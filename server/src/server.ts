@@ -20,7 +20,9 @@ app.use(express.json());
 
 // Routes
 import usuarioRoutes from "./routes/usuarioRoutes";
+import pacienteRoute from "./routes/pacienteRoute";
 
 app.use("/api/usuarios", usuarioRoutes);
+app.use("/api/pacientes", pacienteRoute);
 
 export default app;
