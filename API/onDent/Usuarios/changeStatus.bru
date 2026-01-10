@@ -1,0 +1,16 @@
+meta {
+  name: changeStatus
+  type: http
+  seq: 4
+}
+
+patch {
+  url: {{Host}}:4001/api/usuarios/69570ba76abcbad7cdc4a708/status
+  body: none
+  auth: inherit
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

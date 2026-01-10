@@ -12,9 +12,14 @@ connectDB();
 
 const app = express();
 
-// Middlewares
 app.use(morgan("dev"));
-app.use(cors());
+
+app.use((req, _res, next) => {
+  console.log("REQ:", req.method, req.url);
+  next();
+});
+
+// Middlewares
 app.use(cors(corsOptions));
 app.use(express.json());
 

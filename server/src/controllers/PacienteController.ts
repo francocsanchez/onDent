@@ -17,7 +17,7 @@ export class PacienteController {
     }
   };
 
-  static getPaciente = async (req: Request, res: Response) => {
+  static getByID = async (req: Request, res: Response) => {
     try {
       const paciente = await Paciente.findById(req.params.idPaciente).lean();
 

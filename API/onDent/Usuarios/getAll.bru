@@ -1,0 +1,15 @@
+meta {
+  name: getAll
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{Host}}:4001/api/usuarios
+  body: none
+  auth: inherit
+}
+
+settings {
+  encodeUrl: true
+}
