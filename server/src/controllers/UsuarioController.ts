@@ -4,7 +4,6 @@ import { hashPassword } from "../helpers/hash";
 
 export class UsuarioController {
   static getAll = async (req: Request, res: Response) => {
-        console.log(`Llegaste`)
     try {
       const usuarios = await Usuario.find({}).lean();
       res.status(200).json({
@@ -73,9 +72,7 @@ export class UsuarioController {
       await usuario.save();
 
       return res.status(200).json({
-        message: `Usuario ${
-          usuario.enable ? "habilitado" : "deshabilitado"
-        } correctamente`,
+        message: `Usuario ${usuario.enable ? "habilitado" : "deshabilitado"} correctamente`,
       });
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : "Unknown error";
