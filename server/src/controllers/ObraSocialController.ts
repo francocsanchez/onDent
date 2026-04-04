@@ -1,69 +1,88 @@
 import { Request, Response } from "express";
 import ObraSocial from "../models/ObraSocial";
+import { logError } from "../utils/logError";
 
 export class ObraSocialController {
-  static create = async (req: Request, res: Response): Promise<void> => {
+  static create = async (req: Request, res: Response) => {
     const { name } = req.body;
+
     try {
       const existingObraSocial = await ObraSocial.findOne({ name });
+
       if (existingObraSocial) {
-        res.status(400).json({ message: "La obra social ya está registrada" });
-        return;
+        return res.status(400).json({ message: "La obra social ya está registrada" });
       }
 
       const newObraSocial = new ObraSocial({ name });
       await newObraSocial.save();
 
-      res.status(200).json({ message: "Obra Social creada exitosamente" });
-    } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : "Unknown error";
-      console.error(message);
-
-      res.status(500).json({ message: "Error al crear obra social" });
-      return;
+      return res.status(200).json({ message: "Obra Social creada exitosamente" });
+    } catch (error) {
+      logError("ObraSocialController.create");
+      console.error(error);
+      return res.status(500).json({
+        data: null,
+        message: "Error del servidor",
+      });
     }
   };
+
   static getAll = async (req: Request, res: Response) => {
     try {
       const obrasSociales = await ObraSocial.find({}).lean();
-      res.status(200).json({
+
+      return res.status(200).json({
         data: obrasSociales,
         message: "Listado de obras sociales",
       });
-    } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : "Unknown error";
-      console.error(message);
-
-      return res.status(500).json({ message: "Error al listar las obras sociales" });
+    } catch (error) {
+      logError("ObraSocialController.getAll");
+      console.error(error);
+      return res.status(500).json({
+        data: null,
+        message: "Error del servidor",
+      });
     }
   };
+
   static getByID = async (req: Request, res: Response) => {
+    const { idObraSocial } = req.params;
+
     try {
-      const obraSocial = await ObraSocial.findById(req.params.idObraSocial).lean();
+      const obraSocial = await ObraSocial.findById(idObraSocial).lean();
 
       if (!obraSocial) {
-        res.status(404).json({ message: "Obra Social no encontrada" });
-        return;
+        return res.status(404).json({
+          data: null,
+          message: "Obra Social no encontrada",
+        });
       }
 
-      res.status(200).json({
+      return res.status(200).json({
         data: obraSocial,
         message: "Obra Social listada",
       });
-    } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : "Unknown error";
-      console.error(message);
-
-      return res.status(500).json({ message: "Error al listar obra social" });
+    } catch (error) {
+      logError("ObraSocialController.getByID");
+      console.error(error);
+      return res.status(500).json({
+        data: null,
+        message: "Error del servidor",
+      });
     }
   };
+
   static changeStatus = async (req: Request, res: Response) => {
+    const { idObraSocial } = req.params;
+
     try {
-      const obraSocial = await ObraSocial.findById(req.params.idObraSocial);
+      const obraSocial = await ObraSocial.findById(idObraSocial);
 
       if (!obraSocial) {
-        res.status(404).json({ message: "Obra social no encontrada" });
-        return;
+        return res.status(404).json({
+          data: null,
+          message: "Obra Social no encontrada",
+        });
       }
 
       obraSocial.enable = !obraSocial.enable;
@@ -72,11 +91,13 @@ export class ObraSocialController {
       return res.status(200).json({
         message: `Obra social ${obraSocial.enable ? "habilitada" : "deshabilitada"} correctamente`,
       });
-    } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : "Unknown error";
-      console.error(message);
-
-      return res.status(500).json({ message: "Error al listar obra social" });
+    } catch (error) {
+      logError("ObraSocialController.changeStatus");
+      console.error(error);
+      return res.status(500).json({
+        data: null,
+        message: "Error del servidor",
+      });
     }
   };
 }

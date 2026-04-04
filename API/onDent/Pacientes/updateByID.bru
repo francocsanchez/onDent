@@ -1,0 +1,25 @@
+meta {
+  name: updateByID
+  type: http
+  seq: 4
+}
+
+put {
+  url: {{Host}}:4001/api/pacientes/69d19ff994d2ba5e48bbca13
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "name": "Franco",
+    "lastName": "Sanchez",
+    "dni": 36435347,
+    "obraSocial": "69d19c71029bfa0dd50cfcd0"
+  }
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

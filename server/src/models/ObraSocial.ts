@@ -15,4 +15,4 @@ const ObraSocialSchema: Schema = new Schema<IObraSocial>(
   }
 );
 
-export default model<IObraSocial>("obrasSociales", ObraSocialSchema);
+export default model<IObraSocial>("obras_sociales", ObraSocialSchema);

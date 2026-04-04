@@ -24,11 +24,9 @@ app.use(cors(corsOptions));
 app.use(express.json());
 
 // Routes
-import usuarioRoutes from "./routes/usuarioRoutes";
 import pacienteRoute from "./routes/pacienteRoute";
 import obraSocialRouter from "./routes/obraSocial";
 
-app.use("/api/usuarios", usuarioRoutes);
 app.use("/api/obras-sociales", obraSocialRouter);
 app.use("/api/pacientes", pacienteRoute);
 

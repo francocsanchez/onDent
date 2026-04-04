@@ -1,0 +1,22 @@
+meta {
+  name: create
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{Host}}:4001/api/obras-sociales
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "name": "swiss medical"
+  }
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

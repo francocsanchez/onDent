@@ -1,0 +1,16 @@
+meta {
+  name: changeStatus
+  type: http
+  seq: 4
+}
+
+patch {
+  url: {{Host}}:4001/api/obras-sociales/69d186eec52dd27356e644de/change-status
+  body: none
+  auth: inherit
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}
