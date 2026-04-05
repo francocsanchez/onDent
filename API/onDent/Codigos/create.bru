@@ -1,0 +1,24 @@
+meta {
+  name: create
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{Host}}:4001/api/codigos
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "code": "110100",
+    "description": "CONSULTA",
+    "obraSocial": "69d186eec52dd27356e644de"
+  }
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

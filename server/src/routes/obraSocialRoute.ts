@@ -2,7 +2,7 @@ import { Router } from "express";
 
 import { ObraSocialController } from "../controllers/ObraSocialController";
 import { handleImputErrors } from "../middleware/validation";
-import { nameValidationObraSocial, obraSocialIdValidation } from "../validation/obrasSociales";
+import { createValidation, idValidation } from "../validation/obrasSociales";
 
 const router = Router();
 
@@ -16,20 +16,20 @@ router.get("/", ObraSocialController.getAll);
  * @route POST /
  * @desc Crear una nueva obra social.
  */
-router.post("/", nameValidationObraSocial, handleImputErrors, ObraSocialController.create);
+router.post("/", createValidation, handleImputErrors, ObraSocialController.create);
 
 /**
  * @route GET /:idObraSocial
  * @params idObraSocial
  * @desc Obtener una obra social por su ID.
  */
-router.get("/:idObraSocial", obraSocialIdValidation, handleImputErrors, ObraSocialController.getByID);
+router.get("/:idObraSocial", idValidation, handleImputErrors, ObraSocialController.getByID);
 
 /**
  * @route PATCH /:idObraSocial/change-status
  * @params idObraSocial
  * @desc Cambiar el estado de una obra social por su ID.
  */
-router.patch("/:idObraSocial/change-status", obraSocialIdValidation, handleImputErrors, ObraSocialController.changeStatus);
+router.patch("/:idObraSocial/change-status", idValidation, handleImputErrors, ObraSocialController.changeStatus);
 
 export default router;

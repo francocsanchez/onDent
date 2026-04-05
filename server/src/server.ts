@@ -25,9 +25,11 @@ app.use(express.json());
 
 // Routes
 import pacienteRoute from "./routes/pacienteRoute";
-import obraSocialRouter from "./routes/obraSocial";
+import obraSocialRouter from "./routes/obraSocialRoute";
+import codigoRoute from "./routes/codigoRoute";
 
 app.use("/api/obras-sociales", obraSocialRouter);
 app.use("/api/pacientes", pacienteRoute);
+app.use("/api/codigos", codigoRoute);
 
 export default app;
