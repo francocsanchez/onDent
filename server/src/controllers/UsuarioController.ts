@@ -1,84 +1,167 @@
 import { Request, Response } from "express";
 import Usuario from "../models/Usuario";
 import { hashPassword } from "../helpers/hash";
+import { logError } from "../utils/logError";
 
 export class UsuarioController {
   static getAll = async (req: Request, res: Response) => {
     try {
       const usuarios = await Usuario.find({}).lean();
-      res.status(200).json({
+
+      return res.status(200).json({
         data: usuarios,
         message: "Listado de usuarios",
       });
-    } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : "Unknown error";
-      console.error(message);
-
-      return res.status(500).json({ message: "Error al listar los usuarios" });
+    } catch (error) {
+      logError("UsuarioController.getAll");
+      console.error(error);
+      return res.status(500).json({
+        data: null,
+        message: "Error del servidor",
+      });
     }
   };
-  static create = async (req: Request, res: Response): Promise<void> => {
-    const { email, name, lastName } = req.body;
+
+  static create = async (req: Request, res: Response) => {
+    const { email, name, lastName, role } = req.body;
+
     try {
-      const existingUser = await Usuario.findOne({ email });
+      const existingUser = await Usuario.findOne({ email }).lean();
+
       if (existingUser) {
-        res.status(400).json({ message: "El email ya está registrado" });
-        return;
+        return res.status(400).json({
+          data: null,
+          message: "El email ya está registrado",
+        });
       }
 
-      const newUser = new Usuario({ email, name, lastName });
-      newUser.password = await hashPassword(process.env.DEFAULT_USER_PASSWORD);
+      const newUser = new Usuario({
+        email,
+        name,
+        lastName,
+        role,
+      });
+
+      newUser.password = await hashPassword(process.env.DEFAULT_USER_PASSWORD as string);
       await newUser.save();
 
-      res.status(200).json({ message: "Usuario creado exitosamente" });
-    } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : "Unknown error";
-      console.error(message);
-
-      res.status(500).json({ message: "Error al crear usuario" });
-      return;
+      return res.status(200).json({
+        data: newUser,
+        message: "Usuario creado exitosamente",
+      });
+    } catch (error) {
+      logError("UsuarioController.create");
+      console.error(error);
+      return res.status(500).json({
+        data: null,
+        message: "Error del servidor",
+      });
     }
   };
+
   static getByID = async (req: Request, res: Response) => {
+    const { idUsuario } = req.params;
+
     try {
-      const usuario = await Usuario.findById(req.params.idUsuario).lean();
+      const usuario = await Usuario.findById(idUsuario).lean();
 
       if (!usuario) {
-        res.status(404).json({ message: "Usuario no encontrado" });
-        return;
+        return res.status(404).json({
+          data: null,
+          message: "Usuario no encontrado",
+        });
       }
 
-      res.status(200).json({
+      return res.status(200).json({
         data: usuario,
         message: "Usuario listado",
       });
-    } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : "Unknown error";
-      console.error(message);
-
-      return res.status(500).json({ message: "Error al listar usuario" });
+    } catch (error) {
+      logError("UsuarioController.getByID");
+      console.error(error);
+      return res.status(500).json({
+        data: null,
+        message: "Error del servidor",
+      });
     }
   };
-  static changeStatus = async (req: Request, res: Response) => {
+
+  static updateByID = async (req: Request, res: Response) => {
+    const { idUsuario } = req.params;
+    const { email, name, lastName, role } = req.body;
+
     try {
-      const usuario = await Usuario.findById(req.params.idUsuario);
+      const existingUser = await Usuario.findOne({
+        email,
+        _id: { $ne: idUsuario },
+      }).lean();
+
+      if (existingUser) {
+        return res.status(400).json({
+          data: null,
+          message: "El email ya está registrado",
+        });
+      }
+
+      const updatedUser = await Usuario.findByIdAndUpdate(
+        idUsuario,
+        {
+          email,
+          name,
+          lastName,
+          role,
+        },
+        { new: true }
+      ).lean();
+
+      if (!updatedUser) {
+        return res.status(404).json({
+          data: null,
+          message: "Usuario no encontrado",
+        });
+      }
+
+      return res.status(200).json({
+        data: updatedUser,
+        message: "Usuario actualizado correctamente",
+      });
+    } catch (error) {
+      logError("UsuarioController.updateByID");
+      console.error(error);
+      return res.status(500).json({
+        data: null,
+        message: "Error del servidor",
+      });
+    }
+  };
+
+  static changeStatus = async (req: Request, res: Response) => {
+    const { idUsuario } = req.params;
+
+    try {
+      const usuario = await Usuario.findById(idUsuario);
 
       if (!usuario) {
-        res.status(404).json({ message: "Usuario no encontrado" });
-        return;
+        return res.status(404).json({
+          data: null,
+          message: "Usuario no encontrado",
+        });
       }
 
       usuario.enable = !usuario.enable;
       await usuario.save();
 
       return res.status(200).json({
+        data: usuario,
         message: `Usuario ${usuario.enable ? "habilitado" : "deshabilitado"} correctamente`,
       });
-    } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : "Unknown error";
-      console.error(message);
-
-      return res.status(500).json({ message: "Error al listar usuario" });
+    } catch (error) {
+      logError("UsuarioController.changeStatus");
+      console.error(error);
+      return res.status(500).json({
+        data: null,
+        message: "Error del servidor",
+      });
     }
   };
 }

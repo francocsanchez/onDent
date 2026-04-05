@@ -1,8 +1,8 @@
 import { body, param } from "express-validator";
 
-export const idValidation = [param("idCodigo").isMongoId().withMessage("ID de código no válido")];
+export const idValidationCodigo = [param("idCodigo").isMongoId().withMessage("ID de código no válido")];
 
-export const updateValidation = [
+export const updateValidationCodigo = [
   param("idCodigo").isMongoId().withMessage("ID de código no válido"),
   body("code")
     .notEmpty()
@@ -20,7 +20,7 @@ export const updateValidation = [
   body("obraSocial").notEmpty().withMessage("La obra social es obligatoria").isMongoId().withMessage("El ID de la obra social no es válido"),
 ];
 
-export const createValidation = [
+export const createValidationCodigo = [
   body("code")
     .notEmpty()
     .withMessage("El código es obligatorio")

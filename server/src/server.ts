@@ -14,22 +14,19 @@ const app = express();
 
 app.use(morgan("dev"));
 
-app.use((req, _res, next) => {
-  console.log("REQ:", req.method, req.url);
-  next();
-});
-
 // Middlewares
 app.use(cors(corsOptions));
 app.use(express.json());
 
 // Routes
-import pacienteRoute from "./routes/pacienteRoute";
-import obraSocialRouter from "./routes/obraSocialRoute";
-import codigoRoute from "./routes/codigoRoute";
+import obraSocialRoutes from "./routes/obraSocialRoutes";
+import pacienteRoutes from "./routes/pacienteRoutes";
+import codigoRoutes from "./routes/codigoRoutes";
+import usuarioRoutes from "./routes/usuarioRoutes";
 
-app.use("/api/obras-sociales", obraSocialRouter);
-app.use("/api/pacientes", pacienteRoute);
-app.use("/api/codigos", codigoRoute);
+app.use("/api/obras-sociales", obraSocialRoutes);
+app.use("/api/pacientes", pacienteRoutes);
+app.use("/api/codigos", codigoRoutes);
+app.use("/api/usuarios", usuarioRoutes);
 
 export default app;

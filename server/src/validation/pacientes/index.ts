@@ -1,7 +1,7 @@
 import { body, param } from "express-validator";
 import mongoose from "mongoose";
 
-export const createValidation = [
+export const createValidationPaciente = [
   body("name")
     .notEmpty()
     .withMessage("El nombre es obligatorio")
@@ -24,13 +24,13 @@ export const createValidation = [
     .withMessage("El id de la obra social no es válido"),
 ];
 
-export const idValidation = [
+export const idValidationPaciente = [
   param("idPaciente")
     .custom((value) => mongoose.Types.ObjectId.isValid(value))
     .withMessage("El id del paciente no es válido"),
 ];
 
-export const updateValidation = [
+export const updateValidationPaciente = [
   param("idPaciente")
     .custom((value) => mongoose.Types.ObjectId.isValid(value))
     .withMessage("El id del paciente no es válido"),

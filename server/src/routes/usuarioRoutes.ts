@@ -1,36 +1,49 @@
 import { Router } from "express";
-import { body, param } from "express-validator";
 import { UsuarioController } from "../controllers/UsuarioController";
 import { handleImputErrors } from "../middleware/validation";
+import { createValidationUsuario, idValidationUsuario, updateValidationUsuario } from "../validation/usuarios";
 
 const router = Router();
 
+/**
+ *
+ * @route GET /
+ * @desc Listar todos los usuarios
+ *
+ */
 router.get("/", UsuarioController.getAll);
 
-router.post(
-  "/",
-  body("email").notEmpty().withMessage("El email es obligatorio").isEmail().withMessage("Email inválido").trim().normalizeEmail(),
-  body("name")
-    .notEmpty()
-    .withMessage("El nombre es obligatorio")
-    .isLength({ min: 2, max: 50 })
-    .withMessage("El nombre debe tener entre 2 y 50 caracteres")
-    .trim()
-    .escape(),
-  body("lastName")
-    .notEmpty()
-    .withMessage("El apellido es obligatorio")
-    .isLength({ min: 2, max: 50 })
-    .withMessage("El apellido debe tener entre 2 y 50 caracteres")
-    .trim()
-    .escape(),
-  body("role").optional().isIn(["superadmin", "admin", "odontologo"]).withMessage("Rol inválido"),
-  handleImputErrors,
-  UsuarioController.create
-);
+/**
+ *
+ * @route POST /
+ * @desc Crear un usuario
+ *
+ */
+router.post("/", createValidationUsuario, handleImputErrors, UsuarioController.create);
 
-router.get("/:idUsuario", param("idUsuario").isMongoId().withMessage("ID no válido"), handleImputErrors, UsuarioController.getByID);
+/**
+ *
+ * @route GET /:idUsuario
+ * @params idUsuario
+ * @desc Obtener un usuario por su ID.
+ *
+ */
+router.get("/:idUsuario", idValidationUsuario, handleImputErrors, UsuarioController.getByID);
 
-router.patch("/:idUsuario/status", param("idUsuario").isMongoId().withMessage("ID no válido"), handleImputErrors, UsuarioController.changeStatus);
+/**
+ *
+ * @route PUT /:idUsuario
+ * @desc Actualizar un usuario por ID
+ *
+ */
+router.put("/:idUsuario", updateValidationUsuario, handleImputErrors, UsuarioController.updateByID);
+
+/**
+ *
+ * @route PATCH /:idUsuario/change-status
+ * @desc Cambiar estado de un usuario por ID
+ *
+ */
+router.patch("/:idUsuario/change-status", idValidationUsuario, handleImputErrors, UsuarioController.changeStatus);
 
 export default router;

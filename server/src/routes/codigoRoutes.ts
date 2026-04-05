@@ -2,7 +2,7 @@ import { Router } from "express";
 
 import { handleImputErrors } from "../middleware/validation";
 import { CodigoController } from "../controllers/CodigoController";
-import { createValidation, idValidation, updateValidation } from "../validation/codigos";
+import { createValidationCodigo, idValidationCodigo, updateValidationCodigo } from "../validation/codigos";
 
 const router = Router();
 
@@ -20,7 +20,7 @@ router.get("/", CodigoController.getAll);
  * @desc Crear un código
  *
  */
-router.post("/", createValidation, handleImputErrors, CodigoController.create);
+router.post("/", createValidationCodigo, handleImputErrors, CodigoController.create);
 
 /**
  *
@@ -28,7 +28,7 @@ router.post("/", createValidation, handleImputErrors, CodigoController.create);
  * @desc Obtener un código por ID
  *
  */
-router.get("/:idCodigo", idValidation, handleImputErrors, CodigoController.getByID);
+router.get("/:idCodigo", idValidationCodigo, handleImputErrors, CodigoController.getByID);
 
 /**
  *
@@ -36,7 +36,7 @@ router.get("/:idCodigo", idValidation, handleImputErrors, CodigoController.getBy
  * @desc Actualizar un código por ID
  *
  */
-router.put("/:idCodigo", updateValidation, handleImputErrors, CodigoController.updateByID);
+router.put("/:idCodigo", updateValidationCodigo, handleImputErrors, CodigoController.updateByID);
 
 /**
  *
@@ -44,6 +44,6 @@ router.put("/:idCodigo", updateValidation, handleImputErrors, CodigoController.u
  * @desc Cambiar estado de un código por ID
  *
  */
-router.patch("/:idCodigo/change-status", idValidation, handleImputErrors, CodigoController.changeStatus);
+router.patch("/:idCodigo/change-status", idValidationCodigo, handleImputErrors, CodigoController.changeStatus);
 
 export default router;

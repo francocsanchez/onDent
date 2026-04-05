@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { PacienteController } from "../controllers/PacienteController";
 import { handleImputErrors } from "../middleware/validation";
-import { createValidation, idValidation, updateValidation } from "../validation/pacientes";
+import { createValidationPaciente, idValidationPaciente, updateValidationPaciente } from "../validation/pacientes";
 
 const router = Router();
 
@@ -19,7 +19,7 @@ router.get("/", PacienteController.getAll);
  * @desc Crear un nuevo paciente.
  *
  */
-router.post("/", createValidation, handleImputErrors, PacienteController.create);
+router.post("/", createValidationPaciente, handleImputErrors, PacienteController.create);
 
 /**
  *
@@ -28,7 +28,7 @@ router.post("/", createValidation, handleImputErrors, PacienteController.create)
  * @desc Obtener un paciente por su ID.
  *
  */
-router.get("/:idPaciente", idValidation, handleImputErrors, PacienteController.getByID);
+router.get("/:idPaciente", idValidationPaciente, handleImputErrors, PacienteController.getByID);
 
 /**
  *
@@ -37,6 +37,6 @@ router.get("/:idPaciente", idValidation, handleImputErrors, PacienteController.g
  * @desc Actualizar un paciente por su ID.
  *
  */
-router.put("/:idPaciente", updateValidation, handleImputErrors, PacienteController.updateByID);
+router.put("/:idPaciente", updateValidationPaciente, handleImputErrors, PacienteController.updateByID);
 
 export default router;

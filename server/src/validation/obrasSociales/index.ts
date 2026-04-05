@@ -1,13 +1,13 @@
 import { body, param } from "express-validator";
 import mongoose from "mongoose";
 
-export const idValidation = param("idObraSocial")
+export const idValidationObraSocial = param("idObraSocial")
   .notEmpty()
   .withMessage("El id de la obra social es obligatorio")
   .custom((value) => mongoose.Types.ObjectId.isValid(value))
   .withMessage("El id de la obra social no es válido");
 
-export const createValidation = [
+export const createValidationObraSocial = [
   body("name")
     .notEmpty()
     .withMessage("El nombre es obligatorio")
