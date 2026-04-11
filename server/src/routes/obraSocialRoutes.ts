@@ -26,6 +26,12 @@ router.post("/", createValidationObraSocial, handleImputErrors, ObraSocialContro
 router.get("/:idObraSocial", idValidationObraSocial, handleImputErrors, ObraSocialController.getByID);
 
 /**
+ * @route PUT /:idObraSocial
+ * @params idObraSocial
+ * @desc Actualizar una obra social por su ID.
+ */
+router.put("/:idObraSocial", idValidationObraSocial, handleImputErrors, ObraSocialController.update);
+/**
  * @route PATCH /:idObraSocial/change-status
  * @params idObraSocial
  * @desc Cambiar el estado de una obra social por su ID.

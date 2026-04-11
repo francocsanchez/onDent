@@ -29,7 +29,7 @@ export class ObraSocialController {
 
   static getAll = async (req: Request, res: Response) => {
     try {
-      const obrasSociales = await ObraSocial.find({}).lean();
+      const obrasSociales = await ObraSocial.find({}).sort({ name: 1 }).lean();
 
       return res.status(200).json({
         data: obrasSociales,
@@ -93,6 +93,48 @@ export class ObraSocialController {
       });
     } catch (error) {
       logError("ObraSocialController.changeStatus");
+      console.error(error);
+      return res.status(500).json({
+        data: null,
+        message: "Error del servidor",
+      });
+    }
+  };
+
+  static update = async (req: Request, res: Response) => {
+    const { idObraSocial } = req.params;
+    const { name } = req.body;
+
+    try {
+      const obraSocial = await ObraSocial.findById(idObraSocial);
+
+      if (!obraSocial) {
+        return res.status(404).json({
+          data: null,
+          message: "Obra Social no encontrada",
+        });
+      }
+
+      // Validar si ya existe otra con el mismo nombre
+      const existingObraSocial = await ObraSocial.findOne({
+        name,
+        _id: { $ne: idObraSocial },
+      });
+
+      if (existingObraSocial) {
+        return res.status(400).json({
+          message: "La obra social ya está registrada",
+        });
+      }
+
+      obraSocial.name = name;
+      await obraSocial.save();
+
+      return res.status(200).json({
+        message: "Obra Social actualizada correctamente",
+      });
+    } catch (error) {
+      logError("ObraSocialController.update");
       console.error(error);
       return res.status(500).json({
         data: null,
