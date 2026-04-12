@@ -6,7 +6,7 @@ import { logError } from "../utils/logError";
 export class UsuarioController {
   static getAll = async (req: Request, res: Response) => {
     try {
-      const usuarios = await Usuario.find({}).lean();
+      const usuarios = await Usuario.find({}).sort({ lastName: 1 }).lean();
 
       return res.status(200).json({
         data: usuarios,
@@ -111,7 +111,7 @@ export class UsuarioController {
           lastName,
           role,
         },
-        { new: true }
+        { new: true },
       ).lean();
 
       if (!updatedUser) {

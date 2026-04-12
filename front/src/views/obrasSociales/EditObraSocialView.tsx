@@ -2,7 +2,6 @@ import { getObrasSocialByID } from "@/api/obraSocialAPI";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import EditObraSocialForm from "@/components/obrasSociales/EditObraSocialForm";
 import { useQuery } from "@tanstack/react-query";
-import React from "react";
 import { useParams } from "react-router-dom";
 
 export default function EditObraSocialView() {
