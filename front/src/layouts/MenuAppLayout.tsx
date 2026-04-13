@@ -16,7 +16,7 @@ const navigationItems: NavigationItem[] = [
   },
   {
     label: "Pacientes",
-    href: "/patients",
+    href: "/pacientes",
     icon: Users,
   },
   {

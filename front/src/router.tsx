@@ -7,12 +7,19 @@ import EditObraSocialView from "./views/obrasSociales/EditObraSocialView";
 import ListUsuariosView from "./views/usuarios/ListUsuariosView";
 import CreateUsuarioView from "./views/usuarios/CreateUsuarioView";
 import EditUsuarioView from "./views/usuarios/EditUsuarioView";
+import ListPacientesView from "./views/pacientes/ListPacientesView";
+import CreatePacienteView from "./views/pacientes/CreatePacienteView";
+import EditPacienteView from "./views/pacientes/EditPacienteView";
 
 export default function Router() {
   return (
     <BrowserRouter>
       <Routes>
         <Route element={<AppLayout />}>
+          <Route path="/pacientes" element={<ListPacientesView />} />
+          <Route path="/pacientes/create" element={<CreatePacienteView />} />
+          <Route path="/pacientes/:idPaciente/editar" element={<EditPacienteView />} />
+
           <Route path="/config" element={<MenuConfigView />} />
 
           <Route path="/config/usuarios" element={<ListUsuariosView />} />
