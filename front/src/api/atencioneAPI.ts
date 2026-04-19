@@ -32,6 +32,10 @@ type CreateAtencionPayload = {
   coseguroOdonto?: number;
 };
 
+type UpdateAtencionPayload = CreateAtencionPayload & {
+  idAtencion: Atencion["_id"];
+};
+
 type GetAtencionesFiltradasParams = {
   periodo: string;
   status: AtencionStatus;
@@ -133,6 +137,19 @@ export async function createAtencion(formData: CreateAtencionPayload) {
     }
 
     throw new Error("Error inesperado al crear la atención");
+  }
+}
+
+export async function updateAtencionByID({ idAtencion, ...formData }: UpdateAtencionPayload) {
+  try {
+    const { data } = await api.put(`/atenciones/${idAtencion}`, formData);
+    return data;
+  } catch (error) {
+    if (isAxiosError(error) && error.response) {
+      throw new Error(error.response.data.error || error.response.data.message || "Error al actualizar la atención");
+    }
+
+    throw new Error("Error inesperado al actualizar la atención");
   }
 }
 

@@ -4,7 +4,7 @@ export type AtencionStatus = "OK" | "Pendiente" | "Denegado" | "Diferido" | "No 
 
 export interface IAtencionCodigo {
   codigo: Types.ObjectId;
-  pieza: string;
+  pieza?: string;
   valor: number;
   status: AtencionStatus;
   observaciones?: string;

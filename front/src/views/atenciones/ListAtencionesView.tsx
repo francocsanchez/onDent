@@ -1,7 +1,7 @@
 import { getAtenciones } from "@/api/atencioneAPI";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import { useQuery } from "@tanstack/react-query";
-import { BadgeCheck, Eye, Plus } from "lucide-react";
+import { Eye, Plus } from "lucide-react";
 import { useState } from "react";
 import { Link } from "react-router-dom";
 

@@ -13,6 +13,7 @@ import EditPacienteView from "./views/pacientes/EditPacienteView";
 import ListAtencionesView from "./views/atenciones/ListAtencionesView";
 import ListAtencionesFilteredView from "./views/atenciones/ListAtencionesFilteredView";
 import AtencionView from "./views/atenciones/AtencionView";
+import EditAtencionView from "./views/atenciones/EditAtencionView";
 import CreateAtencionView from "./views/atenciones/CreateAtencionView";
 import LoginView from "./views/auth/LoginView";
 import NotFound from "./views/NotFound";
@@ -36,6 +37,7 @@ export default function Router() {
             <Route path="/atenciones" element={<ListAtencionesView />} />
             <Route path="/atenciones/filtrar" element={<ListAtencionesFilteredView />} />
             <Route path="/atenciones/create" element={<CreateAtencionView />} />
+            <Route path="/atenciones/:idAtencion/editar" element={<EditAtencionView />} />
             <Route path="/atenciones/:idAtencion" element={<AtencionView />} />
 
             <Route path="/pacientes" element={<ListPacientesView />} />
