@@ -1,7 +1,7 @@
 import { getAtenciones } from "@/api/atencioneAPI";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import { useQuery } from "@tanstack/react-query";
-import { Eye, Plus } from "lucide-react";
+import { BadgeCheck, Eye, Plus } from "lucide-react";
 import { Link } from "react-router-dom";
 
 export default function ListAtencionesView() {
@@ -57,8 +57,8 @@ export default function ListAtencionesView() {
               <table className="min-w-full">
                 <thead className="border-b border-secondary-dark/50 bg-secondary/40">
                   <tr>
-                    <th className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-primary-dark/80">Fecha</th>
                     <th className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-primary-dark/80">Usuario</th>
+                    <th className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-primary-dark/80">Fecha</th>
                     <th className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-primary-dark/80">Nombre paciente</th>
                     <th className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-primary-dark/80">Obra social</th>
                     <th className="px-4 py-3 text-center text-[11px] font-semibold uppercase tracking-wider text-primary-dark/80">
@@ -102,6 +102,13 @@ export default function ListAtencionesView() {
                           >
                             <Eye className="h-3.5 w-3.5" strokeWidth={2} />
                             <span>Ver</span>
+                          </Link>
+                          <Link
+                            to={`${atencion._id}`}
+                            className="inline-flex items-center gap-1.5 rounded-lg border border-secondary-dark/60 bg-white px-2.5 py-1.5 text-xs font-medium text-slate-600 transition-colors hover:border-primary/40 hover:bg-secondary/40 hover:text-primary-dark"
+                          >
+                            <BadgeCheck className="h-3.5 w-3.5" strokeWidth={2} />
+                            <span>Revisar</span>
                           </Link>
                         </div>
                       </td>

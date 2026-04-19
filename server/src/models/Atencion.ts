@@ -13,7 +13,7 @@ export interface IAtencionCodigo {
 const AtencionCodigoSchema = new Schema<IAtencionCodigo>(
   {
     codigo: { type: Schema.Types.ObjectId, ref: "codigos", required: true },
-    pieza: { type: String, required: true, trim: true },
+    pieza: { type: String, trim: true },
     valor: { type: Number, default: 0 },
     status: {
       type: String,
@@ -23,7 +23,7 @@ const AtencionCodigoSchema = new Schema<IAtencionCodigo>(
     },
     observaciones: { type: String },
   },
-  { _id: false }
+  { _id: false },
 );
 
 export interface IAtencion extends Document {
@@ -50,7 +50,7 @@ const AtencionSchema: Schema = new Schema<IAtencion>(
   },
   {
     timestamps: true,
-  }
+  },
 );
 
 export default model<IAtencion>("atenciones", AtencionSchema);

@@ -1,6 +1,7 @@
 import { createAtencion, getCodigosByObraSocial, getPacienteByDNI } from "@/api/atencioneAPI";
 import type { Codigo, Paciente } from "@/types/index";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { CalendarDays, Search } from "lucide-react";
 import { useState } from "react";
 import { useFieldArray, useForm } from "react-hook-form";
 import { Link, useNavigate } from "react-router-dom";
@@ -40,6 +41,7 @@ type AttentionCodeFormItem = {
 };
 
 type CreateAtencionFormValues = {
+  fecha: string;
   patientSearchDni: string;
   patientId: string;
   codes: AttentionCodeFormItem[];
@@ -76,6 +78,7 @@ export default function CreateAtencionView() {
   const [searchStatus, setSearchStatus] = useState<SearchStatus>("idle");
 
   const initialValues: CreateAtencionFormValues = {
+    fecha: getTodayDate(),
     patientSearchDni: "",
     patientId: "",
     codes: [],
@@ -181,7 +184,7 @@ export default function CreateAtencionView() {
     }
 
     const attentionPayload: LocalAtencionPayload = {
-      fecha: getTodayDate(),
+      fecha: formData.fecha,
       paciente: foundPatient._id,
       usuario: mockCurrentUser._id,
       obraSocial: foundPatient.obraSocial._id,
@@ -217,7 +220,25 @@ export default function CreateAtencionView() {
             <p className="mt-0.5 text-sm text-slate-500">Ingresá el DNI para validar si el paciente ya existe en el sistema.</p>
           </div>
 
-          <div className="grid gap-4 px-5 py-5 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
+          <div className="grid gap-4 px-5 py-5 lg:grid-cols-[220px_minmax(0,1fr)_auto] lg:items-end">
+            <div className="space-y-2">
+              <label htmlFor="fecha" className="text-sm font-medium text-slate-700">
+                Fecha de atencion
+              </label>
+              <div className="relative">
+                <input
+                  id="fecha"
+                  type="date"
+                  className={`${inputBaseClassName} pr-10`}
+                  {...register("fecha", {
+                    required: "La fecha es obligatoria",
+                  })}
+                />
+                <CalendarDays className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+              </div>
+              {errors.fecha ? <p className="text-sm text-rose-600">{errors.fecha.message}</p> : null}
+            </div>
+
             <div className="space-y-2">
               <label htmlFor="patientSearchDni" className="text-sm font-medium text-slate-700">
                 DNI del paciente
@@ -239,16 +260,17 @@ export default function CreateAtencionView() {
                   },
                 })}
               />
-              <p className="text-xs text-slate-500">La validacion se realiza con datos locales simulados.</p>
             </div>
 
             <button
               type="button"
               onClick={() => performPatientSearch()}
               disabled={searchPatientMutation.isPending || searchCodesMutation.isPending}
-              className="inline-flex h-[46px] items-center justify-center rounded-xl bg-primary px-5 text-sm font-semibold text-white transition hover:bg-primary-dark"
+              className="inline-flex h-[46px] w-[46px] items-center justify-center rounded-xl bg-primary text-white transition hover:bg-primary-dark disabled:cursor-not-allowed disabled:bg-slate-300"
+              aria-label="Buscar paciente"
+              title="Buscar paciente"
             >
-              {searchPatientMutation.isPending || searchCodesMutation.isPending ? "Buscando..." : "Buscar paciente"}
+              <Search className={`h-4 w-4 ${searchPatientMutation.isPending || searchCodesMutation.isPending ? "animate-pulse" : ""}`} />
             </button>
           </div>
 
@@ -287,7 +309,7 @@ export default function CreateAtencionView() {
               <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                   <p className="text-sm font-semibold text-rose-700">Paciente inexistente</p>
-                  <p className="text-sm text-rose-600">No encontramos un paciente con ese DNI en los datos locales.</p>
+                  <p className="text-sm text-rose-600">No encontramos un paciente con ese DNI.</p>
                 </div>
 
                 <Link
@@ -404,11 +426,8 @@ export default function CreateAtencionView() {
                         type="text"
                         placeholder="Ej: 16"
                         className={inputBaseClassName}
-                        {...register(`codes.${index}.piece`, {
-                          required: "Ingresá la pieza",
-                        })}
+                        {...register(`codes.${index}.piece`)}
                       />
-                      {errors.codes?.[index]?.piece ? <p className="text-sm text-rose-600">{errors.codes[index]?.piece?.message}</p> : null}
                     </div>
 
                     <div className="space-y-2">
