@@ -231,4 +231,35 @@ export class UsuarioController {
   static getMe = async (req: Request, res: Response) => {
     res.json(req.user);
   };
+
+  static updateMyPassword = async (req: Request, res: Response) => {
+    try {
+      const { _id } = req.user;
+      const { newPassword } = req.body;
+
+      const usuario = await Usuario.findById(_id);
+
+      if (!usuario) {
+        return res.status(404).json({
+          data: null,
+          message: "Usuario no encontrado",
+        });
+      }
+
+      usuario.password = await hashPassword(newPassword);
+      await usuario.save();
+
+      return res.status(200).json({
+        data: null,
+        message: "Contraseña actualizada correctamente",
+      });
+    } catch (error) {
+      logError("UsuarioController.updateMyPassword");
+      console.error(error);
+      return res.status(500).json({
+        data: null,
+        message: "Error del servidor",
+      });
+    }
+  };
 }

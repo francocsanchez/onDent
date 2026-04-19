@@ -18,6 +18,7 @@ import NotFound from "./views/NotFound";
 import ProtectedRoute from "./layouts/ProtectedRoute";
 import RoleProtectedRoute from "./layouts/RoleProtectedRoute";
 import NoAutorizado from "./views/NoAutorizado";
+import MiPerfilView from "./views/auth/MiPerfilView";
 
 export default function Router() {
   return (
@@ -26,6 +27,7 @@ export default function Router() {
         <Route path="/login" element={<LoginView />} />
         <Route element={<ProtectedRoute />}>
           <Route element={<AppLayout />}>
+            <Route path="/profile" element={<MiPerfilView />} />
             <Route path="/no-autorizado" element={<NoAutorizado />} />
 
             <Route path="/" element={<Navigate to="/atenciones" replace />} />

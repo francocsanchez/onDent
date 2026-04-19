@@ -34,6 +34,14 @@ router.get("/", UsuarioController.getAll);
 
 /**
  *
+ * @route GET /
+ * @desc Listar todos los usuarios
+ *
+ */
+router.patch("/me/password", UsuarioController.updateMyPassword);
+
+/**
+ *
  * @route POST /
  * @desc Crear un usuario
  *

@@ -6,6 +6,10 @@ type AuthenticateUserFormData = {
   password: string;
 };
 
+type UpdateMyPasswordFormData = {
+  newPassword: string;
+};
+
 export async function authenticateUser(formData: AuthenticateUserFormData) {
   try {
     const { data } = await api.post("/usuarios/login", formData);
@@ -17,5 +21,18 @@ export async function authenticateUser(formData: AuthenticateUserFormData) {
     }
 
     throw new Error("Error al iniciar sesión");
+  }
+}
+
+export async function updateMyPassword(formData: UpdateMyPasswordFormData) {
+  try {
+    const { data } = await api.patch("/usuarios/me/password", formData);
+    return data;
+  } catch (error) {
+    if (isAxiosError(error)) {
+      throw new Error(error.response?.data?.error || error.response?.data?.message || "Error al actualizar la contraseña");
+    }
+
+    throw new Error("Error al actualizar la contraseña");
   }
 }
