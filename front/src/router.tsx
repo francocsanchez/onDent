@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 import AppLayout from "@/layouts/AppLayout";
 import ListObrasSocialesView from "@/views/obrasSociales/ListObrasSocialesView";
 import MenuConfigView from "./views/MenuConfigView";
@@ -11,6 +11,7 @@ import ListPacientesView from "./views/pacientes/ListPacientesView";
 import CreatePacienteView from "./views/pacientes/CreatePacienteView";
 import EditPacienteView from "./views/pacientes/EditPacienteView";
 import ListAtencionesView from "./views/atenciones/ListAtencionesView";
+import ListAtencionesFilteredView from "./views/atenciones/ListAtencionesFilteredView";
 import AtencionView from "./views/atenciones/AtencionView";
 import CreateAtencionView from "./views/atenciones/CreateAtencionView";
 import LoginView from "./views/auth/LoginView";
@@ -19,6 +20,7 @@ import ProtectedRoute from "./layouts/ProtectedRoute";
 import RoleProtectedRoute from "./layouts/RoleProtectedRoute";
 import NoAutorizado from "./views/NoAutorizado";
 import MiPerfilView from "./views/auth/MiPerfilView";
+import DashBoardView from "./views/dashboard/DashBoardView";
 
 export default function Router() {
   return (
@@ -30,8 +32,9 @@ export default function Router() {
             <Route path="/profile" element={<MiPerfilView />} />
             <Route path="/no-autorizado" element={<NoAutorizado />} />
 
-            <Route path="/" element={<Navigate to="/atenciones" replace />} />
+            <Route path="/" element={<DashBoardView />} />
             <Route path="/atenciones" element={<ListAtencionesView />} />
+            <Route path="/atenciones/filtrar" element={<ListAtencionesFilteredView />} />
             <Route path="/atenciones/create" element={<CreateAtencionView />} />
             <Route path="/atenciones/:idAtencion" element={<AtencionView />} />
 

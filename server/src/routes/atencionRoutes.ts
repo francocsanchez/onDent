@@ -20,6 +20,22 @@ router.get("/", AtencionController.getAll);
 
 /**
  * @method GET
+ * @route /resumen
+ * @params Ninguno.
+ * @description Resumen de atenciones para Dashboard.
+ */
+router.get("/resumen", AtencionController.dashAtenciones);
+
+/**
+ * @method GET
+ * @route /filtrar
+ * @params periodo: período con formato YYYY-MM. status: estado del código dentro de la atención. page: número de página.
+ * @description Lista atenciones filtradas por período mensual y estado.
+ */
+router.get("/filtrar", AtencionController.getByMonthAndStatus);
+
+/**
+ * @method GET
  * @route /:idAtencion
  * @params idAtencion: ID de la atención.
  * @description Obtiene una atención por su ID.

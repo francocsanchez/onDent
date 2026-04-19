@@ -8,7 +8,7 @@ export const createValidationAtencion = [
   body("codigos").isArray({ min: 1 }).withMessage("Debe enviar al menos un código"),
   body("codigos.*.codigo").notEmpty().withMessage("El código es obligatorio").isMongoId().withMessage("El ID del código no es válido"),
   body("codigos.*.valor").optional().isNumeric().withMessage("El valor debe ser numérico"),
-  body("codigos.*.status").optional().isIn(["OK", "Pendiente", "Denegado", "Diferido"]).withMessage("El estado no es válido"),
+  body("codigos.*.status").optional().isIn(["OK", "Pendiente", "Denegado", "Diferido", "No cargado"]).withMessage("El estado no es válido"),
   body("codigos.*.observaciones").optional().isString().withMessage("Las observaciones deben ser un texto").trim(),
   body("observaciones").optional().isString().withMessage("Las observaciones deben ser un texto").trim(),
   body("coseguro").optional().isNumeric().withMessage("El coseguro debe ser numérico"),
@@ -25,7 +25,7 @@ export const updateValidationAtencion = [
   body("codigos.*.codigo").notEmpty().withMessage("El código es obligatorio").isMongoId().withMessage("El ID del código no es válido"),
   body("codigos.*.pieza").notEmpty().withMessage("La pieza es obligatoria").isString().withMessage("La pieza debe ser un texto").trim(),
   body("codigos.*.valor").optional().isNumeric().withMessage("El valor debe ser numérico"),
-  body("codigos.*.status").optional().isIn(["OK", "Pendiente", "Denegado", "Diferido"]).withMessage("El estado no es válido"),
+  body("codigos.*.status").optional().isIn(["OK", "Pendiente", "Denegado", "Diferido", "No cargado"]).withMessage("El estado no es válido"),
   body("codigos.*.observaciones").optional().isString().withMessage("Las observaciones deben ser un texto").trim(),
   body("observaciones").optional().isString().withMessage("Las observaciones deben ser un texto").trim(),
   body("coseguro").optional().isNumeric().withMessage("El coseguro debe ser numérico"),
@@ -38,7 +38,7 @@ export const changeStatusValidationAtencion = [
   body("status")
     .notEmpty()
     .withMessage("El estado es obligatorio")
-    .isIn(["OK", "Pendiente", "Denegado", "Diferido"])
+    .isIn(["OK", "Pendiente", "Denegado", "Diferido", "No cargado"])
     .withMessage("El estado no es válido"),
   body("observaciones").optional().isString().withMessage("Las observaciones deben ser un texto").trim(),
 ];

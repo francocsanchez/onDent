@@ -10,7 +10,7 @@ import { useFieldArray, useForm } from "react-hook-form";
 import { Link, Navigate, useNavigate, useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
 
-type AtencionStatus = "OK" | "Pendiente" | "Denegado" | "Diferido";
+type AtencionStatus = "OK" | "Pendiente" | "Denegado" | "Diferido" | "No cargado";
 
 type LocalAtencionCodigoPayload = {
   codigo: string;

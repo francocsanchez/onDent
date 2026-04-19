@@ -82,7 +82,7 @@ export const atencionCodigoSchema = z.object({
   codigo: codigoSchema,
   pieza: z.string(),
   valor: z.number(),
-  status: z.enum(["OK", "Pendiente", "Denegado", "Diferido"]),
+  status: z.enum(["OK", "Pendiente", "Denegado", "Diferido", "No cargado"]),
   observaciones: z.string().optional(),
 });
 
@@ -125,7 +125,42 @@ export const atencionesListResponseSchema = z.object({
   pagination: pacientesPaginationSchema,
 });
 
+export const atencionesDashPorDiaSchema = z.object({
+  fecha: z.string(),
+  dia: z.number(),
+  cantidad: z.number(),
+});
+
+export const atencionesDashPorMesSchema = z.object({
+  periodo: z.string(),
+  anio: z.number(),
+  mes: z.number(),
+  cantidad: z.number(),
+});
+
+export const atencionesDashResumenMensualSchema = z.object({
+  periodo: z.string(),
+  anio: z.number(),
+  mes: z.number(),
+  cantidad: z.number(),
+  montoAtencion: z.number(),
+  montoCoseguro: z.number(),
+  montoTotal: z.number(),
+  ok: z.number(),
+  pendiente: z.number(),
+  denegado: z.number(),
+  diferido: z.number(),
+  noCargado: z.number(),
+});
+
+export const atencionesDashSchema = z.object({
+  atencionesPorDiaMesActual: z.array(atencionesDashPorDiaSchema),
+  atencionesPorMes: z.array(atencionesDashPorMesSchema),
+  resumenMensual: z.array(atencionesDashResumenMensualSchema),
+});
+
 export type Atencion = z.infer<typeof atencionSchema>;
 export type AtencionCodigo = z.infer<typeof atencionCodigoSchema>;
 export type Codigo = z.infer<typeof codigoSchema>;
 export type AtencionesListResponse = z.infer<typeof atencionesListResponseSchema>;
+export type AtencionesDash = z.infer<typeof atencionesDashSchema>;

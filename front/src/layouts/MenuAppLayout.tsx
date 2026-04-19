@@ -17,14 +17,14 @@ const navigationItems: NavigationItem[] = [
     icon: LayoutDashboard,
   },
   {
-    label: "Pacientes",
-    href: "/pacientes",
-    icon: Users,
-  },
-  {
     label: "Atencionces",
     href: "/atenciones",
     icon: Stethoscope,
+  },
+  {
+    label: "Pacientes",
+    href: "/pacientes",
+    icon: Users,
   },
   {
     label: "Reportes",
@@ -50,6 +50,7 @@ export default function MenuAppLayout() {
   };
 
   const { allowed: canShowConfig } = useRoleGuard(["superadmin"]);
+  const { allowed: canShowReports } = useRoleGuard(["admin", "superadmin"]);
 
   return (
     <aside className="sticky top-0 flex h-screen w-full max-w-sm flex-col overflow-y-auto border-r border-secondary-dark/60 bg-white px-4 py-6 sm:px-6 lg:w-2/12 lg:min-w-[280px]">
@@ -61,7 +62,11 @@ export default function MenuAppLayout() {
 
       <nav className="space-y-2">
         {navigationItems
-          .filter((item) => (item.href === "/config" ? canShowConfig : true))
+          .filter((item) => {
+            if (item.href === "/config") return canShowConfig;
+            if (item.href === "/reports") return canShowReports;
+            return true;
+          })
           .map((item) => {
             const isActive = item.href === "/" ? location.pathname === "/" : location.pathname.startsWith(item.href);
             const Icon = item.icon;

@@ -51,6 +51,7 @@ export default function AtencionView() {
     Pendiente: "bg-amber-50 text-amber-700 border border-amber-200",
     Denegado: "bg-red-50 text-red-700 border border-red-200",
     Diferido: "bg-slate-100 text-slate-700 border border-slate-200",
+    "No cargado": "bg-gray-100 text-gray-700 border border-gray-200",
   };
 
   const totalCodigos = atencion.codigos.reduce((acc, item) => acc + item.valor, 0);

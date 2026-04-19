@@ -1,6 +1,6 @@
 import { Schema, model, Document, Types } from "mongoose";
 
-export type AtencionStatus = "OK" | "Pendiente" | "Denegado" | "Diferido";
+export type AtencionStatus = "OK" | "Pendiente" | "Denegado" | "Diferido" | "No cargado";
 
 export interface IAtencionCodigo {
   codigo: Types.ObjectId;
@@ -17,7 +17,7 @@ const AtencionCodigoSchema = new Schema<IAtencionCodigo>(
     valor: { type: Number, default: 0 },
     status: {
       type: String,
-      enum: ["OK", "Pendiente", "Denegado", "Diferido"],
+      enum: ["OK", "Pendiente", "Denegado", "Diferido", "No cargado"],
       required: true,
       default: "Pendiente",
     },
