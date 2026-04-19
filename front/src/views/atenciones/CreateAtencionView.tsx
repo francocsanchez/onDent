@@ -1,18 +1,14 @@
 import { createAtencion, getCodigosByObraSocial, getPacienteByDNI } from "@/api/atencioneAPI";
 import { getPacienteByID } from "@/api/pacienteAPI";
+import LoadingSpinner from "@/components/LoadingSpinner";
+import { useAuth } from "@/hooks/useAuth";
 import type { Codigo, Paciente } from "@/types/index";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { CalendarDays, Search } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useFieldArray, useForm } from "react-hook-form";
-import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import { Link, Navigate, useNavigate, useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
-
-type MockUser = {
-  _id: string;
-  name: string;
-  lastName: string;
-};
 
 type AtencionStatus = "OK" | "Pendiente" | "Denegado" | "Diferido";
 
@@ -52,12 +48,6 @@ type CreateAtencionFormValues = {
 
 type SearchStatus = "idle" | "found" | "not-found";
 
-const mockCurrentUser: MockUser = {
-  _id: "69dc1f26ddefc14594024112",
-  name: "Agustin",
-  lastName: "Bobadilla",
-};
-
 const createEmptyCodeRow = (): AttentionCodeFormItem => ({
   dentalCodeId: "",
   piece: "",
@@ -72,6 +62,8 @@ const disabledInputClassName = "w-full rounded-xl border border-secondary-dark/5
 const getTodayDate = () => new Date().toISOString().slice(0, 10);
 
 export default function CreateAtencionView() {
+  const { user, isLoading, isAuthenticated } = useAuth();
+
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -79,6 +71,14 @@ export default function CreateAtencionView() {
   const [availableCodes, setAvailableCodes] = useState<Codigo[]>([]);
   const [searchStatus, setSearchStatus] = useState<SearchStatus>("idle");
   const patientIdFromQuery = searchParams.get("pacienteId")?.trim() ?? "";
+
+  if (isLoading) {
+    return <LoadingSpinner label="Cargando usuario..." />;
+  }
+
+  if (!isAuthenticated || !user) {
+    return <Navigate to="/login" replace />;
+  }
 
   const initialValues: CreateAtencionFormValues = {
     fecha: getTodayDate(),
@@ -219,7 +219,7 @@ export default function CreateAtencionView() {
     const attentionPayload: LocalAtencionPayload = {
       fecha: formData.fecha,
       paciente: foundPatient._id,
-      usuario: mockCurrentUser._id,
+      usuario: user._id,
       obraSocial: foundPatient.obraSocial._id,
       codigos: formData.codes.map((item) => ({
         codigo: item.dentalCodeId,
@@ -599,7 +599,7 @@ export default function CreateAtencionView() {
 
             <div className="space-y-2">
               <p className="text-xs font-medium uppercase tracking-[0.14em] text-slate-400">Profesional</p>
-              <input type="text" value={`${mockCurrentUser.lastName}, ${mockCurrentUser.name}`} readOnly className={disabledInputClassName} />
+              <input type="text" value={`${user.lastName}, ${user.name}`} readOnly className={disabledInputClassName} />
             </div>
           </div>
         </section>

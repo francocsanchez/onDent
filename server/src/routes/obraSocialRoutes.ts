@@ -1,10 +1,13 @@
 import { Router } from "express";
 
 import { ObraSocialController } from "../controllers/ObraSocialController";
+import { authenticate } from "../middleware/authenticate";
 import { handleImputErrors } from "../middleware/validation";
 import { createValidationObraSocial, idValidationObraSocial } from "../validation/obrasSociales";
 
 const router = Router();
+
+router.use(authenticate);
 
 /**
  * @route GET /

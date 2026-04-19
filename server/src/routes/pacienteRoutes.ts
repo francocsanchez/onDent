@@ -1,9 +1,12 @@
 import { Router } from "express";
 import { PacienteController } from "../controllers/PacienteController";
+import { authenticate } from "../middleware/authenticate";
 import { handleImputErrors } from "../middleware/validation";
 import { createValidationPaciente, idValidationPaciente, updateValidationPaciente } from "../validation/pacientes";
 
 const router = Router();
+
+router.use(authenticate);
 
 /**
  *

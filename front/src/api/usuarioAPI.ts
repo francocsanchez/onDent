@@ -1,6 +1,6 @@
 import api from "@/libs/axios";
 import { isAxiosError } from "axios";
-import { UsuariosTableSchema, type Usuario, type UsuarioFormData } from "../types";
+import { usuarioSchema, UsuariosTableSchema, type Usuario, type UsuarioFormData } from "../types";
 
 export async function getUsuarios() {
   try {
@@ -73,4 +73,18 @@ export async function updateUsuarioById({ formData, idUsuario }: UsuarioAPIType)
       throw new Error(error.response.data.error);
     }
   }
+}
+
+export async function getMe() {
+  const token = localStorage.getItem("AUTH_TOKEN");
+  if (!token) return null;
+
+  const { data } = await api.get("/usuarios/me");
+  const result = usuarioSchema.safeParse(data);
+
+  if (!result.success) {
+    throw new Error("Respuesta inválida del servidor");
+  }
+
+  return result.data;
 }

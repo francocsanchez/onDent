@@ -2,8 +2,27 @@ import { Router } from "express";
 import { UsuarioController } from "../controllers/UsuarioController";
 import { handleImputErrors } from "../middleware/validation";
 import { createValidationUsuario, idValidationUsuario, updateValidationUsuario } from "../validation/usuarios";
+import { authenticate } from "../middleware/authenticate";
 
 const router = Router();
+
+/**
+ *
+ * @route POST /login
+ * @desc Login usuario.
+ *
+ */
+router.post("/login", UsuarioController.login);
+
+router.use(authenticate);
+
+/**
+ *
+ * @route GET /me
+ * @desc Obtener usuario autenticado.
+ *
+ */
+router.get("/me", UsuarioController.getMe);
 
 /**
  *

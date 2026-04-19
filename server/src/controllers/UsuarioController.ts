@@ -1,12 +1,15 @@
 import { Request, Response } from "express";
 import Usuario from "../models/Usuario";
-import { hashPassword } from "../helpers/hash";
+import { checkPassword, hashPassword } from "../helpers/hash";
 import { logError } from "../utils/logError";
+import { generateJWT } from "../helpers/jwt";
+
+const USER_PUBLIC_PROJECTION = "-password";
 
 export class UsuarioController {
   static getAll = async (req: Request, res: Response) => {
     try {
-      const usuarios = await Usuario.find({}).sort({ lastName: 1 }).lean();
+      const usuarios = await Usuario.find({}, USER_PUBLIC_PROJECTION).sort({ lastName: 1 }).lean();
 
       return res.status(200).json({
         data: usuarios,
@@ -45,8 +48,10 @@ export class UsuarioController {
       newUser.password = await hashPassword(process.env.DEFAULT_USER_PASSWORD as string);
       await newUser.save();
 
+      const usuarioCreado = await Usuario.findById(newUser._id, USER_PUBLIC_PROJECTION).lean();
+
       return res.status(200).json({
-        data: newUser,
+        data: usuarioCreado,
         message: "Usuario creado exitosamente",
       });
     } catch (error) {
@@ -63,7 +68,7 @@ export class UsuarioController {
     const { idUsuario } = req.params;
 
     try {
-      const usuario = await Usuario.findById(idUsuario).lean();
+      const usuario = await Usuario.findById(idUsuario, USER_PUBLIC_PROJECTION).lean();
 
       if (!usuario) {
         return res.status(404).json({
@@ -111,7 +116,7 @@ export class UsuarioController {
           lastName,
           role,
         },
-        { new: true },
+        { new: true, projection: USER_PUBLIC_PROJECTION },
       ).lean();
 
       if (!updatedUser) {
@@ -151,8 +156,10 @@ export class UsuarioController {
       usuario.enable = !usuario.enable;
       await usuario.save();
 
+      const usuarioActualizado = await Usuario.findById(idUsuario, USER_PUBLIC_PROJECTION).lean();
+
       return res.status(200).json({
-        data: usuario,
+        data: usuarioActualizado,
         message: `Usuario ${usuario.enable ? "habilitado" : "deshabilitado"} correctamente`,
       });
     } catch (error) {
@@ -163,5 +170,65 @@ export class UsuarioController {
         message: "Error del servidor",
       });
     }
+  };
+
+  static login = async (req: Request, res: Response) => {
+    try {
+      const { email, password } = req.body as {
+        email: string;
+        password: string;
+      };
+
+      if (!email || !password) {
+        return res.status(400).json({
+          data: null,
+          message: "Email y password son obligatorios",
+        });
+      }
+
+      const normalizedEmail = email.trim().toLowerCase();
+
+      const user = await Usuario.findOne({ email: normalizedEmail }).lean();
+
+      if (!user) {
+        return res.status(401).json({
+          data: null,
+          message: "Credenciales inválidas",
+        });
+      }
+
+      if (!user.enable) {
+        return res.status(403).json({
+          data: null,
+          message: "Usuario deshabilitado",
+        });
+      }
+
+      const ok = await checkPassword(password, user.password);
+
+      if (!ok) {
+        return res.status(401).json({
+          data: null,
+          message: "Credenciales inválidas",
+        });
+      }
+
+      const token = generateJWT({ sub: String(user._id) });
+
+      return res.status(200).json({
+        token,
+      });
+    } catch (error) {
+      logError("UsuarioController.login");
+      console.error(error);
+      return res.status(500).json({
+        data: null,
+        message: "Error interno del servidor",
+      });
+    }
+  };
+
+  static getMe = async (req: Request, res: Response) => {
+    res.json(req.user);
   };
 }

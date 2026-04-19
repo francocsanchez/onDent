@@ -1,6 +1,8 @@
-import { ChartColumn, ChevronRight, LayoutDashboard, Settings, Stethoscope, UserCircle2, Users } from "lucide-react";
+import useRoleGuard from "@/hooks/useRoleGuard";
+import { useQueryClient } from "@tanstack/react-query";
+import { ChartColumn, LayoutDashboard, LogOut, Settings, Stethoscope, UserCircle2, Users } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 
 type NavigationItem = {
   label: string;
@@ -38,6 +40,17 @@ const navigationItems: NavigationItem[] = [
 
 export default function MenuAppLayout() {
   const location = useLocation();
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+
+  const handleLogout = () => {
+    localStorage.removeItem("AUTH_TOKEN");
+    queryClient.removeQueries({ queryKey: ["auth-user"] });
+    navigate("/login", { replace: true });
+  };
+
+  const { allowed: canShowConfig } = useRoleGuard(["superadmin"]);
+
   return (
     <aside className="sticky top-0 flex h-screen w-full max-w-sm flex-col overflow-y-auto border-r border-secondary-dark/60 bg-white px-4 py-6 sm:px-6 lg:w-2/12 lg:min-w-[280px]">
       <div className="mb-10 flex justify-center px-2">
@@ -47,52 +60,63 @@ export default function MenuAppLayout() {
       </div>
 
       <nav className="space-y-2">
-        {navigationItems.map((item) => {
-          const isActive = item.href === "/" ? location.pathname === "/" : location.pathname.startsWith(item.href);
-          const Icon = item.icon;
+        {navigationItems
+          .filter((item) => (item.href === "/config" ? canShowConfig : true))
+          .map((item) => {
+            const isActive = item.href === "/" ? location.pathname === "/" : location.pathname.startsWith(item.href);
+            const Icon = item.icon;
 
-          return (
-            <Link
-              key={item.label}
-              to={item.href}
-              className={`group flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium transition-all duration-200 ${
-                isActive
-                  ? "bg-secondary text-primary shadow-[0_12px_30px_-24px_rgba(21,170,154,0.95)]"
-                  : "text-slate-600 hover:bg-secondary/70 hover:text-primary-dark"
-              }`}
-            >
-              <span
-                className={`flex h-10 w-10 items-center justify-center rounded-xl border transition-colors ${
+            return (
+              <Link
+                key={item.label}
+                to={item.href}
+                className={`group flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium transition-all duration-200 ${
                   isActive
-                    ? "border-primary/10 bg-white text-primary"
-                    : "border-slate-200 text-slate-400 group-hover:border-secondary-dark group-hover:text-primary-dark"
+                    ? "bg-secondary text-primary shadow-[0_12px_30px_-24px_rgba(21,170,154,0.95)]"
+                    : "text-slate-600 hover:bg-secondary/70 hover:text-primary-dark"
                 }`}
               >
-                <Icon className="h-5 w-5 flex-shrink-0" strokeWidth={1.9} />
-              </span>
+                <span
+                  className={`flex h-10 w-10 items-center justify-center rounded-xl border transition-colors ${
+                    isActive
+                      ? "border-primary/10 bg-white text-primary"
+                      : "border-slate-200 text-slate-400 group-hover:border-secondary-dark group-hover:text-primary-dark"
+                  }`}
+                >
+                  <Icon className="h-5 w-5 flex-shrink-0" strokeWidth={1.9} />
+                </span>
 
-              <span>{item.label}</span>
-            </Link>
-          );
-        })}
+                <span>{item.label}</span>
+              </Link>
+            );
+          })}
       </nav>
 
       <div className="mt-auto pt-8">
         <Link
           to="/profile"
-          className="group mt-3 flex items-center gap-3 rounded-3xl border border-secondary-dark/60 bg-white p-4 shadow-[0_20px_50px_-40px_rgba(14,124,114,0.6)] transition-colors hover:border-primary/30 hover:bg-secondary/40"
+          className="group flex items-center gap-3 rounded-2xl border border-secondary-dark/60 bg-white px-3 py-2.5 shadow-[0_20px_50px_-40px_rgba(14,124,114,0.6)] transition-colors hover:border-primary/30 hover:bg-secondary/40"
         >
-          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary text-white">
-            <UserCircle2 className="h-6 w-6" strokeWidth={1.9} />
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary text-white">
+            <UserCircle2 className="h-5 w-5" strokeWidth={1.9} />
           </div>
 
           <div className="min-w-0 flex-1">
-            <p className="text-sm text-slate-500">Mi perfil</p>
-            <p className="truncate font-semibold text-slate-900">OnDent Admin</p>
+            <p className="text-xs font-medium uppercase tracking-[0.14em] text-slate-500">Mi perfil</p>
+            <p className="truncate text-sm font-semibold text-slate-900">OnDent Admin</p>
           </div>
-
-          <ChevronRight className="h-5 w-5 text-slate-400 transition-colors group-hover:text-primary" strokeWidth={1.9} />
         </Link>
+
+        <button
+          type="button"
+          onClick={handleLogout}
+          className="mt-3 flex w-full items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm font-medium text-slate-600 transition-colors hover:border-rose-200 hover:bg-rose-50 hover:text-rose-700"
+        >
+          <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-white text-slate-500">
+            <LogOut className="h-4.5 w-4.5" strokeWidth={2} />
+          </span>
+          <span>Cerrar sesión</span>
+        </button>
       </div>
     </aside>
   );

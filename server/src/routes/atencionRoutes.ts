@@ -1,11 +1,14 @@
 import { Router } from "express";
 import { AtencionController } from "../controllers/AtencionController";
+import { authenticate } from "../middleware/authenticate";
 import { handleImputErrors } from "../middleware/validation";
 import { changeStatusValidationAtencion, createValidationAtencion, updateValidationAtencion } from "../validation/atenciones";
 import { idValidationUsuario } from "../validation/usuarios";
 import { idValidationPaciente } from "../validation/pacientes";
 
 const router = Router();
+
+router.use(authenticate);
 
 /**
  *

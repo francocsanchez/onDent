@@ -3,9 +3,11 @@ import { Router } from "express";
 import { handleImputErrors } from "../middleware/validation";
 import { CodigoController } from "../controllers/CodigoController";
 import { createValidationCodigo, idObraSocial, idValidationCodigo, updateValidationCodigo } from "../validation/codigos";
+import { authenticate } from "../middleware/authenticate";
 
 const router = Router();
 
+router.use(authenticate);
 /**
  *
  * @route GET /

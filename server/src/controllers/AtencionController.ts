@@ -10,7 +10,7 @@ export class AtencionController {
       const skip = (page - 1) * limit;
 
       const [atenciones, total] = await Promise.all([
-        Atencion.find({})
+        Atencion.find({ usuario: req.user._id })
           .populate("paciente")
           .populate("usuario")
           .populate("obraSocial")
