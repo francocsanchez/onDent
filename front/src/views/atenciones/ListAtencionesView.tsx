@@ -109,13 +109,6 @@ export default function ListAtencionesView() {
                               <Eye className="h-3.5 w-3.5" strokeWidth={2} />
                               <span>Ver</span>
                             </Link>
-                            <Link
-                              to={`${atencion._id}`}
-                              className="inline-flex items-center gap-1.5 rounded-lg border border-secondary-dark/60 bg-white px-2.5 py-1.5 text-xs font-medium text-slate-600 transition-colors hover:border-primary/40 hover:bg-secondary/40 hover:text-primary-dark"
-                            >
-                              <BadgeCheck className="h-3.5 w-3.5" strokeWidth={2} />
-                              <span>Revisar</span>
-                            </Link>
                           </div>
                         </td>
                       </tr>

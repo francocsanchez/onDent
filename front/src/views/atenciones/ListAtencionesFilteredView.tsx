@@ -117,7 +117,9 @@ export default function ListAtencionesFilteredView() {
                       <th className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-primary-dark/80">Fecha</th>
                       <th className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-primary-dark/80">Paciente</th>
                       <th className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-primary-dark/80">Obra social</th>
-                      <th className="px-4 py-3 text-center text-[11px] font-semibold uppercase tracking-wider text-primary-dark/80">Códigos {status}</th>
+                      <th className="px-4 py-3 text-center text-[11px] font-semibold uppercase tracking-wider text-primary-dark/80">
+                        Códigos {status}
+                      </th>
                       <th className="px-4 py-3 text-right text-[11px] font-semibold uppercase tracking-wider text-primary-dark/80">Acciones</th>
                     </tr>
                   </thead>
@@ -149,7 +151,9 @@ export default function ListAtencionesFilteredView() {
                           </td>
 
                           <td className="px-4 py-3 text-center">
-                            <span className={`inline-flex min-w-12 items-center justify-center rounded-full px-2.5 py-1 text-xs font-semibold ${statusClasses[status]}`}>
+                            <span
+                              className={`inline-flex min-w-12 items-center justify-center rounded-full px-2.5 py-1 text-xs font-semibold ${statusClasses[status]}`}
+                            >
                               {codigosPorEstado}
                             </span>
                           </td>
@@ -162,13 +166,6 @@ export default function ListAtencionesFilteredView() {
                               >
                                 <Eye className="h-3.5 w-3.5" strokeWidth={2} />
                                 <span>Ver</span>
-                              </Link>
-                              <Link
-                                to={`/atenciones/${atencion._id}`}
-                                className="inline-flex items-center gap-1.5 rounded-lg border border-secondary-dark/60 bg-white px-2.5 py-1.5 text-xs font-medium text-slate-600 transition-colors hover:border-primary/40 hover:bg-secondary/40 hover:text-primary-dark"
-                              >
-                                <BadgeCheck className="h-3.5 w-3.5" strokeWidth={2} />
-                                <span>Revisar</span>
                               </Link>
                             </div>
                           </td>
@@ -213,7 +210,9 @@ export default function ListAtencionesFilteredView() {
             </>
           ) : (
             <div className="px-4 py-10 text-center">
-              <p className="text-sm font-medium text-slate-700">No hay atenciones con estado {status} en {periodLabel}.</p>
+              <p className="text-sm font-medium text-slate-700">
+                No hay atenciones con estado {status} en {periodLabel}.
+              </p>
             </div>
           )}
         </div>
