@@ -39,18 +39,10 @@ const navigationItems: NavigationItem[] = [
 export default function MenuAppLayout() {
   const location = useLocation();
   return (
-    <aside className="flex w-full max-w-sm flex-col border-r border-secondary-dark/60 bg-white px-4 py-6 sm:px-6 lg:w-2/12 lg:min-w-[280px]">
-      <div className="mb-10 flex items-center gap-3 px-2">
-        <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-primary to-primary-dark text-white shadow-[0_18px_40px_-24px_rgba(21,170,154,0.9)]">
-          <svg viewBox="0 0 48 48" fill="none" className="h-6 w-6" aria-hidden="true">
-            <path d="M7 19c4.4-6.2 14.6-6.6 19.2-.8 3.8 4.7 11.1 5 15.8.8" stroke="currentColor" strokeWidth="4.2" strokeLinecap="round" />
-            <path d="M7 30c4.4-6.2 14.6-6.6 19.2-.8 3.8 4.7 11.1 5 15.8.8" stroke="currentColor" strokeWidth="4.2" strokeLinecap="round" />
-          </svg>
-        </div>
-
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.28em] text-primary-dark/70">OnDent</p>
-          <h1 className="text-lg font-semibold text-slate-900">Panel clínico</h1>
+    <aside className="sticky top-0 flex h-screen w-full max-w-sm flex-col overflow-y-auto border-r border-secondary-dark/60 bg-white px-4 py-6 sm:px-6 lg:w-2/12 lg:min-w-[280px]">
+      <div className="mb-10 flex justify-center px-2">
+        <div className="flex w-full justify-center">
+          <img src="/logo.png" alt="OnDent" className="h-auto w-full max-w-[120px] object-contain" />
         </div>
       </div>
 

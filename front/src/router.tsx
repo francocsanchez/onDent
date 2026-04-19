@@ -13,11 +13,15 @@ import EditPacienteView from "./views/pacientes/EditPacienteView";
 import ListAtencionesView from "./views/atenciones/ListAtencionesView";
 import AtencionView from "./views/atenciones/AtencionView";
 import CreateAtencionView from "./views/atenciones/CreateAtencionView";
+import LoginView from "./views/auth/LoginView";
+import NotFound from "./views/NotFound";
 
 export default function Router() {
   return (
     <BrowserRouter>
       <Routes>
+        <Route path="/login" element={<LoginView />} />
+
         <Route element={<AppLayout />}>
           <Route path="/atenciones" element={<ListAtencionesView />} />
           <Route path="/atenciones/create" element={<CreateAtencionView />} />
@@ -37,6 +41,8 @@ export default function Router() {
           <Route path="/config/obras-sociales/create" element={<CreateObraSocialView />} />
           <Route path="/config/obras-sociales/:idObraSocial/editar" element={<EditObraSocialView />} />
         </Route>
+
+        <Route path="*" element={<NotFound />} />
       </Routes>
     </BrowserRouter>
   );
