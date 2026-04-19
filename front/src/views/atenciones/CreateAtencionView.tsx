@@ -1,10 +1,11 @@
 import { createAtencion, getCodigosByObraSocial, getPacienteByDNI } from "@/api/atencioneAPI";
+import { getPacienteByID } from "@/api/pacienteAPI";
 import type { Codigo, Paciente } from "@/types/index";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { CalendarDays, Search } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useFieldArray, useForm } from "react-hook-form";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
 
 type MockUser = {
@@ -73,9 +74,11 @@ const getTodayDate = () => new Date().toISOString().slice(0, 10);
 export default function CreateAtencionView() {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [foundPatient, setFoundPatient] = useState<Paciente | null>(null);
   const [availableCodes, setAvailableCodes] = useState<Codigo[]>([]);
   const [searchStatus, setSearchStatus] = useState<SearchStatus>("idle");
+  const patientIdFromQuery = searchParams.get("pacienteId")?.trim() ?? "";
 
   const initialValues: CreateAtencionFormValues = {
     fecha: getTodayDate(),
@@ -115,6 +118,14 @@ export default function CreateAtencionView() {
     setValue("coseguro", "");
   };
 
+  const handlePatientFound = (patient: Paciente) => {
+    setFoundPatient(patient);
+    setSearchStatus("found");
+    setValue("patientId", patient._id);
+    setValue("patientSearchDni", String(patient.dni));
+    searchCodesMutation.mutate(patient.obraSocial._id);
+  };
+
   const searchCodesMutation = useMutation({
     mutationFn: getCodigosByObraSocial,
     onSuccess: (codes) => {
@@ -133,10 +144,19 @@ export default function CreateAtencionView() {
   const searchPatientMutation = useMutation({
     mutationFn: getPacienteByDNI,
     onSuccess: (patient) => {
-      setFoundPatient(patient);
-      setSearchStatus("found");
-      setValue("patientId", patient._id);
-      searchCodesMutation.mutate(patient.obraSocial._id);
+      handlePatientFound(patient);
+    },
+    onError: () => {
+      setFoundPatient(null);
+      setSearchStatus("not-found");
+      resetAttentionDetails();
+    },
+  });
+
+  const searchPatientByIdMutation = useMutation({
+    mutationFn: getPacienteByID,
+    onSuccess: (patient) => {
+      handlePatientFound(patient);
     },
     onError: () => {
       setFoundPatient(null);
@@ -177,6 +197,19 @@ export default function CreateAtencionView() {
     setSearchStatus("idle");
     searchPatientMutation.mutate(normalizedDni);
   };
+
+  useEffect(() => {
+    if (!patientIdFromQuery) {
+      return;
+    }
+
+    if (foundPatient?._id === patientIdFromQuery) {
+      return;
+    }
+
+    setSearchStatus("idle");
+    searchPatientByIdMutation.mutate(patientIdFromQuery);
+  }, [patientIdFromQuery]);
 
   const onSubmit = (formData: CreateAtencionFormValues) => {
     if (!foundPatient) {
@@ -265,12 +298,16 @@ export default function CreateAtencionView() {
             <button
               type="button"
               onClick={() => performPatientSearch()}
-              disabled={searchPatientMutation.isPending || searchCodesMutation.isPending}
+              disabled={searchPatientMutation.isPending || searchPatientByIdMutation.isPending || searchCodesMutation.isPending}
               className="inline-flex h-[46px] w-[46px] items-center justify-center rounded-xl bg-primary text-white transition hover:bg-primary-dark disabled:cursor-not-allowed disabled:bg-slate-300"
               aria-label="Buscar paciente"
               title="Buscar paciente"
             >
-              <Search className={`h-4 w-4 ${searchPatientMutation.isPending || searchCodesMutation.isPending ? "animate-pulse" : ""}`} />
+              <Search
+                className={`h-4 w-4 ${
+                  searchPatientMutation.isPending || searchPatientByIdMutation.isPending || searchCodesMutation.isPending ? "animate-pulse" : ""
+                }`}
+              />
             </button>
           </div>
 

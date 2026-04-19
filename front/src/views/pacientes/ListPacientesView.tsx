@@ -80,7 +80,7 @@ export default function ListPacientesView() {
                       <td className="px-4 py-3">
                         <div className="flex justify-end gap-2">
                           <Link
-                            to={`${paciente._id}/atender`}
+                            to={`/atenciones/create?pacienteId=${paciente._id}`}
                             className="inline-flex items-center gap-1.5 rounded-lg border border-primary/40 bg-secondary/40 px-2.5 py-1.5 text-xs font-medium text-primary-dark transition-colors hover:bg-secondary/60"
                           >
                             <span>Atender</span>
