@@ -1,14 +1,19 @@
 import api from "@/libs/axios";
 import { isAxiosError } from "axios";
-import { PacientesTableSchema, type Paciente, type PacienteFormData } from "../types";
+import { pacientesListResponseSchema, type Paciente, type PacienteFormData } from "../types";
 
-export async function getPacientes() {
+export async function getPacientes(page = 1) {
   try {
-    const { data } = await api("/pacientes");
+    const { data } = await api("/pacientes", {
+      params: { page },
+    });
 
-    const response = PacientesTableSchema.safeParse(data.data);
+    const response = pacientesListResponseSchema.safeParse({
+      data: data.data,
+      pagination: data.pagination,
+    });
     if (!response.success) {
-      console.error("Error en la validación de getUsuarios:", response.error);
+      console.error("Error en la validación de getPacientes:", response.error);
       throw new Error("La estructura de los datos es inválida");
     }
 

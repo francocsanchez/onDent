@@ -1,7 +1,7 @@
 import api from "@/libs/axios";
 import { isAxiosError } from "axios";
 import { z } from "zod";
-import { AtencionesTableSchema, atencionSchema, codigoSchema, pacienteSchema, type Atencion, type Codigo, type Paciente } from "../types";
+import { atencionesListResponseSchema, atencionSchema, codigoSchema, pacienteSchema, type Atencion, type Codigo, type Paciente } from "../types";
 
 type AtencionStatus = "OK" | "Pendiente" | "Denegado" | "Diferido";
 
@@ -22,13 +22,18 @@ type CreateAtencionPayload = {
   coseguroOdonto?: number;
 };
 
-export async function getAtenciones() {
+export async function getAtenciones(page = 1) {
   try {
-    const { data } = await api("/atenciones");
+    const { data } = await api("/atenciones", {
+      params: { page },
+    });
 
-    const response = AtencionesTableSchema.safeParse(data.data);
+    const response = atencionesListResponseSchema.safeParse({
+      data: data.data,
+      pagination: data.pagination,
+    });
     if (!response.success) {
-      console.error("Error en la validación de getUsuarios:", response.error);
+      console.error("Error en la validación de getAtenciones:", response.error);
       throw new Error("La estructura de los datos es inválida");
     }
 

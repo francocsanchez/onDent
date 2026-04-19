@@ -5,10 +5,35 @@ import { logError } from "../utils/logError";
 export class AtencionController {
   static getAll = async (req: Request, res: Response) => {
     try {
-      const atenciones = await Atencion.find({}).populate("paciente").populate("usuario").populate("obraSocial").populate("codigos.codigo").lean();
+      const page = Math.max(Number(req.query.page) || 1, 1);
+      const limit = 50;
+      const skip = (page - 1) * limit;
+
+      const [atenciones, total] = await Promise.all([
+        Atencion.find({})
+          .populate("paciente")
+          .populate("usuario")
+          .populate("obraSocial")
+          .populate("codigos.codigo")
+          .sort({ fecha: -1 })
+          .skip(skip)
+          .limit(limit)
+          .lean(),
+        Atencion.countDocuments({}),
+      ]);
+
+      const totalPages = Math.ceil(total / limit);
 
       return res.status(200).json({
         data: atenciones,
+        pagination: {
+          total,
+          page,
+          limit,
+          totalPages,
+          hasNextPage: page < totalPages,
+          hasPrevPage: page > 1,
+        },
         message: "Listado de atenciones",
       });
     } catch (error) {

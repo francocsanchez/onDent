@@ -46,8 +46,24 @@ export const PacientesTableSchema = z.array(
   }),
 );
 
+export const pacientesPaginationSchema = z.object({
+  total: z.number(),
+  page: z.number(),
+  limit: z.number(),
+  totalPages: z.number(),
+  hasNextPage: z.boolean(),
+  hasPrevPage: z.boolean(),
+});
+
+export const pacientesListResponseSchema = z.object({
+  data: PacientesTableSchema,
+  pagination: pacientesPaginationSchema,
+});
+
 export type Paciente = z.infer<typeof pacienteSchema>;
 export type PacienteObraSocial = Paciente["obraSocial"];
+export type PacientesPagination = z.infer<typeof pacientesPaginationSchema>;
+export type PacientesListResponse = z.infer<typeof pacientesListResponseSchema>;
 export type PacienteFormData = {
   name: string;
   lastName: string;
@@ -104,7 +120,12 @@ export const atencionSchema = z.object({
 });
 
 export const AtencionesTableSchema = z.array(atencionSchema);
+export const atencionesListResponseSchema = z.object({
+  data: AtencionesTableSchema,
+  pagination: pacientesPaginationSchema,
+});
 
 export type Atencion = z.infer<typeof atencionSchema>;
 export type AtencionCodigo = z.infer<typeof atencionCodigoSchema>;
 export type Codigo = z.infer<typeof codigoSchema>;
+export type AtencionesListResponse = z.infer<typeof atencionesListResponseSchema>;

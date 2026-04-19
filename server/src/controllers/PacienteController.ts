@@ -5,10 +5,27 @@ import { logError } from "../utils/logError";
 export class PacienteController {
   static getAll = async (req: Request, res: Response) => {
     try {
-      const pacientes = await Paciente.find({}).populate("obraSocial").lean();
+      const page = Math.max(Number(req.query.page) || 1, 1);
+      const limit = 30;
+      const skip = (page - 1) * limit;
+
+      const [pacientes, total] = await Promise.all([
+        Paciente.find({}).populate("obraSocial").sort({ lastName: 1 }).skip(skip).limit(limit).lean(),
+        Paciente.countDocuments({}),
+      ]);
+
+      const totalPages = Math.ceil(total / limit);
 
       return res.status(200).json({
         data: pacientes,
+        pagination: {
+          total,
+          page,
+          limit,
+          totalPages,
+          hasNextPage: page < totalPages,
+          hasPrevPage: page > 1,
+        },
         message: "Listado de pacientes",
       });
     } catch (error) {
