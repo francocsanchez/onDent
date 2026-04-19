@@ -1,9 +1,10 @@
-import { getCodigosByObraSocial, getPacienteByDNI } from "@/api/atencioneAPI";
+import { createAtencion, getCodigosByObraSocial, getPacienteByDNI } from "@/api/atencioneAPI";
 import type { Codigo, Paciente } from "@/types/index";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { useFieldArray, useForm } from "react-hook-form";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 
 type MockUser = {
   _id: string;
@@ -49,9 +50,9 @@ type CreateAtencionFormValues = {
 type SearchStatus = "idle" | "found" | "not-found";
 
 const mockCurrentUser: MockUser = {
-  _id: "usr-001",
-  name: "Valentina",
-  lastName: "Gimenez",
+  _id: "69dc1f26ddefc14594024112",
+  name: "Agustin",
+  lastName: "Bobadilla",
 };
 
 const createEmptyCodeRow = (): AttentionCodeFormItem => ({
@@ -68,6 +69,8 @@ const disabledInputClassName = "w-full rounded-xl border border-secondary-dark/5
 const getTodayDate = () => new Date().toISOString().slice(0, 10);
 
 export default function CreateAtencionView() {
+  const queryClient = useQueryClient();
+  const navigate = useNavigate();
   const [foundPatient, setFoundPatient] = useState<Paciente | null>(null);
   const [availableCodes, setAvailableCodes] = useState<Codigo[]>([]);
   const [searchStatus, setSearchStatus] = useState<SearchStatus>("idle");
@@ -139,6 +142,18 @@ export default function CreateAtencionView() {
     },
   });
 
+  const createAtencionMutation = useMutation({
+    mutationFn: createAtencion,
+    onSuccess: (response: { message: string }) => {
+      toast.success(response.message);
+      queryClient.invalidateQueries({ queryKey: ["atenciones", "listar"] });
+      navigate("/atenciones");
+    },
+    onError: (error: Error) => {
+      toast.error(error.message);
+    },
+  });
+
   const performPatientSearch = (dniToSearch?: string) => {
     const normalizedDni = (dniToSearch ?? getValues("patientSearchDni")).trim();
 
@@ -182,7 +197,7 @@ export default function CreateAtencionView() {
       coseguroOdonto: 0,
     };
 
-    console.log("Nueva atencion odontologica", attentionPayload);
+    createAtencionMutation.mutate(attentionPayload);
   };
 
   return (
@@ -497,10 +512,10 @@ export default function CreateAtencionView() {
 
               <button
                 type="submit"
-                disabled={!canShowFormSections || fields.length === 0}
+                disabled={!canShowFormSections || fields.length === 0 || createAtencionMutation.isPending}
                 className="inline-flex items-center justify-center rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-primary-dark disabled:cursor-not-allowed disabled:bg-slate-300"
               >
-                Guardar atencion
+                {createAtencionMutation.isPending ? "Guardando..." : "Guardar atencion"}
               </button>
             </div>
           </div>

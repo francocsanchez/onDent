@@ -3,6 +3,25 @@ import { isAxiosError } from "axios";
 import { z } from "zod";
 import { AtencionesTableSchema, atencionSchema, codigoSchema, pacienteSchema, type Atencion, type Codigo, type Paciente } from "../types";
 
+type AtencionStatus = "OK" | "Pendiente" | "Denegado" | "Diferido";
+
+type CreateAtencionPayload = {
+  fecha: string;
+  paciente: string;
+  usuario: string;
+  obraSocial: string;
+  codigos: {
+    codigo: string;
+    pieza: string;
+    valor: number;
+    status: AtencionStatus;
+    observaciones?: string;
+  }[];
+  observaciones?: string;
+  coseguro?: number;
+  coseguroOdonto?: number;
+};
+
 export async function getAtenciones() {
   try {
     const { data } = await api("/atenciones");
@@ -80,5 +99,18 @@ export async function getCodigosByObraSocial(idObraSocial: string) {
     }
 
     throw new Error("Error inesperado al buscar los códigos");
+  }
+}
+
+export async function createAtencion(formData: CreateAtencionPayload) {
+  try {
+    const { data } = await api.post("/atenciones", formData);
+    return data;
+  } catch (error) {
+    if (isAxiosError(error) && error.response) {
+      throw new Error(error.response.data.error || error.response.data.message || "Error al crear la atención");
+    }
+
+    throw new Error("Error inesperado al crear la atención");
   }
 }
