@@ -9,44 +9,42 @@ const router = Router();
 router.use(authenticate);
 
 /**
- *
- * @route GET /
- * @desc Listar todos los pacientes.
- *
+ * @method GET
+ * @route /
+ * @params Ninguno.
+ * @description Lista todos los pacientes.
  */
 router.get("/", PacienteController.getAll);
 
 /**
- *
- * @route GET /
- * @desc Listar todos los pacientes.
- *
+ * @method GET
+ * @route /:dni/busqueda
+ * @params dni: DNI del paciente.
+ * @description Busca un paciente por su DNI.
  */
 router.get("/:dni/busqueda", PacienteController.getByDNI);
 
 /**
- *
- * @route POST /
- * @desc Crear un nuevo paciente.
- *
+ * @method POST
+ * @route /
+ * @params Ninguno.
+ * @description Crea un nuevo paciente.
  */
 router.post("/", createValidationPaciente, handleImputErrors, PacienteController.create);
 
 /**
- *
- * @route GET /:idPaciente
- * @params idPaciente
- * @desc Obtener un paciente por su ID.
- *
+ * @method GET
+ * @route /:idPaciente
+ * @params idPaciente: ID del paciente.
+ * @description Obtiene un paciente por su ID.
  */
 router.get("/:idPaciente", idValidationPaciente, handleImputErrors, PacienteController.getByID);
 
 /**
- *
- * @route PUT /:idPaciente
- * @params idPaciente
- * @desc Actualizar un paciente por su ID.
- *
+ * @method PUT
+ * @route /:idPaciente
+ * @params idPaciente: ID del paciente.
+ * @description Actualiza un paciente por su ID.
  */
 router.put("/:idPaciente", updateValidationPaciente, handleImputErrors, PacienteController.updateByID);
 

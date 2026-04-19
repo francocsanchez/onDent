@@ -7,69 +7,68 @@ import { authenticate } from "../middleware/authenticate";
 const router = Router();
 
 /**
- *
- * @route POST /login
- * @desc Login usuario.
- *
+ * @method POST
+ * @route /login
+ * @params Ninguno.
+ * @description Inicia sesión de usuario y devuelve el token de autenticación.
  */
 router.post("/login", UsuarioController.login);
 
 router.use(authenticate);
 
 /**
- *
- * @route GET /me
- * @desc Obtener usuario autenticado.
- *
+ * @method GET
+ * @route /me
+ * @params Ninguno.
+ * @description Obtiene los datos del usuario autenticado.
  */
 router.get("/me", UsuarioController.getMe);
 
 /**
- *
- * @route GET /
- * @desc Listar todos los usuarios
- *
+ * @method GET
+ * @route /
+ * @params Ninguno.
+ * @description Lista todos los usuarios.
  */
 router.get("/", UsuarioController.getAll);
 
 /**
- *
- * @route GET /
- * @desc Listar todos los usuarios
- *
+ * @method PATCH
+ * @route /me/password
+ * @params Ninguno.
+ * @description Actualiza la contraseña del usuario autenticado.
  */
 router.patch("/me/password", UsuarioController.updateMyPassword);
 
 /**
- *
- * @route POST /
- * @desc Crear un usuario
- *
+ * @method POST
+ * @route /
+ * @params Ninguno.
+ * @description Crea un nuevo usuario.
  */
 router.post("/", createValidationUsuario, handleImputErrors, UsuarioController.create);
 
 /**
- *
- * @route GET /:idUsuario
- * @params idUsuario
- * @desc Obtener un usuario por su ID.
- *
+ * @method GET
+ * @route /:idUsuario
+ * @params idUsuario: ID del usuario.
+ * @description Obtiene un usuario por su ID.
  */
 router.get("/:idUsuario", idValidationUsuario, handleImputErrors, UsuarioController.getByID);
 
 /**
- *
- * @route PUT /:idUsuario
- * @desc Actualizar un usuario por ID
- *
+ * @method PUT
+ * @route /:idUsuario
+ * @params idUsuario: ID del usuario.
+ * @description Actualiza un usuario por su ID.
  */
 router.put("/:idUsuario", updateValidationUsuario, handleImputErrors, UsuarioController.updateByID);
 
 /**
- *
- * @route PATCH /:idUsuario/change-status
- * @desc Cambiar estado de un usuario por ID
- *
+ * @method PATCH
+ * @route /:idUsuario/change-status
+ * @params idUsuario: ID del usuario.
+ * @description Cambia el estado de un usuario por su ID.
  */
 router.patch("/:idUsuario/change-status", idValidationUsuario, handleImputErrors, UsuarioController.changeStatus);
 

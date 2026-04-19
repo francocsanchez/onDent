@@ -11,42 +11,42 @@ const router = Router();
 router.use(authenticate);
 
 /**
- *
- * @route GET /
- * @desc Listar todas las atenciones
- *
+ * @method GET
+ * @route /
+ * @params Ninguno.
+ * @description Lista todas las atenciones.
  */
 router.get("/", AtencionController.getAll);
 
 /**
- *
- * @route GET /
- * @desc Listar todas las atenciones
- *
+ * @method GET
+ * @route /:idAtencion
+ * @params idAtencion: ID de la atención.
+ * @description Obtiene una atención por su ID.
  */
 router.get("/:idAtencion", AtencionController.getAtencion);
 
 /**
- *
- * @route POST /
- * @desc Crear una atención
- *
+ * @method POST
+ * @route /
+ * @params Ninguno.
+ * @description Crea una nueva atención.
  */
 router.post("/", createValidationAtencion, handleImputErrors, AtencionController.create);
 
 /**
- *
- * @route PUT /:idAtencion
- * @desc Editar una atención por ID
- *
+ * @method PUT
+ * @route /:idAtencion
+ * @params idAtencion: ID de la atención.
+ * @description Actualiza una atención por su ID.
  */
 router.put("/:idAtencion", updateValidationAtencion, handleImputErrors, AtencionController.updateByID);
 
 /**
- *
- * @route PATCH /:idAtencion/codigos/:codigoId/change-status
- * @desc Cambiar estado de un código dentro de una atención
- *
+ * @method PATCH
+ * @route /:idAtencion/codigos/:codigoId/change-status
+ * @params idAtencion: ID de la atención. codigoId: ID del código dentro de la atención.
+ * @description Cambia el estado de un código dentro de una atención.
  */
 router.patch(
   "/:idAtencion/codigos/:codigoId/change-status",
@@ -56,18 +56,18 @@ router.patch(
 );
 
 /**
- *
- * @route GET /usuario/:idUsuario
- * @desc Listar atenciones por usuario
- *
+ * @method GET
+ * @route /usuario/:idUsuario
+ * @params idUsuario: ID del usuario.
+ * @description Lista las atenciones asociadas a un usuario.
  */
 router.get("/usuario/:idUsuario", idValidationUsuario, handleImputErrors, AtencionController.getByUsuario);
 
 /**
- *
- * @route GET /paciente/:idPaciente
- * @desc Listar atenciones por paciente
- *
+ * @method GET
+ * @route /paciente/:idPaciente
+ * @params idPaciente: ID del paciente.
+ * @description Lista las atenciones asociadas a un paciente.
  */
 router.get("/paciente/:idPaciente", idValidationPaciente, handleImputErrors, AtencionController.getByPaciente);
 
