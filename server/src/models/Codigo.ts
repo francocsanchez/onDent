@@ -16,7 +16,10 @@ const CodigoSchema: Schema = new Schema<ICodigo>(
   },
   {
     timestamps: true,
-  }
+  },
 );
+
+CodigoSchema.index({ obraSocial: 1 });
+CodigoSchema.index({ code: 1, obraSocial: 1 }, { unique: true });
 
 export default model<ICodigo>("codigos", CodigoSchema);

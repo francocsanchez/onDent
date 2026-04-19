@@ -10,12 +10,19 @@ import EditUsuarioView from "./views/usuarios/EditUsuarioView";
 import ListPacientesView from "./views/pacientes/ListPacientesView";
 import CreatePacienteView from "./views/pacientes/CreatePacienteView";
 import EditPacienteView from "./views/pacientes/EditPacienteView";
+import ListAtencionesView from "./views/atenciones/ListAtencionesView";
+import AtencionView from "./views/atenciones/AtencionView";
+import CreateAtencionView from "./views/atenciones/CreateAtencionView";
 
 export default function Router() {
   return (
     <BrowserRouter>
       <Routes>
         <Route element={<AppLayout />}>
+          <Route path="/atenciones" element={<ListAtencionesView />} />
+          <Route path="/atenciones/create" element={<CreateAtencionView />} />
+          <Route path="/atenciones/:idAtencion" element={<AtencionView />} />
+
           <Route path="/pacientes" element={<ListPacientesView />} />
           <Route path="/pacientes/create" element={<CreatePacienteView />} />
           <Route path="/pacientes/:idPaciente/editar" element={<EditPacienteView />} />

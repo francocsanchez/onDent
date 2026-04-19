@@ -36,3 +36,7 @@ export const createValidationCodigo = [
     .escape(),
   body("obraSocial").notEmpty().withMessage("La obra social es obligatoria").isMongoId().withMessage("El ID de la obra social no es válido"),
 ];
+
+export const idObraSocial = [
+  param("idObraSocial").notEmpty().withMessage("La obra social es obligatoria").isMongoId().withMessage("El ID de la obra social no es válido"),
+];

@@ -1,6 +1,5 @@
 import type { UsuarioFormData } from "@/types/index";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import React from "react";
 import { useForm } from "react-hook-form";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { toast } from "sonner";

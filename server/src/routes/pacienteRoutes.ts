@@ -15,6 +15,14 @@ router.get("/", PacienteController.getAll);
 
 /**
  *
+ * @route GET /
+ * @desc Listar todos los pacientes.
+ *
+ */
+router.get("/:dni/busqueda", PacienteController.getByDNI);
+
+/**
+ *
  * @route POST /
  * @desc Crear un nuevo paciente.
  *

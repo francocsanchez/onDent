@@ -125,4 +125,31 @@ export class PacienteController {
       });
     }
   };
+
+  static getByDNI = async (req: Request, res: Response) => {
+    const { dni } = req.params;
+
+    try {
+      const paciente = await Paciente.findOne({ dni }).populate("obraSocial").lean();
+
+      if (!paciente) {
+        return res.status(404).json({
+          data: null,
+          message: "Paciente no encontrado",
+        });
+      }
+
+      return res.status(200).json({
+        data: paciente,
+        message: "Paciente listado",
+      });
+    } catch (error) {
+      logError("PacienteController.getByDNI");
+      console.error(error);
+      return res.status(500).json({
+        data: null,
+        message: "Error del servidor",
+      });
+    }
+  };
 }

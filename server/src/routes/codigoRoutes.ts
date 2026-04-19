@@ -2,7 +2,7 @@ import { Router } from "express";
 
 import { handleImputErrors } from "../middleware/validation";
 import { CodigoController } from "../controllers/CodigoController";
-import { createValidationCodigo, idValidationCodigo, updateValidationCodigo } from "../validation/codigos";
+import { createValidationCodigo, idObraSocial, idValidationCodigo, updateValidationCodigo } from "../validation/codigos";
 
 const router = Router();
 
@@ -45,5 +45,13 @@ router.put("/:idCodigo", updateValidationCodigo, handleImputErrors, CodigoContro
  *
  */
 router.patch("/:idCodigo/change-status", idValidationCodigo, handleImputErrors, CodigoController.changeStatus);
+
+/**
+ *
+ * @route GET /
+ * @desc Listar todos los códigos
+ *
+ */
+router.get("/:idObraSocial/obra-social", idObraSocial, CodigoController.getByObraSocial);
 
 export default router;

@@ -1,0 +1,50 @@
+meta {
+  name: create
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{Host}}:4001/api/atenciones
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "fecha": "2026-04-14",
+    "paciente": "69d19ff994d2ba5e48bbca13",
+    "usuario": "69dc1f26ddefc14594024112",
+    "obraSocial": "69d186eec52dd27356e644de",
+    "codigos": [
+      {
+        "codigo": "69dc4c00499870ea05f0b09e",
+        "pieza": "11",
+        "valor": 1500,
+        "status": "OK",
+        "observaciones": "Sin observaciones"
+      },
+      {
+        "codigo": "69dc4c00499870ea05f0b09f",
+        "pieza": "21",
+        "valor": 2000,
+        "status": "Pendiente"
+      },
+      {
+        "codigo": "69dc4c00499870ea05f0b0a0",
+        "pieza": "36",
+        "valor": 3000,
+        "status": "Denegado",
+        "observaciones": "Falta autorización"
+      }
+    ],
+    "observaciones": "Atención general del paciente",
+    "coseguro": 500,
+    "coseguroOdonto": 300
+  }
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

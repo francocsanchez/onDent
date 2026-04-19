@@ -42,7 +42,7 @@ const AtencionSchema: Schema = new Schema<IAtencion>(
     fecha: { type: String, required: true },
     paciente: { type: Schema.Types.ObjectId, ref: "pacientes", required: true },
     usuario: { type: Schema.Types.ObjectId, ref: "usuarios", required: true },
-    obraSocial: { type: Schema.Types.ObjectId, ref: "obrasSociales", required: true },
+    obraSocial: { type: Schema.Types.ObjectId, ref: "obras_sociales", required: true },
     codigos: { type: [AtencionCodigoSchema], required: true, default: [] },
     observaciones: { type: String },
     coseguro: { type: Number },

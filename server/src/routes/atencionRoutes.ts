@@ -17,6 +17,14 @@ router.get("/", AtencionController.getAll);
 
 /**
  *
+ * @route GET /
+ * @desc Listar todas las atenciones
+ *
+ */
+router.get("/:idAtencion", AtencionController.getAtencion);
+
+/**
+ *
  * @route POST /
  * @desc Crear una atención
  *
@@ -41,7 +49,7 @@ router.patch(
   "/:idAtencion/codigos/:codigoId/change-status",
   changeStatusValidationAtencion,
   handleImputErrors,
-  AtencionController.changeCodigoStatus
+  AtencionController.changeCodigoStatus,
 );
 
 /**

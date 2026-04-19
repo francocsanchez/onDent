@@ -1,0 +1,16 @@
+meta {
+  name: getByDNI
+  type: http
+  seq: 5
+}
+
+get {
+  url: {{Host}}:4001/api/pacientes/69d19ff994d2ba5e48bbca13
+  body: none
+  auth: inherit
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

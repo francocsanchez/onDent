@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import Codigo from "../models/Codigo";
 import { logError } from "../utils/logError";
+import mongoose from "mongoose";
 
 export class CodigoController {
   static create = async (req: Request, res: Response) => {
@@ -19,10 +20,12 @@ export class CodigoController {
         });
       }
 
+      const obraSocialObjectId = new mongoose.Types.ObjectId(obraSocial);
+
       const newCodigo = new Codigo({
         code,
         description: description.toLowerCase(),
-        obraSocial,
+        obraSocial: obraSocialObjectId,
       });
 
       await newCodigo.save();
@@ -111,7 +114,7 @@ export class CodigoController {
           description: description.toLowerCase(),
           obraSocial,
         },
-        { new: true }
+        { new: true },
       );
 
       if (!updatedCodigo) {
@@ -157,6 +160,33 @@ export class CodigoController {
       });
     } catch (error) {
       logError("CodigoController.changeStatus");
+      console.error(error);
+      return res.status(500).json({
+        data: null,
+        message: "Error del servidor",
+      });
+    }
+  };
+
+  static getByObraSocial = async (req: Request, res: Response) => {
+    const { idObraSocial } = req.params;
+
+    try {
+      const codigos = await Codigo.find({ obraSocial: idObraSocial }).lean();
+
+      if (!codigos || codigos.length === 0) {
+        return res.status(404).json({
+          data: null,
+          message: "Códigos no encontrados",
+        });
+      }
+
+      return res.status(200).json({
+        data: codigos,
+        message: "Códigos obtenidos",
+      });
+    } catch (error) {
+      logError("CodigoController.getByObraSocial");
       console.error(error);
       return res.status(500).json({
         data: null,

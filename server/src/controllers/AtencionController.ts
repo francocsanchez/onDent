@@ -5,12 +5,7 @@ import { logError } from "../utils/logError";
 export class AtencionController {
   static getAll = async (req: Request, res: Response) => {
     try {
-      const atenciones = await Atencion.find({})
-        .populate("paciente")
-        .populate("usuario")
-        .populate("obraSocial")
-        .populate("codigos.codigo")
-        .lean();
+      const atenciones = await Atencion.find({}).populate("paciente").populate("usuario").populate("obraSocial").populate("codigos.codigo").lean();
 
       return res.status(200).json({
         data: atenciones,
@@ -27,16 +22,7 @@ export class AtencionController {
   };
 
   static create = async (req: Request, res: Response) => {
-    const {
-      fecha,
-      paciente,
-      usuario,
-      obraSocial,
-      codigos,
-      observaciones,
-      coseguro,
-      coseguroOdonto,
-    } = req.body;
+    const { fecha, paciente, usuario, obraSocial, codigos, observaciones, coseguro, coseguroOdonto } = req.body;
 
     try {
       const newAtencion = new Atencion({
@@ -68,16 +54,7 @@ export class AtencionController {
 
   static updateByID = async (req: Request, res: Response) => {
     const { idAtencion } = req.params;
-    const {
-      fecha,
-      paciente,
-      usuario,
-      obraSocial,
-      codigos,
-      observaciones,
-      coseguro,
-      coseguroOdonto,
-    } = req.body;
+    const { fecha, paciente, usuario, obraSocial, codigos, observaciones, coseguro, coseguroOdonto } = req.body;
 
     try {
       const updatedAtencion = await Atencion.findByIdAndUpdate(
@@ -92,7 +69,7 @@ export class AtencionController {
           coseguro,
           coseguroOdonto,
         },
-        { new: true }
+        { new: true },
       )
         .populate("paciente")
         .populate("usuario")
@@ -134,9 +111,7 @@ export class AtencionController {
         });
       }
 
-      const codigoAtencion = atencion.codigos.find(
-        (item) => item.codigo.toString() === codigoId
-      );
+      const codigoAtencion = atencion.codigos.find((item) => item.codigo.toString() === codigoId);
 
       if (!codigoAtencion) {
         return res.status(404).json({
@@ -208,6 +183,30 @@ export class AtencionController {
       });
     } catch (error) {
       logError("AtencionController.getByPaciente");
+      console.error(error);
+      return res.status(500).json({
+        data: null,
+        message: "Error del servidor",
+      });
+    }
+  };
+
+  static getAtencion = async (req: Request, res: Response) => {
+    const { idAtencion } = req.params;
+
+    try {
+      const atencion = await Atencion.findById(idAtencion)
+        .populate("paciente")
+        .populate("usuario")
+        .populate("obraSocial")
+        .populate("codigos.codigo")
+        .lean();
+
+      return res.status(200).json({
+        data: atencion,
+      });
+    } catch (error) {
+      logError("AtencionController.getAtencion");
       console.error(error);
       return res.status(500).json({
         data: null,

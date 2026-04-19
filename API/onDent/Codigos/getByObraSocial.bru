@@ -1,0 +1,16 @@
+meta {
+  name: getByObraSocial
+  type: http
+  seq: 5
+}
+
+get {
+  url: {{Host}}:4001/api/codigos/69d186eec52dd27356e644de/obra-social
+  body: none
+  auth: inherit
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

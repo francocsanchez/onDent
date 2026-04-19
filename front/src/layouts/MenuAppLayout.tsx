@@ -20,8 +20,8 @@ const navigationItems: NavigationItem[] = [
     icon: Users,
   },
   {
-    label: "Tratamientos",
-    href: "/treatments",
+    label: "Atencionces",
+    href: "/atenciones",
     icon: Stethoscope,
   },
   {
