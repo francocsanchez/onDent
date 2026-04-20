@@ -2,9 +2,10 @@ import { getAtencionByID } from "@/api/atencioneAPI";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft, CircleDollarSign, Pencil, Shield, UserRound } from "lucide-react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 
 export default function AtencionView() {
+  const navigate = useNavigate();
   const params = useParams();
   const idAtencion = params.idAtencion!;
 
@@ -77,13 +78,14 @@ export default function AtencionView() {
             <span>Editar</span>
           </Link>
 
-          <Link
-            to="/atenciones"
+          <button
+            type="button"
+            onClick={() => navigate(-1)}
             className="inline-flex items-center justify-center gap-2 rounded-2xl border border-secondary-dark/60 bg-white px-4 py-3 text-sm font-semibold text-slate-700 transition-colors hover:border-primary/40 hover:bg-secondary/40 hover:text-primary-dark"
           >
             <ArrowLeft className="h-4 w-4" strokeWidth={2.2} />
             <span>Volver</span>
-          </Link>
+          </button>
         </div>
       </div>
 

@@ -8,7 +8,7 @@ export default function AppLayout() {
         <MenuAppLayout />
 
         <main className="min-w-0 flex-1 bg-white lg:w-10/12">
-          <div className="flex min-h-full flex-col   bg-white p-4 shadow-[0_30px_80px_-60px_rgba(14,124,114,0.45)] sm:p-6 lg:p-8">
+          <div className="flex min-h-full flex-col bg-white p-4 sm:p-6 lg:p-8">
             <Outlet />
           </div>
         </main>

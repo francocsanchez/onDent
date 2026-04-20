@@ -22,6 +22,9 @@ import RoleProtectedRoute from "./layouts/RoleProtectedRoute";
 import NoAutorizado from "./views/NoAutorizado";
 import MiPerfilView from "./views/auth/MiPerfilView";
 import DashBoardView from "./views/dashboard/DashBoardView";
+import ReportesView from "./views/reportes/ReportesView";
+import ReportesAtencionesByEstadoView from "./views/reportes/ReportesAtencionesByEstadoView";
+import AuditarAtencionView from "./views/reportes/AuditarAtencionView";
 
 export default function Router() {
   return (
@@ -44,7 +47,12 @@ export default function Router() {
             <Route path="/pacientes/create" element={<CreatePacienteView />} />
             <Route path="/pacientes/:idPaciente/editar" element={<EditPacienteView />} />
 
-            <Route element={<RoleProtectedRoute allowedRoles={["superadmin"]} />}>
+            <Route element={<RoleProtectedRoute allowedRoles={["admin", "superadmin"]} />}>
+              <Route path="/reports" element={<ReportesView />} />
+              <Route path="/reports/atenciones/:estado/:idUsuario" element={<ReportesAtencionesByEstadoView />} />
+              <Route path="/reports/atenciones/:estado/:idUsuario/:idAtencion/auditar" element={<AuditarAtencionView />} />
+
+              <Route element={<RoleProtectedRoute allowedRoles={["superadmin"]} />}>
               <Route path="/config" element={<MenuConfigView />} />
               <Route path="/config/usuarios" element={<ListUsuariosView />} />
               <Route path="/config/usuarios/create" element={<CreateUsuarioView />} />
@@ -53,6 +61,7 @@ export default function Router() {
               <Route path="/config/obras-sociales" element={<ListObrasSocialesView />} />
               <Route path="/config/obras-sociales/create" element={<CreateObraSocialView />} />
               <Route path="/config/obras-sociales/:idObraSocial/editar" element={<EditObraSocialView />} />
+              </Route>
             </Route>
           </Route>
         </Route>

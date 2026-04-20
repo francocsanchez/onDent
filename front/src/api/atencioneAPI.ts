@@ -2,6 +2,7 @@ import api from "@/libs/axios";
 import { isAxiosError } from "axios";
 import { z } from "zod";
 import {
+  AtencionesTableSchema,
   atencionesDashSchema,
   atencionesListResponseSchema,
   atencionSchema,
@@ -170,6 +171,26 @@ export async function getResumenAtenciones() {
     }
 
     throw new Error("Error inesperado al obtener el resumen de atenciones");
+  }
+}
+
+export async function getAtencionesByUsuario(idUsuario: string) {
+  try {
+    const { data } = await api.get(`/atenciones/usuario/${idUsuario}`);
+
+    const response = AtencionesTableSchema.safeParse(data.data);
+    if (!response.success) {
+      console.error("Error en la validación de getAtencionesByUsuario:", response.error);
+      throw new Error("La estructura de los datos es inválida");
+    }
+
+    return response.data;
+  } catch (error) {
+    if (isAxiosError(error) && error.response) {
+      throw new Error(error.response.data.error || error.response.data.message || "Error al obtener las atenciones del usuario");
+    }
+
+    throw new Error("Error inesperado al obtener las atenciones del usuario");
   }
 }
 
