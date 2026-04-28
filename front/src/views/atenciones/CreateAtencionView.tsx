@@ -61,6 +61,15 @@ const disabledInputClassName = "w-full rounded-xl border border-secondary-dark/5
 
 const getTodayDate = () => new Date().toISOString().slice(0, 10);
 
+const initialValues: CreateAtencionFormValues = {
+  fecha: getTodayDate(),
+  patientSearchDni: "",
+  patientId: "",
+  codes: [],
+  generalObservation: "",
+  coseguro: "",
+};
+
 export default function CreateAtencionView() {
   const { user, isLoading, isAuthenticated } = useAuth();
 
@@ -71,23 +80,6 @@ export default function CreateAtencionView() {
   const [availableCodes, setAvailableCodes] = useState<Codigo[]>([]);
   const [searchStatus, setSearchStatus] = useState<SearchStatus>("idle");
   const patientIdFromQuery = searchParams.get("pacienteId")?.trim() ?? "";
-
-  if (isLoading) {
-    return <LoadingSpinner label="Cargando usuario..." />;
-  }
-
-  if (!isAuthenticated || !user) {
-    return <Navigate to="/login" replace />;
-  }
-
-  const initialValues: CreateAtencionFormValues = {
-    fecha: getTodayDate(),
-    patientSearchDni: "",
-    patientId: "",
-    codes: [],
-    generalObservation: "",
-    coseguro: "",
-  };
 
   const {
     register,
@@ -209,10 +201,10 @@ export default function CreateAtencionView() {
 
     setSearchStatus("idle");
     searchPatientByIdMutation.mutate(patientIdFromQuery);
-  }, [patientIdFromQuery]);
+  }, [patientIdFromQuery, foundPatient?._id, searchPatientByIdMutation]);
 
   const onSubmit = (formData: CreateAtencionFormValues) => {
-    if (!foundPatient) {
+    if (!foundPatient || !user) {
       return;
     }
 
@@ -235,6 +227,14 @@ export default function CreateAtencionView() {
 
     createAtencionMutation.mutate(attentionPayload);
   };
+
+  if (isLoading) {
+    return <LoadingSpinner label="Cargando usuario..." />;
+  }
+
+  if (!isAuthenticated || !user) {
+    return <Navigate to="/login" replace />;
+  }
 
   return (
     <>

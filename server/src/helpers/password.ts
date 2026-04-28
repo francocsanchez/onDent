@@ -1,14 +1,16 @@
+import { randomInt } from "node:crypto";
+
 const UPPERCASE = "ABCDEFGHJKLMNPQRSTUVWXYZ";
 const LOWERCASE = "abcdefghijkmnopqrstuvwxyz";
 const NUMBERS = "23456789";
 
 function pickRandomChar(charset: string) {
-  return charset[Math.floor(Math.random() * charset.length)];
+  return charset[randomInt(0, charset.length)];
 }
 
 function shuffle(values: string[]) {
   for (let index = values.length - 1; index > 0; index -= 1) {
-    const randomIndex = Math.floor(Math.random() * (index + 1));
+    const randomIndex = randomInt(0, index + 1);
     [values[index], values[randomIndex]] = [values[randomIndex], values[index]];
   }
 

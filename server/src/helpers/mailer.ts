@@ -70,15 +70,20 @@ function buildPasswordRecoveryTemplate({ userName, temporaryPassword }: Password
   `;
 }
 
-export async function sendPasswordRecoveryEmail(to: string, params: PasswordRecoveryTemplateParams) {
+let transporter: nodemailer.Transporter | null = null;
+
+function getTransporter() {
+  if (transporter) {
+    return transporter;
+  }
+
   const smtpHost = getRequiredEnv("SMTP_HOST");
   const smtpPort = Number(getRequiredEnv("SMTP_PORT"));
   const smtpUser = getRequiredEnv("SMTP_USER");
   const smtpPass = getRequiredEnv("SMTP_PASS");
-  const smtpFrom = getRequiredEnv("SMTP_FROM");
   const smtpSecure = process.env.SMTP_SECURE === "true";
 
-  const transporter = nodemailer.createTransport({
+  transporter = nodemailer.createTransport({
     host: smtpHost,
     port: smtpPort,
     secure: smtpSecure,
@@ -88,7 +93,13 @@ export async function sendPasswordRecoveryEmail(to: string, params: PasswordReco
     },
   });
 
-  await transporter.sendMail({
+  return transporter;
+}
+
+export async function sendPasswordRecoveryEmail(to: string, params: PasswordRecoveryTemplateParams) {
+  const smtpFrom = getRequiredEnv("SMTP_FROM");
+
+  await getTransporter().sendMail({
     from: smtpFrom,
     to,
     subject: "OnDent | Nueva contraseña temporal",

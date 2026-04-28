@@ -5,6 +5,10 @@ import { Pencil, Plus, ShieldCheck, ShieldOff } from "lucide-react";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
 
+type MutationResponse = {
+  message?: string;
+};
+
 export default function ListUsuariosView() {
   const queryClient = useQueryClient();
 
@@ -19,11 +23,11 @@ export default function ListUsuariosView() {
 
   const { mutate: changeStatus } = useMutation({
     mutationFn: (id: string) => changeStatusUsuario(id),
-    onError: (error: any) => {
+    onError: (error: Error) => {
       toast.error(error.message || "Error al cambiar el estado del usuario");
     },
-    onSuccess: (response: any) => {
-      toast.success(response.message || "Estado del usuario actualizado");
+    onSuccess: (response: MutationResponse | undefined) => {
+      toast.success(response?.message || "Estado del usuario actualizado");
       queryClient.invalidateQueries({ queryKey: ["usuarios", "listar"] });
     },
   });

@@ -5,6 +5,10 @@ import { Pencil, Plus, ShieldCheck, ShieldOff } from "lucide-react";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
 
+type MutationResponse = {
+  message?: string;
+};
+
 export default function ListObrasSocialesView() {
   const queryClient = useQueryClient();
 
@@ -19,11 +23,11 @@ export default function ListObrasSocialesView() {
 
   const { mutate: changeStatus } = useMutation({
     mutationFn: (id: string) => changeStatusObraSocial(id),
-    onError: (error: any) => {
+    onError: (error: Error) => {
       toast.error(error.message || "Error al cambiar el estado de la obra social");
     },
-    onSuccess: (response: any) => {
-      toast.success(response.message || "Estado de la obra social actualizada");
+    onSuccess: (response: MutationResponse | undefined) => {
+      toast.success(response?.message || "Estado de la obra social actualizada");
       queryClient.invalidateQueries({ queryKey: ["obras_sociales", "listar"] });
     },
   });
