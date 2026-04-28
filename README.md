@@ -1,125 +1,93 @@
-# x0y0 – API Base (Express + TypeScript + Mongoose)
+# OnDent
 
-API RESTful construida con **Express**, **TypeScript** y **Mongoose (MongoDB)**.  
-Este proyecto es la base de una aplicación escalable, lista para extender con más modelos, controladores y middlewares.
+Aplicación full stack con frontend en React/Vite, backend en Express/TypeScript y base de datos MongoDB.
 
----
+## Estructura
 
-## 🚀 Características
-
-- Backend con **Express**.
-- Tipado completo con **TypeScript**.
-- Conexión a **MongoDB** usando Mongoose.
-- Arquitectura basada en controladores.
-- Middleware para logging (morgan) y parsing de JSON.
-- Scripts separados para desarrollo y producción.
-
----
-
-## 📂 Estructura del proyecto
-
-```
-x0y0_NoSql/
-├── server/
-│   ├── src/
-│   │   ├── index.ts          # Entry point (conexión a DB + server.listen)
-│   │   ├── server.ts         # Configuración de Express
-│   │   ├── models/           # Modelos de Mongoose (ej: Usuario.ts)
-│   │   ├── controllers/      # Controladores de rutas (ej: UsuarioController.ts)
-│   │   └── routes/           # Definición de endpoints
-│   ├── package.json
-│   ├── tsconfig.json
-│   └── ...
-└── cliente/                  # (frontend en React, aún no implementado)
+```text
+.
+├── front/    # SPA React + Vite
+├── server/   # API Express + TypeScript
+└── compose.yaml
 ```
 
----
+## Docker
 
-## 🛠️ Requisitos previos
+El proyecto quedó dockerizado completo con tres servicios:
 
-- [Node.js](https://nodejs.org/) (v20 o superior recomendado)
-- [MongoDB](https://www.mongodb.com/) en local o en la nube (ej. Atlas)
-- npm (incluido con Node)
+- `front`: compila la SPA y la sirve con Nginx.
+- `server`: compila el backend TypeScript y lo ejecuta con Node.
+- `mongo`: levanta MongoDB con volumen persistente.
 
----
+El frontend usa proxy de Nginx hacia `/api`, así que no depende de una URL interna del contenedor para hablar con el backend.
 
-## ⚙️ Instalación
+## Levantar el stack
 
-1. Clonar el repositorio:
+1. Crear el archivo de entorno a partir del ejemplo:
 
-   ```bash
-   git clone https://github.com/francocsanchez/x0y0_noSql.git
-   cd x0y0_noSql/server
-   ```
+```bash
+cp .env.example .env
+```
 
-2. Instalar dependencias:
+2. Construir y levantar todo:
 
-   ```bash
-   npm install
-   ```
+```bash
+docker compose up --build
+```
 
-3. Crear un archivo `.env` en `server/` con tus variables:
-   ```env
-   PORT=4000
-   MONGO_URI=mongodb://localhost:27017/x0y0_db
-   NODE_ENV=development
-   ```
+3. Acceder a la app:
 
----
+- Frontend: `http://localhost:8080`
+- Backend: `http://localhost:4000`
+- Healthcheck backend: `http://localhost:4000/api/health`
 
-## ▶️ Scripts disponibles
+## Variables de entorno
 
-En la carpeta `server/`:
+El archivo raíz `.env` es usado por Docker Compose.
 
-- **Desarrollo (con hot reload):**
-  ```bash
-  npm run dev
-  ```
-- **Build (compila a JS en `dist/`):**
-  ```bash
-  npm run build
-  ```
-- **Producción (ejecuta el build):**
-  ```bash
-  npm start
-  ```
+Variables principales:
 
----
+```env
+API_PORT=4000
+FRONT_PORT=8080
+MONGO_DATA_DIR=./.docker/mongo
+DATABASE_MONGO=mongodb://mongo:27017/ondent
+FRONTEND_URL=http://localhost:8080
+VITE_API_URL=/api
+JWT_SECRET=change-this-jwt-secret
+DEFAULT_USER_PASSWORD=Temp1234!
+SMTP_HOST=
+SMTP_PORT=587
+SMTP_USER=
+SMTP_PASS=
+SMTP_SECURE=false
+SMTP_FROM=OnDent <no-reply@localhost>
+```
 
-## 📡 Endpoints básicos
+Notas:
 
-- **GET** `/api/usuarios` → listado de usuarios
+- `DATABASE_MONGO` ya viene preparada para que el backend use el contenedor `mongo`.
+- `FRONTEND_URL` controla CORS cuando el backend recibe requests con `Origin`.
+- `SMTP_*` solo es necesario si vas a usar recuperación de contraseña por email.
+- `MONGO_DATA_DIR` define la carpeta local donde Docker guarda los datos de MongoDB.
+- MongoDB no publica puerto al host por defecto; el backend lo consume por red interna de Docker.
 
----
+## Desarrollo local sin Docker
 
-## 🤝 Contribuir
+Frontend:
 
-1. Hacé un **fork** del proyecto.
-2. Creá una nueva rama (`git checkout -b feature/nueva-feature`).
-3. Commit de los cambios con un mensaje claro (`git commit -m "feat: agregar middleware de auth"`).
-4. Push a la rama (`git push origin feature/nueva-feature`).
-5. Abrí un **Pull Request**.
+```bash
+cd front
+npm install
+npm run dev
+```
 
-### Convenciones de commits
+Backend:
 
-Se recomienda usar [Conventional Commits](https://www.conventionalcommits.org/):
+```bash
+cd server
+npm install
+npm run dev
+```
 
-- `feat:` nueva funcionalidad
-- `fix:` corrección de bug
-- `docs:` cambios en documentación
-- `refactor:` cambios de código sin alterar comportamiento
-- `test:` cambios o agregados en tests
-
----
-
-## 📖 Próximos pasos
-
-- Implementar middlewares de validación y autenticación.
-- Crear tests automatizados.
-- Conectar el frontend (`/cliente`) en React.
-
----
-
-## 📜 Licencia
-
-MIT © 2025 [Franco Sanchez]
+En ese modo vas a necesitar definir las variables de entorno del backend y `VITE_API_URL` para el frontend.

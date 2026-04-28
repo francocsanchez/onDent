@@ -6,7 +6,12 @@ dotenv.config();
 
 export const connectDB = async () => {
   try {
-    const mongoUri = process.env.DATABASE_MONGO!;
+    const mongoUri = process.env.DATABASE_MONGO?.trim();
+
+    if (!mongoUri) {
+      throw new Error("DATABASE_MONGO no definida");
+    }
+
     const connection = await mongoose.connect(mongoUri);
     const { host, port, name } = connection.connection;
 

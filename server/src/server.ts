@@ -18,6 +18,10 @@ app.use(morgan("dev"));
 app.use(cors(corsOptions));
 app.use(express.json());
 
+app.get("/api/health", (_req, res) => {
+  res.status(200).json({ status: "ok" });
+});
+
 // Routes
 import obraSocialRoutes from "./routes/obraSocialRoutes";
 import pacienteRoutes from "./routes/pacienteRoutes";
