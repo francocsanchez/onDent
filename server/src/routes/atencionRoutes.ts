@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { AtencionController } from "../controllers/AtencionController";
 import { authenticate } from "../middleware/authenticate";
+import { authorizeRoles } from "../middleware/authorizeRoles";
 import { handleImputErrors } from "../middleware/validation";
 import { changeStatusValidationAtencion, createValidationAtencion, updateValidationAtencion } from "../validation/atenciones";
 import { idValidationUsuario } from "../validation/usuarios";
@@ -25,6 +26,14 @@ router.get("/", AtencionController.getAll);
  * @description Resumen de atenciones para Dashboard.
  */
 router.get("/resumen", AtencionController.dashAtenciones);
+
+/**
+ * @method GET
+ * @route /reportes/global
+ * @params year: año con formato YYYY.
+ * @description Resumen global anual y mensual de todas las atenciones.
+ */
+router.get("/reportes/global", authorizeRoles("admin", "superadmin"), AtencionController.globalReport);
 
 /**
  * @method GET

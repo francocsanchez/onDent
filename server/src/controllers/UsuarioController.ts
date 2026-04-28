@@ -1,6 +1,8 @@
 import { Request, Response } from "express";
 import Usuario from "../models/Usuario";
 import { checkPassword, hashPassword } from "../helpers/hash";
+import { generateTemporaryPassword } from "../helpers/password";
+import { sendPasswordRecoveryEmail } from "../helpers/mailer";
 import { logError } from "../utils/logError";
 import { generateJWT } from "../helpers/jwt";
 
@@ -224,6 +226,49 @@ export class UsuarioController {
       return res.status(500).json({
         data: null,
         message: "Error interno del servidor",
+      });
+    }
+  };
+
+  static recoverPassword = async (req: Request, res: Response) => {
+    try {
+      const email = String(req.body.email ?? "").trim().toLowerCase();
+
+      if (!email) {
+        return res.status(400).json({
+          data: null,
+          message: "El email es obligatorio",
+        });
+      }
+
+      const usuario = await Usuario.findOne({ email });
+
+      if (!usuario) {
+        return res.status(200).json({
+          data: null,
+          message: "Si el email existe, enviamos una nueva contraseña temporal.",
+        });
+      }
+
+      const temporaryPassword = generateTemporaryPassword();
+      usuario.password = await hashPassword(temporaryPassword);
+      await usuario.save();
+
+      await sendPasswordRecoveryEmail(usuario.email, {
+        userName: `${usuario.name} ${usuario.lastName}`.trim(),
+        temporaryPassword,
+      });
+
+      return res.status(200).json({
+        data: null,
+        message: "Revisá tu casilla de correo. Te enviamos una nueva contraseña temporal.",
+      });
+    } catch (error) {
+      logError("UsuarioController.recoverPassword");
+      console.error(error);
+      return res.status(500).json({
+        data: null,
+        message: "No se pudo enviar el correo de recuperación",
       });
     }
   };

@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import Atencion from "../models/Atencion";
 import { logError } from "../utils/logError";
 import { reporteAtencionesDash } from "../utils/reports/reporte-atencionesDash";
+import { reporteAtencionesGlobal } from "../utils/reports/reporte-atencionesGlobal";
 
 export class AtencionController {
   static getAll = async (req: Request, res: Response) => {
@@ -317,6 +318,41 @@ export class AtencionController {
       });
     } catch (error) {
       logError("AtencionController.dashAtenciones");
+      console.error(error);
+      return res.status(500).json({
+        data: null,
+        message: "Error del servidor",
+      });
+    }
+  };
+
+  static globalReport = async (req: Request, res: Response) => {
+    try {
+      const rawYear = typeof req.query.year === "string" ? req.query.year.trim() : "";
+
+      if (rawYear && !/^\d{4}$/.test(rawYear)) {
+        return res.status(400).json({
+          data: null,
+          message: "El año debe tener formato YYYY",
+        });
+      }
+
+      const requestedYear = rawYear ? Number(rawYear) : undefined;
+
+      const atenciones = await Atencion.find({})
+        .select("fecha createdAt coseguroOdonto usuario codigos")
+        .populate("usuario", "name lastName")
+        .populate("codigos.codigo", "code description")
+        .lean();
+
+      const resumen = reporteAtencionesGlobal(atenciones, requestedYear);
+
+      return res.status(200).json({
+        data: resumen,
+        message: "Resumen global de atenciones",
+      });
+    } catch (error) {
+      logError("AtencionController.globalReport");
       console.error(error);
       return res.status(500).json({
         data: null,

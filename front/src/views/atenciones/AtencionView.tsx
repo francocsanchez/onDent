@@ -47,6 +47,10 @@ export default function AtencionView() {
       maximumFractionDigits: 0,
     }).format(value ?? 0);
 
+  const totalCodigos = atencion.codigos.reduce((acc, item) => acc + (item.status === "OK" ? item.valor : 0), 0);
+  const totalGeneral = totalCodigos + (atencion.coseguroOdonto ?? 0);
+  const totalNoLiquidable = atencion.codigos.reduce((acc, item) => acc + (item.status !== "OK" ? item.valor : 0), 0);
+
   const statusClasses: Record<string, string> = {
     OK: "bg-green-50 text-green-700 border border-green-200",
     Pendiente: "bg-amber-50 text-amber-700 border border-amber-200",
@@ -54,9 +58,6 @@ export default function AtencionView() {
     Diferido: "bg-slate-100 text-slate-700 border border-slate-200",
     "No cargado": "bg-gray-100 text-gray-700 border border-gray-200",
   };
-
-  const totalCodigos = atencion.codigos.reduce((acc, item) => acc + item.valor, 0);
-  const totalGeneral = totalCodigos + (atencion.coseguroOdonto ?? 0);
 
   return (
     <>
@@ -125,13 +126,17 @@ export default function AtencionView() {
                 <CircleDollarSign className="h-4 w-4" strokeWidth={2} />
               </div>
               <div className="min-w-0">
-                <p className="text-[11px] font-semibold uppercase tracking-wider text-primary-dark/80">Total</p>
+                <p className="text-[11px] font-semibold uppercase tracking-wider text-primary-dark/80">Total liquidable</p>
                 <p className="mt-1 text-sm font-semibold text-slate-900">{formatMoney(totalGeneral)}</p>
-                <p className="mt-0.5 text-xs text-slate-600">Incluye codigos y coseguros</p>
+                <p className="mt-0.5 text-xs text-slate-600">Incluye códigos OK y coseguro odonto</p>
               </div>
             </div>
           </div>
         </div>
+      </div>
+
+      <div className="mt-4 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+        Monto pendiente o no liquidable: <span className="font-semibold">{formatMoney(totalNoLiquidable)}</span>
       </div>
 
       <div className="mt-6 space-y-6">

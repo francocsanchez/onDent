@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { UsuarioController } from "../controllers/UsuarioController";
 import { handleImputErrors } from "../middleware/validation";
-import { createValidationUsuario, idValidationUsuario, updateValidationUsuario } from "../validation/usuarios";
+import { createValidationUsuario, idValidationUsuario, recoverPasswordValidationUsuario, updateValidationUsuario } from "../validation/usuarios";
 import { authenticate } from "../middleware/authenticate";
 
 const router = Router();
@@ -13,6 +13,7 @@ const router = Router();
  * @description Inicia sesión de usuario y devuelve el token de autenticación.
  */
 router.post("/login", UsuarioController.login);
+router.post("/recover-password", recoverPasswordValidationUsuario, handleImputErrors, UsuarioController.recoverPassword);
 
 router.use(authenticate);
 

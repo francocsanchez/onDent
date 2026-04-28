@@ -10,6 +10,10 @@ type UpdateMyPasswordFormData = {
   newPassword: string;
 };
 
+type RecoverPasswordFormData = {
+  email: string;
+};
+
 export async function authenticateUser(formData: AuthenticateUserFormData) {
   try {
     const { data } = await api.post("/usuarios/login", formData);
@@ -34,5 +38,18 @@ export async function updateMyPassword(formData: UpdateMyPasswordFormData) {
     }
 
     throw new Error("Error al actualizar la contraseña");
+  }
+}
+
+export async function recoverPassword(formData: RecoverPasswordFormData) {
+  try {
+    const { data } = await api.post("/usuarios/recover-password", formData);
+    return data;
+  } catch (error) {
+    if (isAxiosError(error)) {
+      throw new Error(error.response?.data?.error || error.response?.data?.message || "Error al recuperar la contraseña");
+    }
+
+    throw new Error("Error al recuperar la contraseña");
   }
 }

@@ -31,6 +31,13 @@ const statusClasses: Record<AtencionStatus, string> = {
   "No cargado": "bg-gray-100 text-gray-700 border border-gray-200",
 };
 
+const getMontoLiquidable = (
+  codigos: {
+    status: AtencionStatus;
+    valor: number | "";
+  }[],
+) => codigos.reduce((acc, item) => acc + (item.status === "OK" && item.valor !== "" ? Number(item.valor) : 0), 0);
+
 export default function AuditarAtencionView() {
   const { idAtencion, idUsuario, estado: rawEstado } = useParams();
   const [searchParams] = useSearchParams();
@@ -132,8 +139,12 @@ export default function AuditarAtencionView() {
     );
   }
 
-  const totalCodigos = (watchedCodigos ?? []).reduce((acc, item) => acc + (item?.valor === "" || item?.valor === undefined ? 0 : Number(item.valor)), 0);
+  const totalCodigos = getMontoLiquidable(watchedCodigos ?? []);
   const totalGeneral = totalCodigos + (watchedCoseguroOdonto === "" || watchedCoseguroOdonto === undefined ? 0 : Number(watchedCoseguroOdonto));
+  const totalPendiente = (watchedCodigos ?? []).reduce((acc, item) => {
+    if (!item || item.valor === "" || item.valor === undefined || item.status === "OK") return acc;
+    return acc + Number(item.valor);
+  }, 0);
 
   const onSubmit = (formData: AuditAtencionFormValues) => {
     mutation.mutate({
@@ -229,9 +240,9 @@ export default function AuditarAtencionView() {
                   <BadgeDollarSign className="h-4 w-4" strokeWidth={2} />
                 </div>
                 <div className="min-w-0">
-                  <p className="text-[11px] font-semibold uppercase tracking-wider text-primary-dark/80">Total auditado</p>
+                  <p className="text-[11px] font-semibold uppercase tracking-wider text-primary-dark/80">Total liquidable</p>
                   <p className="mt-1 text-sm font-semibold text-slate-900">{formatMoney(totalGeneral)}</p>
-                  <p className="mt-0.5 text-xs text-slate-600">Códigos + coseguro odonto</p>
+                  <p className="mt-0.5 text-xs text-slate-600">Códigos OK + coseguro odonto</p>
                 </div>
               </div>
             </div>
@@ -258,6 +269,12 @@ export default function AuditarAtencionView() {
                   ) : null}
                   {periodo ? <span className="rounded-full bg-white px-2.5 py-1 text-xs font-medium text-slate-600">{periodo}</span> : null}
                 </div>
+              </div>
+
+              <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3">
+                <p className="text-[11px] font-semibold uppercase tracking-wider text-amber-800">Monto pendiente</p>
+                <p className="mt-2 text-sm font-semibold text-amber-900">{formatMoney(totalPendiente)}</p>
+                <p className="mt-0.5 text-xs text-amber-700">Suma códigos no OK</p>
               </div>
             </div>
           </div>

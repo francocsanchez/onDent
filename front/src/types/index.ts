@@ -159,8 +159,70 @@ export const atencionesDashSchema = z.object({
   resumenMensual: z.array(atencionesDashResumenMensualSchema),
 });
 
+export const atencionStatusCounterSchema = z.object({
+  OK: z.number(),
+  Pendiente: z.number(),
+  Denegado: z.number(),
+  Diferido: z.number(),
+  "No cargado": z.number(),
+});
+
+export const atencionesGlobalMontoPorUsuarioSchema = z.object({
+  usuarioId: z.string(),
+  nombre: z.string(),
+  cantidadAtenciones: z.number(),
+  montoAtencion: z.number(),
+  montoCoseguroOdonto: z.number(),
+  montoTotal: z.number(),
+});
+
+export const atencionesGlobalTopConsultaSchema = z.object({
+  codigoId: z.string(),
+  code: z.string(),
+  description: z.string(),
+  cantidad: z.number(),
+  montoTotal: z.number(),
+});
+
+export const atencionesGlobalResumenAnualSchema = z.object({
+  cantidadAtenciones: z.number(),
+  cantidadPorEstado: atencionStatusCounterSchema,
+  montoPorEstado: atencionStatusCounterSchema,
+  montoPorUsuario: z.array(atencionesGlobalMontoPorUsuarioSchema),
+  topConsultasCantidad: z.array(atencionesGlobalTopConsultaSchema),
+  topConsultasMonto: z.array(atencionesGlobalTopConsultaSchema),
+  montoAtencion: z.number(),
+  montoCoseguroOdonto: z.number(),
+  montoTotal: z.number(),
+});
+
+export const atencionesGlobalResumenMensualSchema = z.object({
+  periodo: z.string(),
+  anio: z.number(),
+  mes: z.number(),
+  cantidadAtenciones: z.number(),
+  cantidadPorEstado: atencionStatusCounterSchema,
+  montoPorEstado: atencionStatusCounterSchema,
+  montoAtencion: z.number(),
+  montoCoseguroOdonto: z.number(),
+  montoTotal: z.number(),
+});
+
+export const atencionesGlobalReportSchema = z.object({
+  availableYears: z.array(z.number()),
+  selectedYear: z.number(),
+  resumenAnual: atencionesGlobalResumenAnualSchema,
+  resumenMensual: z.array(atencionesGlobalResumenMensualSchema),
+});
+
 export type Atencion = z.infer<typeof atencionSchema>;
 export type AtencionCodigo = z.infer<typeof atencionCodigoSchema>;
 export type Codigo = z.infer<typeof codigoSchema>;
 export type AtencionesListResponse = z.infer<typeof atencionesListResponseSchema>;
 export type AtencionesDash = z.infer<typeof atencionesDashSchema>;
+export type AtencionStatusCounter = z.infer<typeof atencionStatusCounterSchema>;
+export type AtencionesGlobalMontoPorUsuario = z.infer<typeof atencionesGlobalMontoPorUsuarioSchema>;
+export type AtencionesGlobalTopConsulta = z.infer<typeof atencionesGlobalTopConsultaSchema>;
+export type AtencionesGlobalResumenAnual = z.infer<typeof atencionesGlobalResumenAnualSchema>;
+export type AtencionesGlobalResumenMensual = z.infer<typeof atencionesGlobalResumenMensualSchema>;
+export type AtencionesGlobalReport = z.infer<typeof atencionesGlobalReportSchema>;

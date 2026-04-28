@@ -8,6 +8,13 @@ type AtencionDashItem = {
   }[];
 };
 
+const getMontoLiquidable = (
+  codigos: {
+    valor?: number;
+    status?: "OK" | "Pendiente" | "Denegado" | "Diferido" | "No cargado";
+  }[] = [],
+) => codigos.reduce((total, codigo) => total + (codigo.status === "OK" ? (codigo.valor ?? 0) : 0), 0);
+
 type AtencionesPorDiaItem = {
   fecha: string;
   dia: number;
@@ -86,7 +93,7 @@ export function reporteAtencionesDash(atenciones: AtencionDashItem[]): Atencione
       noCargado: 0,
     };
 
-    const montoAtencion = (atencion.codigos ?? []).reduce((total, codigo) => total + (codigo.valor ?? 0), 0);
+    const montoAtencion = getMontoLiquidable(atencion.codigos ?? []);
     const montoCoseguro = atencion.coseguroOdonto ?? 0;
 
     resumenMensualActual.cantidad += 1;

@@ -3,12 +3,14 @@ import { isAxiosError } from "axios";
 import { z } from "zod";
 import {
   AtencionesTableSchema,
+  atencionesGlobalReportSchema,
   atencionesDashSchema,
   atencionesListResponseSchema,
   atencionSchema,
   codigoSchema,
   pacienteSchema,
   type Atencion,
+  type AtencionesGlobalReport,
   type AtencionesDash,
   type Codigo,
   type Paciente,
@@ -221,5 +223,28 @@ export async function getAtencionesFiltradas({ periodo, status, page = 1 }: GetA
     }
 
     throw new Error("Error inesperado al obtener las atenciones filtradas");
+  }
+}
+
+export async function getAtencionesGlobalReport(year?: number) {
+  try {
+    const { data } = await api.get("/atenciones/reportes/global", {
+      params: year ? { year } : undefined,
+    });
+
+    const response = atencionesGlobalReportSchema.safeParse(data.data);
+
+    if (!response.success) {
+      console.error("Error en la validación de getAtencionesGlobalReport:", response.error);
+      throw new Error("La estructura de los datos es inválida");
+    }
+
+    return response.data satisfies AtencionesGlobalReport;
+  } catch (error) {
+    if (isAxiosError(error) && error.response) {
+      throw new Error(error.response.data.error || error.response.data.message || "Error al obtener el reporte global de atenciones");
+    }
+
+    throw new Error("Error inesperado al obtener el reporte global de atenciones");
   }
 }

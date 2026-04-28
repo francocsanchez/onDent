@@ -1,4 +1,4 @@
-import { authenticateUser } from "@/api/authAPI";
+import { authenticateUser, recoverPassword } from "@/api/authAPI";
 import { useMutation } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
@@ -20,6 +20,7 @@ export default function LoginView() {
   const {
     register,
     handleSubmit,
+    getValues,
     formState: { errors },
   } = useForm<LoginFormData>({ defaultValues: initialValues });
 
@@ -33,11 +34,32 @@ export default function LoginView() {
     },
   });
 
+  const recoverPasswordMutation = useMutation({
+    mutationFn: recoverPassword,
+    onSuccess: (response: { message?: string }) => {
+      toast.success(response.message || "Te enviamos una nueva contraseña temporal a tu correo");
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || "Error al recuperar la contraseña");
+    },
+  });
+
   const onSubmit = (formData: LoginFormData) => {
     loginMutation.mutate({
       email: formData.email.trim().toLowerCase(),
       password: formData.password,
     });
+  };
+
+  const handleRecoverPassword = () => {
+    const email = getValues("email").trim().toLowerCase();
+
+    if (!email) {
+      toast.error("Ingresá tu email para recuperar la contraseña");
+      return;
+    }
+
+    recoverPasswordMutation.mutate({ email });
   };
 
   return (
@@ -93,6 +115,15 @@ export default function LoginView() {
               className="inline-flex w-full items-center justify-center rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-primary-dark"
             >
               {loginMutation.isPending ? "Ingresando..." : "Ingresar"}
+            </button>
+
+            <button
+              type="button"
+              onClick={handleRecoverPassword}
+              disabled={recoverPasswordMutation.isPending}
+              className="inline-flex w-full items-center justify-center rounded-xl border border-secondary-dark/60 bg-white px-4 py-2.5 text-sm font-semibold text-primary transition hover:bg-secondary/30 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {recoverPasswordMutation.isPending ? "Enviando correo..." : "Olvidé mi contraseña"}
             </button>
           </form>
         </div>
