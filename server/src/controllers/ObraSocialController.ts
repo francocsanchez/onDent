@@ -2,9 +2,22 @@ import { Request, Response } from "express";
 import ObraSocial from "../models/ObraSocial";
 import { logError } from "../utils/logError";
 
+const normalizeLimitePrestacionesMensuales = (value: unknown) => {
+  if (value === null || typeof value === "undefined" || value === "") {
+    return null;
+  }
+
+  const parsedValue = Number(value);
+  if (!Number.isInteger(parsedValue) || parsedValue <= 0) {
+    return null;
+  }
+
+  return parsedValue;
+};
+
 export class ObraSocialController {
   static create = async (req: Request, res: Response) => {
-    const { name } = req.body;
+    const { name, limitePrestacionesMensuales } = req.body;
 
     try {
       const existingObraSocial = await ObraSocial.findOne({ name });
@@ -13,10 +26,16 @@ export class ObraSocialController {
         return res.status(400).json({ message: "La obra social ya está registrada" });
       }
 
-      const newObraSocial = new ObraSocial({ name });
+      const newObraSocial = new ObraSocial({
+        name,
+        limitePrestacionesMensuales: normalizeLimitePrestacionesMensuales(limitePrestacionesMensuales),
+      });
       await newObraSocial.save();
 
-      return res.status(200).json({ message: "Obra Social creada exitosamente" });
+      return res.status(200).json({
+        data: newObraSocial,
+        message: "Obra Social creada exitosamente",
+      });
     } catch (error) {
       logError("ObraSocialController.create");
       console.error(error);
@@ -103,7 +122,7 @@ export class ObraSocialController {
 
   static update = async (req: Request, res: Response) => {
     const { idObraSocial } = req.params;
-    const { name } = req.body;
+    const { name, limitePrestacionesMensuales } = req.body;
 
     try {
       const obraSocial = await ObraSocial.findById(idObraSocial);
@@ -128,9 +147,11 @@ export class ObraSocialController {
       }
 
       obraSocial.name = name;
+      obraSocial.limitePrestacionesMensuales = normalizeLimitePrestacionesMensuales(limitePrestacionesMensuales);
       await obraSocial.save();
 
       return res.status(200).json({
+        data: obraSocial,
         message: "Obra Social actualizada correctamente",
       });
     } catch (error) {

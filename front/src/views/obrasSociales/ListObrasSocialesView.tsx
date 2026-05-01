@@ -69,6 +69,7 @@ export default function ListObrasSocialesView() {
                 <thead className="bg-secondary/40 border-b border-secondary-dark/50">
                   <tr>
                     <th className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-primary-dark/80">Nombre</th>
+                    <th className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-primary-dark/80">Límite mensual</th>
                     <th className="px-4 py-3 text-right text-[11px] font-semibold uppercase tracking-wider text-primary-dark/80">Acciones</th>
                   </tr>
                 </thead>
@@ -78,6 +79,14 @@ export default function ListObrasSocialesView() {
                     <tr key={obraSocial._id} className="transition-colors hover:bg-secondary/20">
                       <td className="px-4 py-3">
                         <p className="text-sm font-medium text-slate-800 leading-tight uppercase">{obraSocial.name}</p>
+                      </td>
+
+                      <td className="px-4 py-3">
+                        <p className="text-sm text-slate-600">
+                          {obraSocial.limitePrestacionesMensuales && obraSocial.limitePrestacionesMensuales > 0
+                            ? `${obraSocial.limitePrestacionesMensuales} por mes`
+                            : "Sin límite"}
+                        </p>
                       </td>
 
                       <td className="px-4 py-3">

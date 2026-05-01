@@ -1,5 +1,6 @@
 import { getAtencionesFiltradas } from "@/api/atencioneAPI";
 import LoadingSpinner from "@/components/LoadingSpinner";
+import { formatDateOnly } from "@/utils/date";
 import { useQuery } from "@tanstack/react-query";
 import { Eye, Filter, Plus } from "lucide-react";
 import { useState } from "react";
@@ -32,13 +33,6 @@ export default function ListAtencionesFilteredView() {
     queryFn: () => getAtencionesFiltradas({ periodo, status: status!, page }),
     enabled: /^\d{4}-\d{2}$/.test(periodo) && !!status,
   });
-
-  const formatFecha = (fecha: string) =>
-    new Intl.DateTimeFormat("es-AR", {
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-    }).format(new Date(fecha));
 
   const getPeriodLabel = (periodoValue: string) => {
     if (!/^\d{4}-\d{2}$/.test(periodoValue)) return periodoValue;
@@ -137,7 +131,7 @@ export default function ListAtencionesFilteredView() {
                           </td>
 
                           <td className="whitespace-nowrap px-4 py-3">
-                            <p className="text-sm font-medium text-slate-800">{formatFecha(atencion.fecha)}</p>
+                            <p className="text-sm font-medium text-slate-800">{formatDateOnly(atencion.fecha)}</p>
                           </td>
 
                           <td className="px-4 py-3">

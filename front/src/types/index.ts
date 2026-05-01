@@ -4,12 +4,15 @@ export const obraSocialSchema = z.object({
   _id: z.string(),
   name: z.string(),
   enable: z.boolean(),
+  limitePrestacionesMensuales: z.number().int().nullable().optional(),
 });
 
-export const ObrasSocialesTableSchema = z.array(obraSocialSchema.pick({ _id: true, name: true, enable: true }));
+export const ObrasSocialesTableSchema = z.array(
+  obraSocialSchema.pick({ _id: true, name: true, enable: true, limitePrestacionesMensuales: true }),
+);
 
 export type ObraSocial = z.infer<typeof obraSocialSchema>;
-export type ObraSocialFormData = Pick<ObraSocial, "name">;
+export type ObraSocialFormData = Pick<ObraSocial, "name" | "limitePrestacionesMensuales">;
 
 export const usuarioSchema = z.object({
   _id: z.string(),
@@ -163,6 +166,15 @@ export const atencionesDashSchema = z.object({
   resumenMensual: z.array(atencionesDashResumenMensualSchema),
 });
 
+export const disponibilidadPrestacionesSchema = z.object({
+  tieneLimiteConfigurado: z.boolean(),
+  limiteMensual: z.number().int().nullable(),
+  utilizadas: z.number(),
+  disponibles: z.number().nullable(),
+  mes: z.number(),
+  anio: z.number(),
+});
+
 export const atencionStatusCounterSchema = z.object({
   OK: z.number(),
   Pendiente: z.number(),
@@ -218,6 +230,8 @@ export const atencionesGlobalReportSchema = z.object({
   resumenAnual: atencionesGlobalResumenAnualSchema,
   resumenMensual: z.array(atencionesGlobalResumenMensualSchema),
 });
+
+export type DisponibilidadPrestaciones = z.infer<typeof disponibilidadPrestacionesSchema>;
 
 export type Atencion = z.infer<typeof atencionSchema>;
 export type AtencionCodigo = z.infer<typeof atencionCodigoSchema>;

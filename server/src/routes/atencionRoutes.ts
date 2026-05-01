@@ -3,7 +3,12 @@ import { AtencionController } from "../controllers/AtencionController";
 import { authenticate } from "../middleware/authenticate";
 import { authorizeRoles } from "../middleware/authorizeRoles";
 import { handleImputErrors } from "../middleware/validation";
-import { changeStatusValidationAtencion, createValidationAtencion, updateValidationAtencion } from "../validation/atenciones";
+import {
+  changeStatusValidationAtencion,
+  createValidationAtencion,
+  disponibilidadPrestacionesValidationAtencion,
+  updateValidationAtencion,
+} from "../validation/atenciones";
 import { idValidationUsuario } from "../validation/usuarios";
 import { idValidationPaciente } from "../validation/pacientes";
 
@@ -58,6 +63,19 @@ router.get("/reportes/global", authorizeRoles("admin", "superadmin"), AtencionCo
  * @description Lista atenciones filtradas por período mensual y estado.
  */
 router.get("/filtrar", AtencionController.getByMonthAndStatus);
+
+/**
+ * @method GET
+ * @route /disponibilidad-prestaciones
+ * @params paciente: ID del paciente. obraSocial: ID de la obra social. fecha: fecha de referencia opcional en formato YYYY-MM-DD.
+ * @description Obtiene la disponibilidad mensual de prestaciones por paciente y obra social.
+ */
+router.get(
+  "/disponibilidad-prestaciones",
+  disponibilidadPrestacionesValidationAtencion,
+  handleImputErrors,
+  AtencionController.getDisponibilidadPrestaciones,
+);
 
 /**
  * @method GET

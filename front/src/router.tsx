@@ -57,6 +57,7 @@ export default function Router() {
             <Route path="/pacientes/:idPaciente/editar" element={withSuspense(<EditPacienteView />, "Cargando paciente...")} />
 
             <Route element={<RoleProtectedRoute allowedRoles={["admin", "superadmin"]} />}>
+              <Route path="/atenciones/:idAtencion/auditar" element={withSuspense(<AuditarAtencionView />, "Cargando auditoría...")} />
               <Route path="/reports" element={withSuspense(<ReportesView />, "Cargando reportes...")} />
               <Route
                 path="/reports/atenciones/:estado/:idUsuario"

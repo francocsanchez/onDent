@@ -1,5 +1,6 @@
 import { getAtencionByID } from "@/api/atencioneAPI";
 import LoadingSpinner from "@/components/LoadingSpinner";
+import { formatDateOnly } from "@/utils/date";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft, CircleDollarSign, Pencil, Shield, UserRound } from "lucide-react";
 import { Link, useNavigate, useParams } from "react-router-dom";
@@ -33,13 +34,6 @@ export default function AtencionView() {
 
   if (!atencion) return null;
 
-  const formatFecha = (fecha: string) =>
-    new Intl.DateTimeFormat("es-AR", {
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-    }).format(new Date(fecha));
-
   const formatMoney = (value?: number) =>
     new Intl.NumberFormat("es-AR", {
       style: "currency",
@@ -66,7 +60,7 @@ export default function AtencionView() {
           <p className="text-sm font-medium text-primary">Atenciones</p>
           <h2 className="text-2xl font-semibold tracking-tight text-slate-900">
             Detalle de atencion
-            <span className="ml-2 text-lg font-medium text-slate-500">{formatFecha(atencion.fecha)}</span>
+            <span className="ml-2 text-lg font-medium text-slate-500">{formatDateOnly(atencion.fecha)}</span>
           </h2>
         </div>
 

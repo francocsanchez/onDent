@@ -2,6 +2,7 @@ import { getAtencionesByUsuario, getAtencionesGlobalReport } from "@/api/atencio
 import { getUsuarios } from "@/api/usuarioAPI";
 import type { AtencionStatusCounter } from "@/types/index";
 import LoadingSpinner from "@/components/LoadingSpinner";
+import { getYearMonthFromDateOnly } from "@/utils/date";
 import { useQuery } from "@tanstack/react-query";
 import { BadgeCheck, BarChart3, CircleDollarSign, FileStack, Stethoscope, UserRound, WalletCards } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
@@ -30,13 +31,6 @@ const statusConfig: { key: StatusKey; label: string; className: string }[] = [
   { key: "Diferido", label: "Diferido", className: "bg-fuchsia-50 text-fuchsia-700 border border-fuchsia-200" },
   { key: "No cargado", label: "No cargado", className: "bg-gray-100 text-gray-700 border border-gray-200" },
 ];
-
-const toDate = (value?: string | Date) => {
-  if (!value) return null;
-
-  const date = value instanceof Date ? value : new Date(value);
-  return Number.isNaN(date.getTime()) ? null : date;
-};
 
 const getMontoLiquidable = (
   codigos: {
@@ -91,17 +85,17 @@ export default function ReportesView() {
     const resumenMensualMap = new Map<string, ResumenMensualItem>();
 
     atencionesUsuario.forEach((atencion) => {
-      const atencionDate = toDate(atencion.fecha) ?? toDate(atencion.createdAt);
-      if (!atencionDate) return;
+      const dateParts = getYearMonthFromDateOnly(atencion.fecha);
+      if (!dateParts) return;
 
-      const year = atencionDate.getFullYear();
-      const month = atencionDate.getMonth();
-      const periodo = `${year}-${String(month + 1).padStart(2, "0")}`;
+      const year = dateParts.year;
+      const month = dateParts.month;
+      const periodo = `${year}-${String(month).padStart(2, "0")}`;
 
       const resumenActual = resumenMensualMap.get(periodo) ?? {
         periodo,
         anio: year,
-        mes: month + 1,
+        mes: month,
         montoAtencion: 0,
         montoCoseguro: 0,
         montoTotal: 0,
@@ -144,6 +138,29 @@ export default function ReportesView() {
 
   const getStatusLink = (status: "OK" | "Pendiente" | "Denegado" | "Diferido" | "No cargado", periodo: string, idUsuario: string) =>
     `/reports/atenciones/${encodeURIComponent(status)}/${idUsuario}?periodo=${periodo}`;
+
+  const getGlobalAtencionesLink = (params?: {
+    year?: number;
+    month?: number;
+    status?: "OK" | "Pendiente" | "Denegado" | "Diferido" | "No cargado";
+  }) => {
+    const query = new URLSearchParams();
+
+    if (params?.year) {
+      query.set("year", String(params.year));
+    }
+
+    if (params?.month) {
+      query.set("month", String(params.month).padStart(2, "0"));
+    }
+
+    if (params?.status) {
+      query.set("status", params.status);
+    }
+
+    const queryString = query.toString();
+    return queryString ? `/atenciones?${queryString}` : "/atenciones";
+  };
 
   if (isLoading) {
     return <LoadingSpinner label="Cargando usuarios para reportes..." />;
@@ -223,7 +240,10 @@ export default function ReportesView() {
         {!isGlobalReportLoading && !isGlobalReportError && globalReport ? (
           <div className="mt-5 space-y-6">
             <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-              <div className="rounded-2xl border border-secondary-dark/50 bg-secondary/20 p-4">
+              <Link
+                to={getGlobalAtencionesLink({ year: globalReport.selectedYear })}
+                className="rounded-2xl border border-secondary-dark/50 bg-secondary/20 p-4 transition hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-sm"
+              >
                 <div className="flex items-start gap-3">
                   <div className="rounded-xl bg-white p-2 text-primary shadow-sm">
                     <FileStack className="h-4 w-4" strokeWidth={2.1} />
@@ -233,9 +253,12 @@ export default function ReportesView() {
                     <p className="mt-1 text-2xl font-semibold text-slate-900">{globalReport.resumenAnual.cantidadAtenciones}</p>
                   </div>
                 </div>
-              </div>
+              </Link>
 
-              <div className="rounded-2xl border border-secondary-dark/50 bg-secondary/20 p-4">
+              <Link
+                to={getGlobalAtencionesLink({ year: globalReport.selectedYear })}
+                className="rounded-2xl border border-secondary-dark/50 bg-secondary/20 p-4 transition hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-sm"
+              >
                 <div className="flex items-start gap-3">
                   <div className="rounded-xl bg-white p-2 text-primary shadow-sm">
                     <CircleDollarSign className="h-4 w-4" strokeWidth={2.1} />
@@ -245,9 +268,12 @@ export default function ReportesView() {
                     <p className="mt-1 text-2xl font-semibold text-slate-900">{formatCurrency(globalReport.resumenAnual.montoAtencion)}</p>
                   </div>
                 </div>
-              </div>
+              </Link>
 
-              <div className="rounded-2xl border border-secondary-dark/50 bg-secondary/20 p-4">
+              <Link
+                to={getGlobalAtencionesLink({ year: globalReport.selectedYear })}
+                className="rounded-2xl border border-secondary-dark/50 bg-secondary/20 p-4 transition hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-sm"
+              >
                 <div className="flex items-start gap-3">
                   <div className="rounded-xl bg-white p-2 text-primary shadow-sm">
                     <WalletCards className="h-4 w-4" strokeWidth={2.1} />
@@ -257,9 +283,12 @@ export default function ReportesView() {
                     <p className="mt-1 text-2xl font-semibold text-slate-900">{formatCurrency(globalReport.resumenAnual.montoCoseguroOdonto)}</p>
                   </div>
                 </div>
-              </div>
+              </Link>
 
-              <div className="rounded-2xl border border-primary/20 bg-primary/5 p-4">
+              <Link
+                to={getGlobalAtencionesLink({ year: globalReport.selectedYear })}
+                className="rounded-2xl border border-primary/20 bg-primary/5 p-4 transition hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-sm"
+              >
                 <div className="flex items-start gap-3">
                   <div className="rounded-xl bg-white p-2 text-primary shadow-sm">
                     <BarChart3 className="h-4 w-4" strokeWidth={2.1} />
@@ -269,7 +298,7 @@ export default function ReportesView() {
                     <p className="mt-1 text-2xl font-semibold text-primary-dark">{formatCurrency(globalReport.resumenAnual.montoTotal)}</p>
                   </div>
                 </div>
-              </div>
+              </Link>
             </div>
 
             <div className="grid gap-6 xl:grid-cols-2">
@@ -277,10 +306,14 @@ export default function ReportesView() {
                 <h4 className="text-sm font-semibold text-slate-900">Cantidad por estado</h4>
                 <div className="mt-4 grid gap-3 sm:grid-cols-2">
                   {statusConfig.map((status) => (
-                    <div key={status.key} className={`rounded-xl px-4 py-3 ${status.className}`}>
+                    <Link
+                      key={status.key}
+                      to={getGlobalAtencionesLink({ year: globalReport.selectedYear, status: status.key })}
+                      className={`rounded-xl px-4 py-3 transition hover:-translate-y-0.5 hover:shadow-sm ${status.className}`}
+                    >
                       <p className="text-[11px] font-semibold uppercase tracking-[0.16em]">{status.label}</p>
                       <p className="mt-2 text-xl font-semibold">{globalReport.resumenAnual.cantidadPorEstado[status.key]}</p>
-                    </div>
+                    </Link>
                   ))}
                 </div>
               </div>
@@ -289,10 +322,14 @@ export default function ReportesView() {
                 <h4 className="text-sm font-semibold text-slate-900">$ por estado</h4>
                 <div className="mt-4 grid gap-3 sm:grid-cols-2">
                   {statusConfig.map((status) => (
-                    <div key={status.key} className={`rounded-xl px-4 py-3 ${status.className}`}>
+                    <Link
+                      key={status.key}
+                      to={getGlobalAtencionesLink({ year: globalReport.selectedYear, status: status.key })}
+                      className={`rounded-xl px-4 py-3 transition hover:-translate-y-0.5 hover:shadow-sm ${status.className}`}
+                    >
                       <p className="text-[11px] font-semibold uppercase tracking-[0.16em]">{status.label}</p>
                       <p className="mt-2 text-base font-semibold">{formatCurrency(globalReport.resumenAnual.montoPorEstado[status.key])}</p>
-                    </div>
+                    </Link>
                   ))}
                 </div>
               </div>
@@ -412,12 +449,36 @@ export default function ReportesView() {
                             <p className="text-sm font-semibold capitalize text-slate-900">{formatMonthLabel(item.anio, item.mes)}</p>
                             <p className="text-xs text-slate-500">{item.anio}</p>
                           </td>
-                          <td className="px-4 py-5 text-center text-sm font-semibold text-slate-800">{item.cantidadAtenciones}</td>
-                          <td className="px-4 py-5 text-center text-sm font-semibold text-emerald-700">{item.cantidadPorEstado.OK}</td>
-                          <td className="px-4 py-5 text-center text-sm font-semibold text-amber-700">{item.cantidadPorEstado.Pendiente}</td>
-                          <td className="px-4 py-5 text-center text-sm font-semibold text-rose-700">{item.cantidadPorEstado.Denegado}</td>
-                          <td className="px-4 py-5 text-center text-sm font-semibold text-fuchsia-700">{item.cantidadPorEstado.Diferido}</td>
-                          <td className="px-4 py-5 text-center text-sm font-semibold text-gray-700">{item.cantidadPorEstado["No cargado"]}</td>
+                          <td className="px-4 py-5 text-center text-sm font-semibold text-slate-800">
+                            <Link to={getGlobalAtencionesLink({ year: item.anio, month: item.mes })} className="transition hover:text-primary-dark">
+                              {item.cantidadAtenciones}
+                            </Link>
+                          </td>
+                          <td className="px-4 py-5 text-center text-sm font-semibold text-emerald-700">
+                            <Link to={getGlobalAtencionesLink({ year: item.anio, month: item.mes, status: "OK" })} className="transition hover:text-emerald-900">
+                              {item.cantidadPorEstado.OK}
+                            </Link>
+                          </td>
+                          <td className="px-4 py-5 text-center text-sm font-semibold text-amber-700">
+                            <Link to={getGlobalAtencionesLink({ year: item.anio, month: item.mes, status: "Pendiente" })} className="transition hover:text-amber-900">
+                              {item.cantidadPorEstado.Pendiente}
+                            </Link>
+                          </td>
+                          <td className="px-4 py-5 text-center text-sm font-semibold text-rose-700">
+                            <Link to={getGlobalAtencionesLink({ year: item.anio, month: item.mes, status: "Denegado" })} className="transition hover:text-rose-900">
+                              {item.cantidadPorEstado.Denegado}
+                            </Link>
+                          </td>
+                          <td className="px-4 py-5 text-center text-sm font-semibold text-fuchsia-700">
+                            <Link to={getGlobalAtencionesLink({ year: item.anio, month: item.mes, status: "Diferido" })} className="transition hover:text-fuchsia-900">
+                              {item.cantidadPorEstado.Diferido}
+                            </Link>
+                          </td>
+                          <td className="px-4 py-5 text-center text-sm font-semibold text-gray-700">
+                            <Link to={getGlobalAtencionesLink({ year: item.anio, month: item.mes, status: "No cargado" })} className="transition hover:text-gray-900">
+                              {item.cantidadPorEstado["No cargado"]}
+                            </Link>
+                          </td>
                           <td className="whitespace-nowrap px-4 py-5 text-right text-sm font-medium text-slate-800">{formatCurrency(item.montoAtencion)}</td>
                           <td className="whitespace-nowrap px-4 py-5 text-right text-sm font-medium text-slate-800">
                             {formatCurrency(item.montoCoseguroOdonto)}

@@ -16,6 +16,7 @@ export default function EditObraSocialForm({ obraSocial }: EditObraSocialFormPro
 
   const initialValues: ObraSocialFormData = {
     name: obraSocial.name,
+    limitePrestacionesMensuales: obraSocial.limitePrestacionesMensuales ?? null,
   };
 
   const {

@@ -3,7 +3,7 @@ import { Router } from "express";
 import { ObraSocialController } from "../controllers/ObraSocialController";
 import { authenticate } from "../middleware/authenticate";
 import { handleImputErrors } from "../middleware/validation";
-import { createValidationObraSocial, idValidationObraSocial } from "../validation/obrasSociales";
+import { createValidationObraSocial, idValidationObraSocial, updateValidationObraSocial } from "../validation/obrasSociales";
 
 const router = Router();
 
@@ -39,7 +39,7 @@ router.get("/:idObraSocial", idValidationObraSocial, handleImputErrors, ObraSoci
  * @params idObraSocial: ID de la obra social.
  * @description Actualiza una obra social por su ID.
  */
-router.put("/:idObraSocial", idValidationObraSocial, handleImputErrors, ObraSocialController.update);
+router.put("/:idObraSocial", idValidationObraSocial, updateValidationObraSocial, handleImputErrors, ObraSocialController.update);
 /**
  * @method PATCH
  * @route /:idObraSocial/change-status

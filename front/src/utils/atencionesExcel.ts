@@ -1,11 +1,5 @@
 import type { Atencion } from "../types";
-
-const formatFecha = (fecha: string) =>
-  new Intl.DateTimeFormat("es-AR", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-  }).format(new Date(fecha));
+import { formatDateOnly } from "./date";
 
 type ExportFilters = {
   year?: string;
@@ -16,7 +10,7 @@ export async function exportAtencionesToExcel(atenciones: Atencion[], filters: E
   const XLSX = await import("xlsx");
   const rows = atenciones.flatMap((atencion) =>
     atencion.codigos.map((codigo) => ({
-      Fecha: formatFecha(atencion.fecha),
+      Fecha: formatDateOnly(atencion.fecha),
       Año: atencion.fecha.slice(0, 4),
       Mes: atencion.fecha.slice(5, 7),
       Usuario: `${atencion.usuario.lastName}, ${atencion.usuario.name}`,

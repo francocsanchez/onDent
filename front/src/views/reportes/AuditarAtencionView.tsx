@@ -1,5 +1,6 @@
 import { getAtencionByID, updateAtencionByID } from "@/api/atencioneAPI";
 import LoadingSpinner from "@/components/LoadingSpinner";
+import { formatDateOnly } from "@/utils/date";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, BadgeDollarSign, FileSearch, Save, Shield, Stethoscope, UserRound } from "lucide-react";
 import { useFieldArray, useForm } from "react-hook-form";
@@ -99,13 +100,6 @@ export default function AuditarAtencionView() {
     },
   });
 
-  const formatFecha = (fecha: string) =>
-    new Intl.DateTimeFormat("es-AR", {
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-    }).format(new Date(fecha));
-
   const formatMoney = (value?: number) =>
     new Intl.NumberFormat("es-AR", {
       style: "currency",
@@ -114,7 +108,7 @@ export default function AuditarAtencionView() {
     }).format(value ?? 0);
 
   function getBackPath() {
-    if (!estado || !idUsuario) return "/reports";
+    if (!estado || !idUsuario) return "/atenciones";
     const query = periodo ? `?periodo=${encodeURIComponent(periodo)}` : "";
     return `/reports/atenciones/${encodeURIComponent(estado)}/${idUsuario}${query}`;
   }
@@ -216,7 +210,7 @@ export default function AuditarAtencionView() {
                   <p className="mt-1 text-sm font-semibold uppercase text-slate-900">
                     {atencion.usuario.lastName} {atencion.usuario.name}
                   </p>
-                  <p className="mt-0.5 text-xs text-slate-600">{formatFecha(atencion.fecha)}</p>
+                  <p className="mt-0.5 text-xs text-slate-600">{formatDateOnly(atencion.fecha)}</p>
                 </div>
               </div>
             </div>

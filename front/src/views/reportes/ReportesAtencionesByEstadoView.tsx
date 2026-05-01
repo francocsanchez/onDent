@@ -1,6 +1,7 @@
 import { getAtencionesByUsuario } from "@/api/atencioneAPI";
 import { getUsuarioByID } from "@/api/usuarioAPI";
 import LoadingSpinner from "@/components/LoadingSpinner";
+import { formatDateOnly } from "@/utils/date";
 import { useQuery } from "@tanstack/react-query";
 import { FileSearch, Filter } from "lucide-react";
 import { Link, useParams, useSearchParams } from "react-router-dom";
@@ -41,13 +42,6 @@ export default function ReportesAtencionesByEstadoView() {
     queryFn: () => getAtencionesByUsuario(idUsuario!),
     enabled: !!idUsuario && !!estado,
   });
-
-  const formatFecha = (fecha: string) =>
-    new Intl.DateTimeFormat("es-AR", {
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-    }).format(new Date(fecha));
 
   const getPeriodLabel = (periodoValue: string) => {
     if (!/^\d{4}-\d{2}$/.test(periodoValue)) return "Todos los períodos";
@@ -142,7 +136,7 @@ export default function ReportesAtencionesByEstadoView() {
                     return (
                       <tr key={atencion._id} className="transition-colors hover:bg-secondary/20">
                         <td className="whitespace-nowrap px-4 py-3">
-                          <p className="text-sm font-medium text-slate-800">{formatFecha(atencion.fecha)}</p>
+                          <p className="text-sm font-medium text-slate-800">{formatDateOnly(atencion.fecha)}</p>
                         </td>
 
                         <td className="px-4 py-3">

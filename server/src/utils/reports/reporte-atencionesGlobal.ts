@@ -1,3 +1,5 @@
+import { parseDateOnlyString } from "../date";
+
 const validStatuses = ["OK", "Pendiente", "Denegado", "Diferido", "No cargado"] as const;
 
 type AtencionStatus = (typeof validStatuses)[number];
@@ -22,7 +24,6 @@ type AtencionGlobalUsuarioItem = {
 
 type AtencionGlobalItem = {
   fecha?: string | Date;
-  createdAt?: string | Date;
   coseguroOdonto?: number;
   usuario?: AtencionGlobalUsuarioItem;
   codigos?: AtencionGlobalCodigoItem[];
@@ -84,13 +85,6 @@ const createEmptyStatusCounter = (): StatusCounter => ({
   "No cargado": 0,
 });
 
-const toDate = (value?: string | Date) => {
-  if (!value) return null;
-
-  const date = value instanceof Date ? value : new Date(value);
-  return Number.isNaN(date.getTime()) ? null : date;
-};
-
 const getStatus = (value?: string): AtencionStatus => {
   return validStatuses.includes(value as AtencionStatus) ? (value as AtencionStatus) : "No cargado";
 };
@@ -102,7 +96,7 @@ export function reporteAtencionesGlobal(atenciones: AtencionGlobalItem[], reques
   const datedAtenciones = atenciones
     .map((atencion) => ({
       atencion,
-      date: toDate(atencion.fecha) ?? toDate(atencion.createdAt),
+      date: parseDateOnlyString(atencion.fecha),
     }))
     .filter((item): item is { atencion: AtencionGlobalItem; date: Date } => item.date !== null);
 

@@ -3,8 +3,47 @@ import Atencion from "../models/Atencion";
 import { logError } from "../utils/logError";
 import { reporteAtencionesDash } from "../utils/reports/reporte-atencionesDash";
 import { reporteAtencionesGlobal } from "../utils/reports/reporte-atencionesGlobal";
+import { getDisponibilidadPrestaciones, validatePrestacionesDisponibles } from "../utils/prestacionesMensuales";
 
 const normalizeText = (value?: string | null) => (value ?? "").trim();
+const validCodigoStatuses = ["OK", "Pendiente", "Denegado", "Diferido", "No cargado"] as const;
+type CodigoStatus = (typeof validCodigoStatuses)[number];
+
+const isAdminRole = (role?: string) => role === "admin" || role === "superadmin";
+const buildUsuarioScopeFilter = (role?: string, userId?: string) => (isAdminRole(role) || !userId ? {} : { usuario: userId });
+const buildStatusFilter = (rawStatus?: string) => {
+  const status = typeof rawStatus === "string" ? rawStatus.trim() : "";
+
+  if (!status) {
+    return { filters: {} };
+  }
+
+  if (!validCodigoStatuses.includes(status as CodigoStatus)) {
+    return { error: "El estado no es válido" };
+  }
+
+  return {
+    filters: {
+      codigos: { $elemMatch: { status } },
+    },
+  };
+};
+
+const getPrestacionesErrorStatus = (message?: string) => {
+  if (!message) {
+    return 500;
+  }
+
+  if (message === "La fecha de atención no es válida") {
+    return 400;
+  }
+
+  if (message === "Obra Social no encontrada" || message === "No se pudo determinar la obra social del paciente") {
+    return 404;
+  }
+
+  return 500;
+};
 
 const buildDateFilters = (rawYear?: string, rawMonth?: string) => {
   const year = typeof rawYear === "string" ? rawYear.trim() : "";
@@ -36,6 +75,43 @@ const buildDateFilters = (rawYear?: string, rawMonth?: string) => {
 };
 
 export class AtencionController {
+  static getDisponibilidadPrestaciones = async (req: Request, res: Response) => {
+    try {
+      const paciente = typeof req.query.paciente === "string" ? req.query.paciente.trim() : "";
+      const obraSocial = typeof req.query.obraSocial === "string" ? req.query.obraSocial.trim() : "";
+      const fecha = typeof req.query.fecha === "string" ? req.query.fecha.trim() : undefined;
+
+      const disponibilidad = await getDisponibilidadPrestaciones({
+        pacienteId: paciente,
+        obraSocialId: obraSocial,
+        fecha,
+      });
+
+      return res.status(200).json({
+        data: {
+          tieneLimiteConfigurado: disponibilidad.tieneLimiteConfigurado,
+          limiteMensual: disponibilidad.limiteMensual,
+          utilizadas: disponibilidad.utilizadas,
+          disponibles: disponibilidad.disponibles,
+          mes: disponibilidad.mes,
+          anio: disponibilidad.anio,
+        },
+        message: disponibilidad.tieneLimiteConfigurado
+          ? "Disponibilidad de prestaciones obtenida correctamente"
+          : "La obra social no posee límite mensual configurado",
+      });
+    } catch (error) {
+      logError("AtencionController.getDisponibilidadPrestaciones");
+      console.error(error);
+      const message = error instanceof Error ? error.message : "Error del servidor";
+      const statusCode = getPrestacionesErrorStatus(message);
+      return res.status(statusCode).json({
+        data: null,
+        message: statusCode === 500 ? "Error del servidor" : message,
+      });
+    }
+  };
+
   static getAll = async (req: Request, res: Response) => {
     try {
       const page = Math.max(Number(req.query.page) || 1, 1);
@@ -45,6 +121,7 @@ export class AtencionController {
         typeof req.query.year === "string" ? req.query.year : undefined,
         typeof req.query.month === "string" ? req.query.month : undefined,
       );
+      const statusFilters = buildStatusFilter(typeof req.query.status === "string" ? req.query.status : undefined);
 
       if ("error" in dateFilters) {
         return res.status(400).json({
@@ -53,9 +130,17 @@ export class AtencionController {
         });
       }
 
+      if ("error" in statusFilters) {
+        return res.status(400).json({
+          data: null,
+          message: statusFilters.error,
+        });
+      }
+
       const filters = {
-        usuario: req.user._id,
+        ...buildUsuarioScopeFilter(req.user?.role, req.user?._id),
         ...dateFilters.filters,
+        ...statusFilters.filters,
       };
 
       const [atenciones, total] = await Promise.all([
@@ -98,7 +183,7 @@ export class AtencionController {
   static getAvailableYears = async (req: Request, res: Response) => {
     try {
       const years = await Atencion.aggregate<{ _id: string }>([
-        { $match: { usuario: req.user._id } },
+        { $match: buildUsuarioScopeFilter(req.user?.role, req.user?._id) },
         {
           $project: {
             year: {
@@ -139,6 +224,7 @@ export class AtencionController {
         typeof req.query.year === "string" ? req.query.year : undefined,
         typeof req.query.month === "string" ? req.query.month : undefined,
       );
+      const statusFilters = buildStatusFilter(typeof req.query.status === "string" ? req.query.status : undefined);
 
       if ("error" in dateFilters) {
         return res.status(400).json({
@@ -147,9 +233,17 @@ export class AtencionController {
         });
       }
 
+      if ("error" in statusFilters) {
+        return res.status(400).json({
+          data: null,
+          message: statusFilters.error,
+        });
+      }
+
       const atenciones = await Atencion.find({
-        usuario: req.user._id,
+        ...buildUsuarioScopeFilter(req.user?.role, req.user?._id),
         ...dateFilters.filters,
+        ...statusFilters.filters,
       })
         .populate("paciente")
         .populate("usuario")
@@ -187,7 +281,7 @@ export class AtencionController {
         });
       }
 
-      if (!["OK", "Pendiente", "Denegado", "Diferido", "No cargado"].includes(status)) {
+      if (!validCodigoStatuses.includes(status as CodigoStatus)) {
         return res.status(400).json({
           data: null,
           message: "El estado no es válido",
@@ -195,7 +289,7 @@ export class AtencionController {
       }
 
       const filters = {
-        usuario: req.user._id,
+        ...buildUsuarioScopeFilter(req.user?.role, req.user?._id),
         fecha: { $regex: `^${periodo}` },
         codigos: { $elemMatch: { status } },
       };
@@ -241,6 +335,20 @@ export class AtencionController {
     const { fecha, paciente, usuario, obraSocial, codigos, observaciones, coseguro, coseguroOdonto } = req.body;
 
     try {
+      const validationResult = await validatePrestacionesDisponibles({
+        pacienteId: paciente,
+        obraSocialId: obraSocial,
+        fecha,
+        cantidadNuevosCodigos: Array.isArray(codigos) ? codigos.length : 0,
+      });
+
+      if (validationResult.excedeLimite) {
+        return res.status(400).json({
+          data: null,
+          message: validationResult.message,
+        });
+      }
+
       const newAtencion = new Atencion({
         fecha,
         paciente,
@@ -261,9 +369,10 @@ export class AtencionController {
     } catch (error) {
       logError("AtencionController.create");
       console.error(error);
-      return res.status(500).json({
+      const message = error instanceof Error ? error.message : "Error del servidor";
+      return res.status(getPrestacionesErrorStatus(message)).json({
         data: null,
-        message: "Error del servidor",
+        message: getPrestacionesErrorStatus(message) === 500 ? "Error del servidor" : message,
       });
     }
   };
@@ -498,7 +607,7 @@ export class AtencionController {
       const requestedYear = rawYear ? Number(rawYear) : undefined;
 
       const atenciones = await Atencion.find({})
-        .select("fecha createdAt coseguroOdonto usuario codigos")
+        .select("fecha coseguroOdonto usuario codigos")
         .populate("usuario", "name lastName")
         .populate("codigos.codigo", "code description")
         .lean();

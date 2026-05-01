@@ -1,4 +1,4 @@
-import { body, param } from "express-validator";
+import { body, param, query } from "express-validator";
 
 export const createValidationAtencion = [
   body("fecha").notEmpty().withMessage("La fecha es obligatoria").isString().withMessage("La fecha debe ser un texto").trim(),
@@ -42,4 +42,13 @@ export const changeStatusValidationAtencion = [
     .isIn(["OK", "Pendiente", "Denegado", "Diferido", "No cargado"])
     .withMessage("El estado no es válido"),
   body("observaciones").optional().isString().withMessage("Las observaciones deben ser un texto").trim(),
+];
+
+export const disponibilidadPrestacionesValidationAtencion = [
+  query("paciente").notEmpty().withMessage("El paciente es obligatorio").isMongoId().withMessage("El ID del paciente no es válido"),
+  query("obraSocial").notEmpty().withMessage("La obra social es obligatoria").isMongoId().withMessage("El ID de la obra social no es válido"),
+  query("fecha")
+    .optional()
+    .matches(/^\d{4}-\d{2}-\d{2}$/)
+    .withMessage("La fecha debe tener formato YYYY-MM-DD"),
 ];

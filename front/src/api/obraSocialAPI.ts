@@ -38,7 +38,7 @@ export async function getObrasSocialByID(idObraSocial: ObraSocial["_id"]) {
   try {
     const { data } = await api(`/obras-sociales/${idObraSocial}`);
 
-    return data.data;
+    return data.data as ObraSocial;
   } catch (error) {
     if (isAxiosError(error) && error.response) {
       throw new Error(error.response.data.error);

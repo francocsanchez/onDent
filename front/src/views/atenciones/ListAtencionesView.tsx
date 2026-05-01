@@ -1,10 +1,12 @@
 import { getAtenciones, getAtencionesAvailableFilters, getAtencionesForExport } from "@/api/atencioneAPI";
 import LoadingSpinner from "@/components/LoadingSpinner";
+import { useAuth } from "@/hooks/useAuth";
+import { formatDateOnly } from "@/utils/date";
 import { useQuery } from "@tanstack/react-query";
 import { exportAtencionesToExcel } from "@/utils/atencionesExcel";
-import { Download, Eye, Plus } from "lucide-react";
-import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Download, Eye, FileSearch, Plus } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { Link, useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
 
 const monthOptions = [
@@ -23,13 +25,41 @@ const monthOptions = [
   { value: "12", label: "Diciembre" },
 ] as const;
 
+const statusOptions = [
+  { value: "", label: "Todos los estados" },
+  { value: "OK", label: "OK" },
+  { value: "Pendiente", label: "Pendiente" },
+  { value: "Denegado", label: "Denegado" },
+  { value: "Diferido", label: "Diferido" },
+  { value: "No cargado", label: "No cargado" },
+] as const;
+
+const validStatuses = ["OK", "Pendiente", "Denegado", "Diferido", "No cargado"] as const;
+type AtencionStatus = (typeof validStatuses)[number];
+
 export default function ListAtencionesView() {
   const currentDate = new Date();
   const currentYear = String(currentDate.getFullYear());
-  const [selectedMonth, setSelectedMonth] = useState("");
-  const [selectedYear, setSelectedYear] = useState(currentYear);
+  const { user } = useAuth();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [page, setPage] = useState(1);
   const [isExporting, setIsExporting] = useState(false);
+  const canAuditAtenciones = user?.role === "admin" || user?.role === "superadmin";
+
+  const selectedMonth = useMemo(() => {
+    const rawMonth = searchParams.get("month")?.trim() ?? "";
+    return monthOptions.some((month) => month.value === rawMonth) ? rawMonth : "";
+  }, [searchParams]);
+
+  const selectedYear = useMemo(() => {
+    const rawYear = searchParams.get("year")?.trim() ?? "";
+    return /^\d{4}$/.test(rawYear) ? rawYear : currentYear;
+  }, [currentYear, searchParams]);
+
+  const selectedStatus = useMemo(() => {
+    const rawStatus = searchParams.get("status")?.trim() ?? "";
+    return validStatuses.includes(rawStatus as AtencionStatus) ? (rawStatus as AtencionStatus) : "";
+  }, [searchParams]);
 
   const {
     data: filtersData,
@@ -44,18 +74,19 @@ export default function ListAtencionesView() {
     isError,
     isLoading,
   } = useQuery({
-    queryKey: ["atenciones", "listar", page, selectedYear, selectedMonth],
+    queryKey: ["atenciones", "listar", page, selectedYear, selectedMonth, selectedStatus],
     queryFn: () =>
       getAtenciones({
         page,
         year: selectedYear || undefined,
         month: selectedMonth || undefined,
+        status: selectedStatus || undefined,
       }),
   });
 
   useEffect(() => {
     setPage(1);
-  }, [selectedMonth, selectedYear]);
+  }, [selectedMonth, selectedStatus, selectedYear]);
 
   if (isLoading) {
     return <LoadingSpinner label="Cargando atenciones..." />;
@@ -69,18 +100,27 @@ export default function ListAtencionesView() {
     );
   }
 
-  const formatFecha = (fecha: string) =>
-    new Intl.DateTimeFormat("es-AR", {
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-    }).format(new Date(fecha));
-
   const atenciones = atencionesResponse?.data ?? [];
   const pagination = atencionesResponse?.pagination;
   const availableYears = Array.from(
     new Set([currentYear, ...(filtersData?.availableYears.map(String) ?? [])]),
   ).sort((firstYear, secondYear) => Number(secondYear) - Number(firstYear));
+
+  const updateFilter = (key: "year" | "month" | "status", value: string) => {
+    const nextParams = new URLSearchParams(searchParams);
+
+    if (value) {
+      nextParams.set(key, value);
+    } else {
+      nextParams.delete(key);
+    }
+
+    if (key === "year" && !value) {
+      nextParams.set("year", currentYear);
+    }
+
+    setSearchParams(nextParams);
+  };
 
   const handleExport = async () => {
     try {
@@ -88,6 +128,7 @@ export default function ListAtencionesView() {
       const atencionesToExport = await getAtencionesForExport({
         year: selectedYear || undefined,
         month: selectedMonth || undefined,
+        status: selectedStatus || undefined,
       });
 
       if (!atencionesToExport.length) {
@@ -121,7 +162,7 @@ export default function ListAtencionesView() {
             <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">Mes</span>
             <select
               value={selectedMonth}
-              onChange={(event) => setSelectedMonth(event.target.value)}
+              onChange={(event) => updateFilter("month", event.target.value)}
               className="rounded-2xl border border-secondary-dark/60 bg-white px-4 py-3 text-sm font-medium text-slate-700 outline-none transition focus:border-primary/40"
             >
               {monthOptions.map((month) => (
@@ -136,12 +177,27 @@ export default function ListAtencionesView() {
             <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">Año</span>
             <select
               value={selectedYear}
-              onChange={(event) => setSelectedYear(event.target.value)}
+              onChange={(event) => updateFilter("year", event.target.value)}
               className="rounded-2xl border border-secondary-dark/60 bg-white px-4 py-3 text-sm font-medium text-slate-700 outline-none transition focus:border-primary/40"
             >
               {availableYears.map((year) => (
                 <option key={year} value={year}>
                   {year}
+                </option>
+              ))}
+            </select>
+          </label>
+
+          <label className="flex min-w-[180px] flex-col gap-1">
+            <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">Estado</span>
+            <select
+              value={selectedStatus}
+              onChange={(event) => updateFilter("status", event.target.value)}
+              className="rounded-2xl border border-secondary-dark/60 bg-white px-4 py-3 text-sm font-medium text-slate-700 outline-none transition focus:border-primary/40"
+            >
+              {statusOptions.map((status) => (
+                <option key={status.value || "all-status"} value={status.value}>
+                  {status.label}
                 </option>
               ))}
             </select>
@@ -201,7 +257,7 @@ export default function ListAtencionesView() {
                           </p>
                         </td>
                         <td className="whitespace-nowrap px-4 py-3">
-                          <p className="text-sm font-medium text-slate-800">{formatFecha(atencion.fecha)}</p>
+                          <p className="text-sm font-medium text-slate-800">{formatDateOnly(atencion.fecha)}</p>
                         </td>
 
                         <td className="px-4 py-3">
@@ -220,6 +276,15 @@ export default function ListAtencionesView() {
 
                         <td className="px-4 py-3">
                           <div className="flex justify-end gap-2">
+                            {canAuditAtenciones ? (
+                              <Link
+                                to={`${atencion._id}/auditar`}
+                                className="inline-flex items-center gap-1.5 rounded-lg border border-amber-300 bg-amber-50 px-2.5 py-1.5 text-xs font-medium text-amber-800 transition-colors hover:border-amber-400 hover:bg-amber-100"
+                              >
+                                <FileSearch className="h-3.5 w-3.5" strokeWidth={2} />
+                                <span>Auditar</span>
+                              </Link>
+                            ) : null}
                             <Link
                               to={`${atencion._id}`}
                               className="inline-flex items-center gap-1.5 rounded-lg border border-secondary-dark/60 bg-white px-2.5 py-1.5 text-xs font-medium text-slate-600 transition-colors hover:border-primary/40 hover:bg-secondary/40 hover:text-primary-dark"
@@ -269,7 +334,7 @@ export default function ListAtencionesView() {
             </>
           ) : (
             <div className="px-4 py-10 text-center">
-              <p className="text-sm font-medium text-slate-700">No hay atenciones registradas.</p>
+              <p className="text-sm font-medium text-slate-700">No hay atenciones registradas con el filtro seleccionado.</p>
             </div>
           )}
         </div>

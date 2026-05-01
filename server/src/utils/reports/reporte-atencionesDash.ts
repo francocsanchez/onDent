@@ -1,6 +1,7 @@
+import { parseDateOnlyString } from "../date";
+
 type AtencionDashItem = {
   fecha?: string | Date;
-  createdAt?: string | Date;
   coseguroOdonto?: number;
   codigos?: {
     valor?: number;
@@ -49,13 +50,6 @@ type AtencionesDashReport = {
   resumenMensual: ResumenMensualAtencionesItem[];
 };
 
-const toDate = (value?: string | Date) => {
-  if (!value) return null;
-
-  const date = value instanceof Date ? value : new Date(value);
-  return Number.isNaN(date.getTime()) ? null : date;
-};
-
 export function reporteAtencionesDash(atenciones: AtencionDashItem[]): AtencionesDashReport {
   const now = new Date();
   const currentYear = now.getFullYear();
@@ -70,7 +64,7 @@ export function reporteAtencionesDash(atenciones: AtencionDashItem[]): Atencione
   }
 
   atenciones.forEach((atencion) => {
-    const atencionDate = toDate(atencion.fecha) ?? toDate(atencion.createdAt);
+    const atencionDate = parseDateOnlyString(atencion.fecha);
     if (!atencionDate) return;
 
     const year = atencionDate.getFullYear();

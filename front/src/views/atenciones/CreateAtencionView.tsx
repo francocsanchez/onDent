@@ -1,8 +1,9 @@
-import { createAtencion, getCodigosByObraSocial, getPacienteByDNI } from "@/api/atencioneAPI";
+import { createAtencion, getCodigosByObraSocial, getDisponibilidadPrestaciones, getPacienteByDNI } from "@/api/atencioneAPI";
 import { getPacienteByID } from "@/api/pacienteAPI";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import { useAuth } from "@/hooks/useAuth";
-import type { Codigo, Paciente } from "@/types/index";
+import type { Codigo, DisponibilidadPrestaciones, Paciente } from "@/types/index";
+import { getTodayDateLocal } from "@/utils/date";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { CalendarDays, Search } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -59,10 +60,8 @@ const inputBaseClassName =
 
 const disabledInputClassName = "w-full rounded-xl border border-secondary-dark/50 bg-slate-100 px-3 py-2.5 text-sm text-slate-500 outline-none";
 
-const getTodayDate = () => new Date().toISOString().slice(0, 10);
-
 const initialValues: CreateAtencionFormValues = {
-  fecha: getTodayDate(),
+  fecha: getTodayDateLocal(),
   patientSearchDni: "",
   patientId: "",
   codes: [],
@@ -78,6 +77,8 @@ export default function CreateAtencionView() {
   const [searchParams] = useSearchParams();
   const [foundPatient, setFoundPatient] = useState<Paciente | null>(null);
   const [availableCodes, setAvailableCodes] = useState<Codigo[]>([]);
+  const [prestacionesDisponibles, setPrestacionesDisponibles] = useState<DisponibilidadPrestaciones | null>(null);
+  const [prestacionesDisponibilidadError, setPrestacionesDisponibilidadError] = useState<string | null>(null);
   const [searchStatus, setSearchStatus] = useState<SearchStatus>("idle");
   const patientIdFromQuery = searchParams.get("pacienteId")?.trim() ?? "";
 
@@ -100,10 +101,14 @@ export default function CreateAtencionView() {
 
   const watchedCodes = watch("codes");
   const watchedCoseguro = watch("coseguro");
+  const watchedFecha = watch("fecha");
   const canShowFormSections = foundPatient !== null;
+  const cantidadCodigosSeleccionados = fields.length;
 
   const resetAttentionDetails = () => {
     setAvailableCodes([]);
+    setPrestacionesDisponibles(null);
+    setPrestacionesDisponibilidadError(null);
     setValue("patientId", "");
     replace([]);
     setValue("generalObservation", "");
@@ -169,6 +174,18 @@ export default function CreateAtencionView() {
     },
   });
 
+  const disponibilidadPrestacionesMutation = useMutation({
+    mutationFn: getDisponibilidadPrestaciones,
+    onSuccess: (disponibilidad) => {
+      setPrestacionesDisponibles(disponibilidad);
+      setPrestacionesDisponibilidadError(null);
+    },
+    onError: (error: Error) => {
+      setPrestacionesDisponibles(null);
+      setPrestacionesDisponibilidadError(error.message);
+    },
+  });
+
   const performPatientSearch = (dniToSearch?: string) => {
     const normalizedDni = (dniToSearch ?? getValues("patientSearchDni")).trim();
 
@@ -203,8 +220,31 @@ export default function CreateAtencionView() {
     searchPatientByIdMutation.mutate(patientIdFromQuery);
   }, [patientIdFromQuery, foundPatient?._id, searchPatientByIdMutation]);
 
+  useEffect(() => {
+    if (!foundPatient) {
+      setPrestacionesDisponibles(null);
+      setPrestacionesDisponibilidadError(null);
+      return;
+    }
+
+    disponibilidadPrestacionesMutation.mutate({
+      paciente: foundPatient._id,
+      obraSocial: foundPatient.obraSocial._id,
+      fecha: watchedFecha,
+    });
+  }, [foundPatient, watchedFecha]);
+
   const onSubmit = (formData: CreateAtencionFormValues) => {
     if (!foundPatient || !user) {
+      return;
+    }
+
+    if (prestacionesDisponibles?.tieneLimiteConfigurado && prestacionesDisponibles.disponibles !== null && formData.codes.length > prestacionesDisponibles.disponibles) {
+      toast.error(
+        prestacionesDisponibles.disponibles === 1
+          ? "Solo queda 1 prestación disponible para este paciente en el mes seleccionado."
+          : `Solo quedan ${prestacionesDisponibles.disponibles} prestaciones disponibles para este paciente en el mes seleccionado.`,
+      );
       return;
     }
 
@@ -385,6 +425,37 @@ export default function CreateAtencionView() {
           </div>
 
           <div className="space-y-3 px-5 py-5">
+            {canShowFormSections && prestacionesDisponibilidadError ? (
+              <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+                {prestacionesDisponibilidadError}
+              </div>
+            ) : null}
+
+            {canShowFormSections && !prestacionesDisponibilidadError && disponibilidadPrestacionesMutation.isPending ? (
+              <div className="rounded-2xl border border-secondary-dark/50 bg-slate-50 px-4 py-3 text-sm text-slate-600">
+                Consultando disponibilidad mensual de prestaciones...
+              </div>
+            ) : null}
+
+            {canShowFormSections && prestacionesDisponibles ? (
+              <div
+                className={`rounded-2xl px-4 py-3 text-sm ${
+                  prestacionesDisponibles.tieneLimiteConfigurado
+                    ? "border border-amber-200 bg-amber-50 text-amber-800"
+                    : "border border-emerald-200 bg-emerald-50 text-emerald-700"
+                }`}
+              >
+                {prestacionesDisponibles.tieneLimiteConfigurado ? (
+                  <p>
+                    Este paciente tiene {prestacionesDisponibles.disponibles} de {prestacionesDisponibles.limiteMensual} prestaciones disponibles para{" "}
+                    {String(prestacionesDisponibles.mes).padStart(2, "0")}/{prestacionesDisponibles.anio}. Ya utilizó {prestacionesDisponibles.utilizadas}.
+                  </p>
+                ) : (
+                  <p>No hay límite mensual configurado para esta obra social.</p>
+                )}
+              </div>
+            ) : null}
+
             {!canShowFormSections ? (
               <div className="rounded-2xl border border-dashed border-secondary-dark/60 bg-slate-50 px-4 py-8 text-center text-sm text-slate-500">
                 Primero buscá y validá un paciente para habilitar la carga de codigos.
@@ -541,6 +612,11 @@ export default function CreateAtencionView() {
                 <p className="mt-2 text-sm text-slate-600">
                   {fields.length} {fields.length === 1 ? "codigo cargado" : "codigos cargados"}
                 </p>
+                {prestacionesDisponibles?.tieneLimiteConfigurado ? (
+                  <p className="mt-1 text-sm text-slate-600">
+                    Disponibles este mes: <span className="font-semibold text-slate-900">{prestacionesDisponibles.disponibles}</span>
+                  </p>
+                ) : null}
                 <p className="mt-1 text-sm text-slate-600">
                   Coseguro actual:{" "}
                   <span className="font-semibold text-slate-900">${typeof watchedCoseguro === "number" ? watchedCoseguro.toFixed(2) : "0.00"}</span>
@@ -568,7 +644,15 @@ export default function CreateAtencionView() {
 
               <button
                 type="submit"
-                disabled={!canShowFormSections || fields.length === 0 || createAtencionMutation.isPending}
+                disabled={
+                  !canShowFormSections ||
+                  fields.length === 0 ||
+                  createAtencionMutation.isPending ||
+                  disponibilidadPrestacionesMutation.isPending ||
+                  (prestacionesDisponibles?.tieneLimiteConfigurado === true &&
+                    prestacionesDisponibles.disponibles !== null &&
+                    cantidadCodigosSeleccionados > prestacionesDisponibles.disponibles)
+                }
                 className="inline-flex items-center justify-center rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-primary-dark disabled:cursor-not-allowed disabled:bg-slate-300"
               >
                 {createAtencionMutation.isPending ? "Guardando..." : "Guardar atencion"}

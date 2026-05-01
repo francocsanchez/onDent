@@ -4,17 +4,19 @@ import { z } from "zod";
 import {
   AtencionesTableSchema,
   atencionesAvailableFiltersSchema,
-  atencionesGlobalReportSchema,
   atencionesDashSchema,
+  atencionesGlobalReportSchema,
   atencionesListResponseSchema,
   atencionSchema,
   codigoSchema,
+  disponibilidadPrestacionesSchema,
   pacienteSchema,
   type Atencion,
+  type AtencionesDash,
   type AtencionesAvailableFilters,
   type AtencionesGlobalReport,
-  type AtencionesDash,
   type Codigo,
+  type DisponibilidadPrestaciones,
   type Paciente,
 } from "../types";
 
@@ -51,15 +53,23 @@ type GetAtencionesParams = {
   page?: number;
   year?: string;
   month?: string;
+  status?: AtencionStatus;
 };
 
-export async function getAtenciones({ page = 1, year, month }: GetAtencionesParams = {}) {
+type GetDisponibilidadPrestacionesParams = {
+  paciente: string;
+  obraSocial: string;
+  fecha?: string;
+};
+
+export async function getAtenciones({ page = 1, year, month, status }: GetAtencionesParams = {}) {
   try {
     const { data } = await api("/atenciones", {
       params: {
         page,
         ...(year ? { year } : {}),
         ...(month ? { month } : {}),
+        ...(status ? { status } : {}),
       },
     });
 
@@ -102,12 +112,13 @@ export async function getAtencionesAvailableFilters() {
   }
 }
 
-export async function getAtencionesForExport({ year, month }: Omit<GetAtencionesParams, "page"> = {}) {
+export async function getAtencionesForExport({ year, month, status }: Omit<GetAtencionesParams, "page"> = {}) {
   try {
     const { data } = await api.get("/atenciones/export", {
       params: {
         ...(year ? { year } : {}),
         ...(month ? { month } : {}),
+        ...(status ? { status } : {}),
       },
     });
 
@@ -197,6 +208,32 @@ export async function createAtencion(formData: CreateAtencionPayload) {
     }
 
     throw new Error("Error inesperado al crear la atención");
+  }
+}
+
+export async function getDisponibilidadPrestaciones({ paciente, obraSocial, fecha }: GetDisponibilidadPrestacionesParams) {
+  try {
+    const { data } = await api.get("/atenciones/disponibilidad-prestaciones", {
+      params: {
+        paciente,
+        obraSocial,
+        ...(fecha ? { fecha } : {}),
+      },
+    });
+
+    const response = disponibilidadPrestacionesSchema.safeParse(data.data);
+    if (!response.success) {
+      console.error("Error en la validación de getDisponibilidadPrestaciones:", response.error);
+      throw new Error("La estructura de los datos es inválida");
+    }
+
+    return response.data satisfies DisponibilidadPrestaciones;
+  } catch (error) {
+    if (isAxiosError(error) && error.response) {
+      throw new Error(error.response.data.error || error.response.data.message || "Error al consultar la disponibilidad de prestaciones");
+    }
+
+    throw new Error("Error inesperado al consultar la disponibilidad de prestaciones");
   }
 }
 

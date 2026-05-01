@@ -12,6 +12,7 @@ export default function CreateObraSocialView() {
 
   const initialValues: ObraSocialFormData = {
     name: "",
+    limitePrestacionesMensuales: null,
   };
 
   const {
