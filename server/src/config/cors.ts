@@ -1,6 +1,6 @@
 import { CorsOptions } from "cors";
 
-const allowedOrigins = ["http://181.13.244.151", "http://localhost:5173", "http://127.0.0.1:5173", "http://histia.site/"];
+const allowedOrigins = ["http://181.13.244.151", "http://localhost:5173", "http://127.0.0.1:5173", "http://histia.site", "http://www.histia.site"];
 
 export const corsOptions: CorsOptions = {
   origin: (origin, callback) => {
