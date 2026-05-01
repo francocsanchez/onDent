@@ -1,48 +1,26 @@
 services:
-  mongo:
-    image: mongo:6
-    restart: unless-stopped
-    volumes:
-      - ${MONGO_DATA_DIR:-./.docker/mongo}:/data/db
-    networks:
-      - ondent_network
-    healthcheck:
-      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping').ok"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 10s
-    logging:
-      driver: json-file
-      options:
-        max-size: "10m"
-        max-file: "3"
-
   server:
     build:
       context: ./server
     restart: unless-stopped
-    depends_on:
-      mongo:
-        condition: service_healthy
     environment:
       NODE_ENV: production
       PORT: 4000
-      DATABASE_MONGO: ${DATABASE_MONGO:-mongodb://mongo:27017/ondent}
-      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:8080}
-      JWT_SECRET: ${JWT_SECRET:-change-this-jwt-secret}
-      DEFAULT_USER_PASSWORD: ${DEFAULT_USER_PASSWORD:-Temp1234!}
-      SMTP_HOST: ${SMTP_HOST:-}
-      SMTP_PORT: ${SMTP_PORT:-587}
-      SMTP_USER: ${SMTP_USER:-}
-      SMTP_PASS: ${SMTP_PASS:-}
-      SMTP_SECURE: ${SMTP_SECURE:-false}
-      SMTP_FROM_NAME: ${SMTP_FROM_NAME:-OnDent}
-      SMTP_FROM_EMAIL: ${SMTP_FROM_EMAIL:-no-reply@localhost}
+      DATABASE_MONGO: ${DATABASE_MONGO}
+      FRONTEND_URL: ${FRONTEND_URL}
+      JWT_SECRET: ${JWT_SECRET}
+      DEFAULT_USER_PASSWORD: ${DEFAULT_USER_PASSWORD}
+      SMTP_HOST: ${SMTP_HOST}
+      SMTP_PORT: ${SMTP_PORT}
+      SMTP_USER: ${SMTP_USER}
+      SMTP_PASS: ${SMTP_PASS}
+      SMTP_SECURE: ${SMTP_SECURE}
+      SMTP_FROM_NAME: ${SMTP_FROM_NAME}
+      SMTP_FROM_EMAIL: ${SMTP_FROM_EMAIL}
     ports:
-      - "127.0.0.1:${API_PORT:-4000}:4000"
+      - "${API_PORT:-4000}:4000"
     networks:
-      - ondent_network
+      - app-network
     healthcheck:
       test:
         ["CMD", "node", "-e", "fetch('http://127.0.0.1:4000/api/health').then((res) => process.exit(res.ok ? 0 : 1)).catch(() => process.exit(1))"]
@@ -66,9 +44,9 @@ services:
       server:
         condition: service_healthy
     ports:
-      - "127.0.0.1:${FRONT_PORT:-8080}:80"
+      - "${FRONT_PORT:-8080}:80"
     networks:
-      - ondent_network
+      - app-network
     healthcheck:
       test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1/ || exit 1"]
       interval: 10s
@@ -82,5 +60,5 @@ services:
         max-file: "3"
 
 networks:
-  ondent_network:
-    driver: bridge
+  app-network:
+    external: true

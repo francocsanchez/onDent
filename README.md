@@ -13,29 +13,56 @@ Aplicación full stack con frontend en React/Vite, backend en Express/TypeScript
 
 ## Docker
 
-El proyecto quedó dockerizado completo con tres servicios:
+El proyecto queda dockerizado con dos servicios:
 
 - `front`: compila la SPA y la sirve con Nginx.
 - `server`: compila el backend TypeScript y lo ejecuta con Node.
-- `mongo`: levanta MongoDB con volumen persistente.
 
 El frontend usa proxy de Nginx hacia `/api`, así que no depende de una URL interna del contenedor para hablar con el backend.
+MongoDB debe existir por fuera de este stack y compartir la red Docker `app-network`.
 
 ## Levantar el stack
 
-1. Crear el archivo de entorno a partir del ejemplo:
+1. Asegurar que exista la red externa:
 
 ```bash
-cp .env.example .env
+docker network ls
 ```
 
-2. Construir y levantar todo:
+2. Cargar variables desde Portainer o exportarlas en la shell.
+
+Variables mínimas del backend:
+
+```env
+DATABASE_MONGO=
+JWT_SECRET=
+FRONTEND_URL=
+PORT=
+```
+
+Variables opcionales:
+
+```env
+DEFAULT_USER_PASSWORD=
+SMTP_HOST=
+SMTP_PORT=
+SMTP_USER=
+SMTP_PASS=
+SMTP_FROM_NAME=
+SMTP_FROM_EMAIL=
+SMTP_SECURE=
+API_PORT=
+FRONT_PORT=
+VITE_API_URL=
+```
+
+3. Construir y levantar:
 
 ```bash
-docker compose up --build
+docker compose up -d --build
 ```
 
-3. Acceder a la app:
+4. Acceder a la app:
 
 - Frontend: `http://localhost:8080`
 - Backend: `http://localhost:4000`
@@ -43,34 +70,33 @@ docker compose up --build
 
 ## Variables de entorno
 
-El archivo raíz `.env` es usado por Docker Compose.
+No se deben guardar valores reales en archivos `.env` para producción si vas a inyectarlos desde Portainer.
 
-Variables principales:
+Ejemplo de variables:
 
 ```env
 API_PORT=4000
 FRONT_PORT=8080
-MONGO_DATA_DIR=./.docker/mongo
-DATABASE_MONGO=mongodb://mongo:27017/ondent
-FRONTEND_URL=http://localhost:8080
+DATABASE_MONGO=
+FRONTEND_URL=
 VITE_API_URL=/api
-JWT_SECRET=change-this-jwt-secret
-DEFAULT_USER_PASSWORD=Temp1234!
+JWT_SECRET=
+DEFAULT_USER_PASSWORD=
 SMTP_HOST=
 SMTP_PORT=587
 SMTP_USER=
 SMTP_PASS=
+SMTP_FROM_NAME=
+SMTP_FROM_EMAIL=
 SMTP_SECURE=false
-SMTP_FROM=OnDent <no-reply@localhost>
 ```
 
 Notas:
 
-- `DATABASE_MONGO` ya viene preparada para que el backend use el contenedor `mongo`.
+- `DATABASE_MONGO` debe apuntar al contenedor externo `mongo` dentro de `app-network`, usando autenticación y la base `onDent`.
 - `FRONTEND_URL` controla CORS cuando el backend recibe requests con `Origin`.
 - `SMTP_*` solo es necesario si vas a usar recuperación de contraseña por email.
-- `MONGO_DATA_DIR` define la carpeta local donde Docker guarda los datos de MongoDB.
-- MongoDB no publica puerto al host por defecto; el backend lo consume por red interna de Docker.
+- `VITE_API_URL=/api` es la opción recomendada en producción porque el frontend usa Nginx como proxy al backend.
 
 ## Desarrollo local sin Docker
 
@@ -90,4 +116,4 @@ npm install
 npm run dev
 ```
 
-En ese modo vas a necesitar definir las variables de entorno del backend y `VITE_API_URL` para el frontend.
+En local podés seguir usando `.env` dentro de `server/`; el backend solo carga `dotenv` fuera de producción.

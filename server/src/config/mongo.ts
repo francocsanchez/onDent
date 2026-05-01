@@ -1,16 +1,10 @@
 import "colors";
 import mongoose from "mongoose";
-import dotenv from "dotenv";
-
-dotenv.config();
+import { getRequiredEnv } from "../helpers/env";
 
 export const connectDB = async () => {
   try {
-    const mongoUri = process.env.DATABASE_MONGO?.trim();
-
-    if (!mongoUri) {
-      throw new Error("DATABASE_MONGO no definida");
-    }
+    const mongoUri = getRequiredEnv("DATABASE_MONGO");
 
     const connection = await mongoose.connect(mongoUri);
     const { host, port, name } = connection.connection;
@@ -23,7 +17,11 @@ export const connectDB = async () => {
     console.log("────────────────────────────────────────".gray);
   } catch (error) {
     console.log("❌ MongoDB connection error".red.bold);
-    console.error(error);
+    if (error instanceof Error) {
+      console.error(error.message);
+    } else {
+      console.error(error);
+    }
     process.exit(1);
   }
 };

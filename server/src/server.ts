@@ -7,7 +7,10 @@ import morgan from "morgan";
 import { connectDB } from "./config/mongo";
 import { corsOptions } from "./config/cors";
 
-dotenv.config();
+if (process.env.NODE_ENV !== "production") {
+  dotenv.config();
+}
+
 connectDB();
 
 const app = express();
