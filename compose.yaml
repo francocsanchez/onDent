@@ -1,15 +1,22 @@
 services:
   mongo:
-    image: mongo:6
+    image: mongo:8.0
     restart: unless-stopped
     volumes:
       - ${MONGO_DATA_DIR:-./.docker/mongo}:/data/db
+    networks:
+      - ondent_network
     healthcheck:
       test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping').ok"]
       interval: 10s
       timeout: 5s
       retries: 5
       start_period: 10s
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
 
   server:
     build:
@@ -30,16 +37,29 @@ services:
       SMTP_USER: ${SMTP_USER:-}
       SMTP_PASS: ${SMTP_PASS:-}
       SMTP_SECURE: ${SMTP_SECURE:-false}
-      SMTP_FROM: ${SMTP_FROM:-OnDent <no-reply@localhost>}
+      SMTP_FROM_NAME: ${SMTP_FROM_NAME:-OnDent}
+      SMTP_FROM_EMAIL: ${SMTP_FROM_EMAIL:-no-reply@localhost}
     ports:
-      - "${API_PORT:-4000}:4000"
+      - "127.0.0.1:${API_PORT:-4000}:4000"
+    networks:
+      - ondent_network
     healthcheck:
       test:
-        ["CMD", "node", "-e", "fetch('http://127.0.0.1:4000/api/health').then((res) => process.exit(res.ok ? 0 : 1)).catch(() => process.exit(1))"]
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://127.0.0.1:4000/api/health').then((res) => process.exit(res.ok ? 0 : 1)).catch(() => process.exit(1))",
+        ]
       interval: 10s
       timeout: 5s
       retries: 5
       start_period: 15s
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
 
   front:
     build:
@@ -51,10 +71,21 @@ services:
       server:
         condition: service_healthy
     ports:
-      - "${FRONT_PORT:-8080}:80"
+      - "127.0.0.1:${FRONT_PORT:-8080}:80"
+    networks:
+      - ondent_network
     healthcheck:
       test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1/ || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 5
       start_period: 10s
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+networks:
+  ondent_network:
+    driver: bridge
