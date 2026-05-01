@@ -9,7 +9,7 @@ export interface ICodigo extends Document {
 
 const CodigoSchema: Schema = new Schema<ICodigo>(
   {
-    code: { type: String, required: true, unique: true, trim: true },
+    code: { type: String, required: true, trim: true },
     description: { type: String, required: true, lowercase: true },
     obraSocial: { type: Schema.Types.ObjectId, ref: "obras_sociales", required: true },
     enable: { type: Boolean, required: true, default: true },
