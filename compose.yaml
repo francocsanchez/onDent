@@ -20,7 +20,9 @@ services:
     ports:
       - "${API_PORT:-4000}:4000"
     networks:
-      - app-network
+      app-network:
+        aliases:
+          - backend
     healthcheck:
       test:
         ["CMD", "node", "-e", "fetch('http://127.0.0.1:4000/api/health').then((res) => process.exit(res.ok ? 0 : 1)).catch(() => process.exit(1))"]
