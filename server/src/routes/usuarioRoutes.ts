@@ -1,19 +1,15 @@
 import { Router } from "express";
+import { AuthController } from "../controllers/AuthController";
 import { UsuarioController } from "../controllers/UsuarioController";
 import { handleImputErrors } from "../middleware/validation";
-import { createValidationUsuario, idValidationUsuario, recoverPasswordValidationUsuario, updateValidationUsuario } from "../validation/usuarios";
+import { createValidationUsuario, idValidationUsuario, updateValidationUsuario } from "../validation/usuarios";
 import { authenticate } from "../middleware/authenticate";
+import { forgotPasswordValidation, loginValidation } from "../validation/auth";
 
 const router = Router();
 
-/**
- * @method POST
- * @route /login
- * @params Ninguno.
- * @description Inicia sesión de usuario y devuelve el token de autenticación.
- */
-router.post("/login", UsuarioController.login);
-router.post("/recover-password", recoverPasswordValidationUsuario, handleImputErrors, UsuarioController.recoverPassword);
+router.post("/login", loginValidation, handleImputErrors, AuthController.login);
+router.post("/recover-password", forgotPasswordValidation, handleImputErrors, AuthController.forgotPassword);
 
 router.use(authenticate);
 

@@ -28,7 +28,9 @@ import pacienteRoutes from "./routes/pacienteRoutes";
 import codigoRoutes from "./routes/codigoRoutes";
 import usuarioRoutes from "./routes/usuarioRoutes";
 import atencionRoutes from "./routes/atencionRoutes";
+import authRoutes from "./routes/authRoutes";
 
+app.use("/api/auth", authRoutes);
 app.use("/api/obras-sociales", obraSocialRoutes);
 app.use("/api/pacientes", pacienteRoutes);
 app.use("/api/codigos", codigoRoutes);

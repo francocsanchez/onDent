@@ -6,6 +6,7 @@ import ProtectedRoute from "./layouts/ProtectedRoute";
 import RoleProtectedRoute from "./layouts/RoleProtectedRoute";
 
 const LoginView = lazy(() => import("./views/auth/LoginView"));
+const ForgotPasswordView = lazy(() => import("./views/auth/ForgotPasswordView"));
 const NotFound = lazy(() => import("./views/NotFound"));
 const NoAutorizado = lazy(() => import("./views/NoAutorizado"));
 const MiPerfilView = lazy(() => import("./views/auth/MiPerfilView"));
@@ -38,6 +39,7 @@ export default function Router() {
     <BrowserRouter>
       <Routes>
         <Route path="/login" element={withSuspense(<LoginView />, "Cargando acceso...")} />
+        <Route path="/forgot-password" element={withSuspense(<ForgotPasswordView />, "Cargando recuperación...")} />
         <Route element={<ProtectedRoute />}>
           <Route element={<AppLayout />}>
             <Route path="/profile" element={withSuspense(<MiPerfilView />, "Cargando perfil...")} />

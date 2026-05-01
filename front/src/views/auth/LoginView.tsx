@@ -1,7 +1,7 @@
-import { authenticateUser, recoverPassword } from "@/api/authAPI";
+import { authenticateUser } from "@/api/authAPI";
 import { useMutation } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 
 type LoginFormData = {
@@ -20,7 +20,6 @@ export default function LoginView() {
   const {
     register,
     handleSubmit,
-    getValues,
     formState: { errors },
   } = useForm<LoginFormData>({ defaultValues: initialValues });
 
@@ -34,16 +33,6 @@ export default function LoginView() {
     },
   });
 
-  const recoverPasswordMutation = useMutation({
-    mutationFn: recoverPassword,
-    onSuccess: (response: { message?: string }) => {
-      toast.success(response.message || "Te enviamos una nueva contraseña temporal a tu correo");
-    },
-    onError: (error: Error) => {
-      toast.error(error.message || "Error al recuperar la contraseña");
-    },
-  });
-
   const onSubmit = (formData: LoginFormData) => {
     loginMutation.mutate({
       email: formData.email.trim().toLowerCase(),
@@ -51,23 +40,15 @@ export default function LoginView() {
     });
   };
 
-  const handleRecoverPassword = () => {
-    const email = getValues("email").trim().toLowerCase();
-
-    if (!email) {
-      toast.error("Ingresá tu email para recuperar la contraseña");
-      return;
-    }
-
-    recoverPasswordMutation.mutate({ email });
-  };
-
   return (
-    <div className="min-h-screen bg-white px-4 py-10 text-slate-800 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(21,170,154,0.14),_transparent_34%),linear-gradient(180deg,_#ffffff_0%,_#e4f3fa_100%)] px-4 py-10 text-slate-800 sm:px-6 lg:px-8">
       <div className="mx-auto flex min-h-[calc(100vh-5rem)] max-w-md items-center">
         <div className="w-full rounded-[1.75rem] border border-secondary-dark/60 bg-white p-6 shadow-[0_30px_80px_-60px_rgba(14,124,114,0.45)] sm:p-8">
           <div className="mb-6 border-b border-secondary-dark/60 pb-5">
             <img src="/logo.png" alt="OnDent" className="h-auto w-full max-w-[180px] object-contain" />
+            <p className="mt-5 text-sm leading-6 text-slate-600">
+              Ingresá con tu cuenta para acceder al sistema de gestión.
+            </p>
           </div>
 
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
@@ -117,14 +98,11 @@ export default function LoginView() {
               {loginMutation.isPending ? "Ingresando..." : "Ingresar"}
             </button>
 
-            <button
-              type="button"
-              onClick={handleRecoverPassword}
-              disabled={recoverPasswordMutation.isPending}
-              className="inline-flex w-full items-center justify-center rounded-xl border border-secondary-dark/60 bg-white px-4 py-2.5 text-sm font-semibold text-primary transition hover:bg-secondary/30 disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              {recoverPasswordMutation.isPending ? "Enviando correo..." : "Olvidé mi contraseña"}
-            </button>
+            <div className="flex justify-end">
+              <Link to="/forgot-password" className="text-sm font-semibold text-primary transition hover:text-primary-dark">
+                ¿Olvidaste tu contraseña?
+              </Link>
+            </div>
           </form>
         </div>
       </div>

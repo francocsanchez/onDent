@@ -16,7 +16,7 @@ type RecoverPasswordFormData = {
 
 export async function authenticateUser(formData: AuthenticateUserFormData) {
   try {
-    const { data } = await api.post("/usuarios/login", formData);
+    const { data } = await api.post("/auth/login", formData);
     localStorage.setItem("AUTH_TOKEN", data.token);
     return data;
   } catch (error) {
@@ -43,7 +43,7 @@ export async function updateMyPassword(formData: UpdateMyPasswordFormData) {
 
 export async function recoverPassword(formData: RecoverPasswordFormData) {
   try {
-    const { data } = await api.post("/usuarios/recover-password", formData);
+    const { data } = await api.post("/auth/forgot-password", formData);
     return data;
   } catch (error) {
     if (isAxiosError(error)) {

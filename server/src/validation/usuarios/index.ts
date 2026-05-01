@@ -40,7 +40,3 @@ export const createValidationUsuario = [
   body("email").notEmpty().withMessage("El email es obligatorio").isEmail().withMessage("El email no es válido").normalizeEmail(),
   body("role").notEmpty().withMessage("El rol es obligatorio").isIn(["superadmin", "admin", "odontologo"]).withMessage("El rol no es válido"),
 ];
-
-export const recoverPasswordValidationUsuario = [
-  body("email").notEmpty().withMessage("El email es obligatorio").isEmail().withMessage("El email no es válido").normalizeEmail(),
-];
