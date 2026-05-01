@@ -3,6 +3,7 @@ import { isAxiosError } from "axios";
 import { z } from "zod";
 import {
   AtencionesTableSchema,
+  atencionesAvailableFiltersSchema,
   atencionesGlobalReportSchema,
   atencionesDashSchema,
   atencionesListResponseSchema,
@@ -10,6 +11,7 @@ import {
   codigoSchema,
   pacienteSchema,
   type Atencion,
+  type AtencionesAvailableFilters,
   type AtencionesGlobalReport,
   type AtencionesDash,
   type Codigo,
@@ -45,10 +47,20 @@ type GetAtencionesFiltradasParams = {
   page?: number;
 };
 
-export async function getAtenciones(page = 1) {
+type GetAtencionesParams = {
+  page?: number;
+  year?: string;
+  month?: string;
+};
+
+export async function getAtenciones({ page = 1, year, month }: GetAtencionesParams = {}) {
   try {
     const { data } = await api("/atenciones", {
-      params: { page },
+      params: {
+        page,
+        ...(year ? { year } : {}),
+        ...(month ? { month } : {}),
+      },
     });
 
     const response = atencionesListResponseSchema.safeParse({
@@ -67,6 +79,51 @@ export async function getAtenciones(page = 1) {
     if (isAxiosError(error) && error.response) {
       throw new Error(error.response.data.error);
     }
+  }
+}
+
+export async function getAtencionesAvailableFilters() {
+  try {
+    const { data } = await api.get("/atenciones/filtros");
+
+    const response = atencionesAvailableFiltersSchema.safeParse(data.data);
+    if (!response.success) {
+      console.error("Error en la validación de getAtencionesAvailableFilters:", response.error);
+      throw new Error("La estructura de los datos es inválida");
+    }
+
+    return response.data satisfies AtencionesAvailableFilters;
+  } catch (error) {
+    if (isAxiosError(error) && error.response) {
+      throw new Error(error.response.data.error || error.response.data.message || "Error al obtener los filtros disponibles");
+    }
+
+    throw new Error("Error inesperado al obtener los filtros disponibles");
+  }
+}
+
+export async function getAtencionesForExport({ year, month }: Omit<GetAtencionesParams, "page"> = {}) {
+  try {
+    const { data } = await api.get("/atenciones/export", {
+      params: {
+        ...(year ? { year } : {}),
+        ...(month ? { month } : {}),
+      },
+    });
+
+    const response = AtencionesTableSchema.safeParse(data.data);
+    if (!response.success) {
+      console.error("Error en la validación de getAtencionesForExport:", response.error);
+      throw new Error("La estructura de los datos es inválida");
+    }
+
+    return response.data;
+  } catch (error) {
+    if (isAxiosError(error) && error.response) {
+      throw new Error(error.response.data.error || error.response.data.message || "Error al obtener las atenciones para exportar");
+    }
+
+    throw new Error("Error inesperado al obtener las atenciones para exportar");
   }
 }
 

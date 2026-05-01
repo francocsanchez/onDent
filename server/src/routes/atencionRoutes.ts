@@ -21,6 +21,22 @@ router.get("/", AtencionController.getAll);
 
 /**
  * @method GET
+ * @route /filtros
+ * @params Ninguno.
+ * @description Obtiene los años disponibles para filtrar atenciones.
+ */
+router.get("/filtros", AtencionController.getAvailableYears);
+
+/**
+ * @method GET
+ * @route /export
+ * @params year: año con formato YYYY. month: mes con formato MM.
+ * @description Obtiene todas las atenciones filtradas para exportación.
+ */
+router.get("/export", AtencionController.getExportData);
+
+/**
+ * @method GET
  * @route /resumen
  * @params Ninguno.
  * @description Resumen de atenciones para Dashboard.

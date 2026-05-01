@@ -125,6 +125,10 @@ export const atencionesListResponseSchema = z.object({
   pagination: pacientesPaginationSchema,
 });
 
+export const atencionesAvailableFiltersSchema = z.object({
+  availableYears: z.array(z.number()),
+});
+
 export const atencionesDashPorDiaSchema = z.object({
   fecha: z.string(),
   dia: z.number(),
@@ -219,6 +223,7 @@ export type Atencion = z.infer<typeof atencionSchema>;
 export type AtencionCodigo = z.infer<typeof atencionCodigoSchema>;
 export type Codigo = z.infer<typeof codigoSchema>;
 export type AtencionesListResponse = z.infer<typeof atencionesListResponseSchema>;
+export type AtencionesAvailableFilters = z.infer<typeof atencionesAvailableFiltersSchema>;
 export type AtencionesDash = z.infer<typeof atencionesDashSchema>;
 export type AtencionStatusCounter = z.infer<typeof atencionStatusCounterSchema>;
 export type AtencionesGlobalMontoPorUsuario = z.infer<typeof atencionesGlobalMontoPorUsuarioSchema>;

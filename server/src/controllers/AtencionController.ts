@@ -6,15 +6,60 @@ import { reporteAtencionesGlobal } from "../utils/reports/reporte-atencionesGlob
 
 const normalizeText = (value?: string | null) => (value ?? "").trim();
 
+const buildDateFilters = (rawYear?: string, rawMonth?: string) => {
+  const year = typeof rawYear === "string" ? rawYear.trim() : "";
+  const month = typeof rawMonth === "string" ? rawMonth.trim() : "";
+
+  if (year && !/^\d{4}$/.test(year)) {
+    return { error: "El año debe tener formato YYYY" };
+  }
+
+  if (month && !/^(0[1-9]|1[0-2])$/.test(month)) {
+    return { error: "El mes debe tener formato MM" };
+  }
+
+  if (month && !year) {
+    return { error: "Para filtrar por mes debés indicar también el año" };
+  }
+
+  if (!year) {
+    return { filters: {} };
+  }
+
+  return {
+    filters: {
+      fecha: {
+        $regex: month ? `^${year}-${month}` : `^${year}`,
+      },
+    },
+  };
+};
+
 export class AtencionController {
   static getAll = async (req: Request, res: Response) => {
     try {
       const page = Math.max(Number(req.query.page) || 1, 1);
       const limit = 50;
       const skip = (page - 1) * limit;
+      const dateFilters = buildDateFilters(
+        typeof req.query.year === "string" ? req.query.year : undefined,
+        typeof req.query.month === "string" ? req.query.month : undefined,
+      );
+
+      if ("error" in dateFilters) {
+        return res.status(400).json({
+          data: null,
+          message: dateFilters.error,
+        });
+      }
+
+      const filters = {
+        usuario: req.user._id,
+        ...dateFilters.filters,
+      };
 
       const [atenciones, total] = await Promise.all([
-        Atencion.find({ usuario: req.user._id })
+        Atencion.find(filters)
           .populate("paciente")
           .populate("usuario")
           .populate("obraSocial")
@@ -23,7 +68,7 @@ export class AtencionController {
           .skip(skip)
           .limit(limit)
           .lean(),
-        Atencion.countDocuments({}),
+        Atencion.countDocuments(filters),
       ]);
 
       const totalPages = Math.ceil(total / limit);
@@ -42,6 +87,83 @@ export class AtencionController {
       });
     } catch (error) {
       logError("AtencionController.getAll");
+      console.error(error);
+      return res.status(500).json({
+        data: null,
+        message: "Error del servidor",
+      });
+    }
+  };
+
+  static getAvailableYears = async (req: Request, res: Response) => {
+    try {
+      const years = await Atencion.aggregate<{ _id: string }>([
+        { $match: { usuario: req.user._id } },
+        {
+          $project: {
+            year: {
+              $substr: ["$fecha", 0, 4],
+            },
+          },
+        },
+        {
+          $match: {
+            year: {
+              $regex: /^\d{4}$/,
+            },
+          },
+        },
+        { $group: { _id: "$year" } },
+        { $sort: { _id: -1 } },
+      ]);
+
+      return res.status(200).json({
+        data: {
+          availableYears: years.map((item) => Number(item._id)).filter((year) => Number.isInteger(year)),
+        },
+        message: "Años disponibles para filtrar atenciones",
+      });
+    } catch (error) {
+      logError("AtencionController.getAvailableYears");
+      console.error(error);
+      return res.status(500).json({
+        data: null,
+        message: "Error del servidor",
+      });
+    }
+  };
+
+  static getExportData = async (req: Request, res: Response) => {
+    try {
+      const dateFilters = buildDateFilters(
+        typeof req.query.year === "string" ? req.query.year : undefined,
+        typeof req.query.month === "string" ? req.query.month : undefined,
+      );
+
+      if ("error" in dateFilters) {
+        return res.status(400).json({
+          data: null,
+          message: dateFilters.error,
+        });
+      }
+
+      const atenciones = await Atencion.find({
+        usuario: req.user._id,
+        ...dateFilters.filters,
+      })
+        .populate("paciente")
+        .populate("usuario")
+        .populate("obraSocial")
+        .populate("codigos.codigo")
+        .sort({ fecha: -1 })
+        .lean();
+
+      return res.status(200).json({
+        data: atenciones,
+        message: "Listado de atenciones para exportar",
+      });
+    } catch (error) {
+      logError("AtencionController.getExportData");
       console.error(error);
       return res.status(500).json({
         data: null,
