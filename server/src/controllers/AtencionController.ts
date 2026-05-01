@@ -4,6 +4,8 @@ import { logError } from "../utils/logError";
 import { reporteAtencionesDash } from "../utils/reports/reporte-atencionesDash";
 import { reporteAtencionesGlobal } from "../utils/reports/reporte-atencionesGlobal";
 
+const normalizeText = (value?: string | null) => (value ?? "").trim();
+
 export class AtencionController {
   static getAll = async (req: Request, res: Response) => {
     try {
@@ -149,34 +151,68 @@ export class AtencionController {
     const { fecha, paciente, usuario, obraSocial, codigos, observaciones, coseguro, coseguroOdonto } = req.body;
 
     try {
-      const updatedAtencion = await Atencion.findByIdAndUpdate(
-        idAtencion,
-        {
-          fecha,
-          paciente,
-          usuario,
-          obraSocial,
-          codigos,
-          observaciones,
-          coseguro,
-          coseguroOdonto,
-        },
-        { new: true },
-      )
-        .populate("paciente")
-        .populate("usuario")
-        .populate("obraSocial")
-        .populate("codigos.codigo");
+      const atencion = await Atencion.findById(idAtencion);
 
-      if (!updatedAtencion) {
+      if (!atencion) {
         return res.status(404).json({
           data: null,
           message: "Atención no encontrada",
         });
       }
 
+      if (req.user?.role === "odontologo") {
+        if (codigos.length !== atencion.codigos.length) {
+          return res.status(403).json({
+            data: null,
+            message: "Solo podés editar códigos en estado Pendiente",
+          });
+        }
+
+        const intentoEditarCodigoAuditado = atencion.codigos.some((codigoActual, index) => {
+          if (codigoActual.status === "Pendiente") {
+            return false;
+          }
+
+          const codigoEntrante = codigos[index];
+          if (!codigoEntrante) {
+            return true;
+          }
+
+          return (
+            String(codigoActual.codigo) !== String(codigoEntrante.codigo) ||
+            normalizeText(codigoActual.pieza) !== normalizeText(codigoEntrante.pieza) ||
+            normalizeText(codigoActual.observaciones) !== normalizeText(codigoEntrante.observaciones) ||
+            Number(codigoActual.valor ?? 0) !== Number(codigoEntrante.valor ?? 0) ||
+            codigoActual.status !== codigoEntrante.status
+          );
+        });
+
+        if (intentoEditarCodigoAuditado) {
+          return res.status(403).json({
+            data: null,
+            message: "Solo podés editar códigos en estado Pendiente",
+          });
+        }
+      }
+
+      atencion.fecha = fecha;
+      atencion.paciente = paciente;
+      atencion.usuario = usuario;
+      atencion.obraSocial = obraSocial;
+      atencion.codigos = codigos;
+      atencion.observaciones = observaciones;
+      atencion.coseguro = coseguro;
+      atencion.coseguroOdonto = coseguroOdonto;
+
+      await atencion.save();
+
+      await atencion.populate("paciente");
+      await atencion.populate("usuario");
+      await atencion.populate("obraSocial");
+      await atencion.populate("codigos.codigo");
+
       return res.status(200).json({
-        data: updatedAtencion,
+        data: atencion,
         message: "Atención actualizada correctamente",
       });
     } catch (error) {

@@ -1,5 +1,6 @@
 import { getAtencionByID, getCodigosByObraSocial, updateAtencionByID } from "@/api/atencioneAPI";
 import LoadingSpinner from "@/components/LoadingSpinner";
+import { useAuth } from "@/hooks/useAuth";
 import type { Codigo } from "@/types/index";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, Save } from "lucide-react";
@@ -28,6 +29,7 @@ export default function EditAtencionView() {
   const idAtencion = params.idAtencion!;
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { user } = useAuth();
 
   const {
     data: atencion,
@@ -96,6 +98,9 @@ export default function EditAtencionView() {
     );
   }
 
+  const canEditAnyCodigo = user?.role === "admin" || user?.role === "superadmin";
+  const isCodigoLocked = (status: string) => !canEditAnyCodigo && user?.role === "odontologo" && status !== "Pendiente";
+
   const onSubmit = (formData: EditAtencionFormValues) => {
     mutation.mutate({
       idAtencion,
@@ -104,11 +109,13 @@ export default function EditAtencionView() {
       usuario: atencion.usuario._id,
       obraSocial: atencion.obraSocial._id,
       codigos: atencion.codigos.map((item, index) => ({
-        codigo: formData.codigos[index].codigo,
-        pieza: formData.codigos[index].pieza.trim(),
+        codigo: isCodigoLocked(item.status) ? item.codigo._id : formData.codigos[index].codigo,
+        pieza: isCodigoLocked(item.status) ? item.pieza : formData.codigos[index].pieza.trim(),
         valor: item.valor,
         status: item.status,
-        observaciones: formData.codigos[index].observaciones.trim() || undefined,
+        observaciones: isCodigoLocked(item.status)
+          ? item.observaciones
+          : formData.codigos[index].observaciones.trim() || undefined,
       })),
       observaciones: formData.observaciones.trim() || undefined,
       coseguro: formData.coseguro === "" ? 0 : formData.coseguro,
@@ -123,6 +130,9 @@ export default function EditAtencionView() {
           <p className="text-sm font-medium text-primary">Atenciones</p>
           <h2 className="text-2xl font-semibold tracking-tight text-slate-900">Editar atención</h2>
           <p className="mt-1 text-sm text-slate-500">Podés modificar código, pieza, observaciones y coseguro.</p>
+          {user?.role === "odontologo" ? (
+            <p className="mt-2 text-sm text-amber-700">Solo podés editar códigos en estado Pendiente. Los ya auditados quedan bloqueados.</p>
+          ) : null}
         </div>
       </div>
 
@@ -161,8 +171,12 @@ export default function EditAtencionView() {
                 {fields.map((field, index) => (
                   <tr key={field.id} className="align-top transition-colors hover:bg-secondary/20">
                     <td className="px-4 py-3">
+                      {isCodigoLocked(atencion.codigos[index].status) ? (
+                        <p className="mb-2 text-xs font-medium text-slate-500">Bloqueado por auditoría: {atencion.codigos[index].status}</p>
+                      ) : null}
                       <select
                         className={`${inputClassName} max-w-[320px]`}
+                        disabled={isCodigoLocked(atencion.codigos[index].status)}
                         {...register(`codigos.${index}.codigo`, {
                           required: "El código es obligatorio",
                         })}
@@ -180,12 +194,22 @@ export default function EditAtencionView() {
                     </td>
 
                     <td className="px-4 py-3">
-                      <input placeholder="Ej: 14" className={`${inputClassName} max-w-[96px]`} {...register(`codigos.${index}.pieza`, {})} />
+                      <input
+                        placeholder="Ej: 14"
+                        readOnly={isCodigoLocked(atencion.codigos[index].status)}
+                        className={`${inputClassName} max-w-[96px] ${isCodigoLocked(atencion.codigos[index].status) ? "bg-slate-100 text-slate-500" : ""}`}
+                        {...register(`codigos.${index}.pieza`, {})}
+                      />
                       {errors.codigos?.[index]?.pieza ? <p className="mt-2 text-sm text-rose-600">{errors.codigos[index]?.pieza?.message}</p> : null}
                     </td>
 
                     <td className="px-4 py-3">
-                      <textarea rows={2} className={`${textareaClassName} min-w-[360px]`} {...register(`codigos.${index}.observaciones`)} />
+                      <textarea
+                        rows={2}
+                        readOnly={isCodigoLocked(atencion.codigos[index].status)}
+                        className={`${textareaClassName} min-w-[360px] ${isCodigoLocked(atencion.codigos[index].status) ? "bg-slate-100 text-slate-500" : ""}`}
+                        {...register(`codigos.${index}.observaciones`)}
+                      />
                     </td>
                   </tr>
                 ))}
