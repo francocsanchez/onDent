@@ -1,6 +1,6 @@
 services:
   mongo:
-    image: mongo:8.0
+    image: mongo:6
     restart: unless-stopped
     volumes:
       - ${MONGO_DATA_DIR:-./.docker/mongo}:/data/db
@@ -45,12 +45,7 @@ services:
       - ondent_network
     healthcheck:
       test:
-        [
-          "CMD",
-          "node",
-          "-e",
-          "fetch('http://127.0.0.1:4000/api/health').then((res) => process.exit(res.ok ? 0 : 1)).catch(() => process.exit(1))",
-        ]
+        ["CMD", "node", "-e", "fetch('http://127.0.0.1:4000/api/health').then((res) => process.exit(res.ok ? 0 : 1)).catch(() => process.exit(1))"]
       interval: 10s
       timeout: 5s
       retries: 5
