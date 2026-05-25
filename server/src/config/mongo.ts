@@ -7,10 +7,12 @@ export const connectDB = async () => {
     const mongoUri = getRequiredEnv("DATABASE_MONGO");
 
     const connection = await mongoose.connect(mongoUri);
+    await mongoose.syncIndexes();
     const { host, port, name } = connection.connection;
 
     console.log("────────────────────────────────────────".gray);
     console.log("🧠 MongoDB connected successfully".green.bold);
+    console.log("🗂️  MongoDB indexes synchronized".green);
     console.log(`📍 Host : ${host}`.magenta);
     console.log(`🔌 Port : ${port}`.magenta);
     console.log(`📦 DB   : ${name}`.cyan);
