@@ -87,9 +87,15 @@ export async function getAtenciones({ page = 1, year, month, status }: GetAtenci
     }
   } catch (error) {
     if (isAxiosError(error) && error.response) {
-      throw new Error(error.response.data.error);
+      throw new Error(error.response.data.error || error.response.data.message || "Error al obtener las atenciones");
+    }
+
+    if (error instanceof Error) {
+      throw error;
     }
   }
+
+  throw new Error("Error al obtener las atenciones");
 }
 
 export async function getAtencionesAvailableFilters() {
@@ -153,9 +159,15 @@ export async function getAtencionByID(idAtencion: Atencion["_id"]) {
     }
   } catch (error) {
     if (isAxiosError(error) && error.response) {
-      throw new Error(error.response.data.error);
+      throw new Error(error.response.data.error || error.response.data.message || "Error al obtener la atención");
+    }
+
+    if (error instanceof Error) {
+      throw error;
     }
   }
+
+  throw new Error("Error al obtener la atención");
 }
 
 export async function getPacienteByDNI(dni: string) {

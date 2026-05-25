@@ -83,7 +83,7 @@ export const codigoSchema = z.object({
 
 export const atencionCodigoSchema = z.object({
   codigo: codigoSchema,
-  pieza: z.string(),
+  pieza: z.string().optional().default(""),
   valor: z.number(),
   status: z.enum(["OK", "Pendiente", "Denegado", "Diferido", "No cargado"]),
   observaciones: z.string().optional(),
