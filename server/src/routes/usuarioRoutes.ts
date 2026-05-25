@@ -2,7 +2,7 @@ import { Router } from "express";
 import { AuthController } from "../controllers/AuthController";
 import { UsuarioController } from "../controllers/UsuarioController";
 import { handleImputErrors } from "../middleware/validation";
-import { createValidationUsuario, idValidationUsuario, updateValidationUsuario } from "../validation/usuarios";
+import { createValidationUsuario, idValidationUsuario, updateMyPasswordValidation, updateValidationUsuario } from "../validation/usuarios";
 import { authenticate } from "../middleware/authenticate";
 import { forgotPasswordValidation, loginValidation } from "../validation/auth";
 
@@ -35,7 +35,7 @@ router.get("/", UsuarioController.getAll);
  * @params Ninguno.
  * @description Actualiza la contraseña del usuario autenticado.
  */
-router.patch("/me/password", UsuarioController.updateMyPassword);
+router.patch("/me/password", updateMyPasswordValidation, handleImputErrors, UsuarioController.updateMyPassword);
 
 /**
  * @method POST

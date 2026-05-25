@@ -123,7 +123,7 @@ export default function MiPerfilView() {
                   className={inputClassName}
                   {...register("password", {
                     validate: (value) => {
-                      if (!value && !watch("repeatPassword")) return true;
+                      if (!value.trim()) return "La contraseña es obligatoria";
                       return value.length >= 6 || "La contraseña debe tener al menos 6 caracteres";
                     },
                   })}
@@ -142,7 +142,7 @@ export default function MiPerfilView() {
                   className={inputClassName}
                   {...register("repeatPassword", {
                     validate: (value) => {
-                      if (!password && !value) return true;
+                      if (!value.trim()) return "Debes repetir la contraseña";
                       return value === password || "Las contraseñas no coinciden";
                     },
                   })}
