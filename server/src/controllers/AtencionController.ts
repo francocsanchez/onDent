@@ -8,6 +8,7 @@ import { getDisponibilidadPrestaciones, validatePrestacionesDisponibles } from "
 const normalizeText = (value?: string | null) => (value ?? "").trim();
 const validCodigoStatuses = ["OK", "Pendiente", "Denegado", "Diferido", "No cargado"] as const;
 type CodigoStatus = (typeof validCodigoStatuses)[number];
+const mongoIdRegex = /^[a-f\d]{24}$/i;
 
 const isAdminRole = (role?: string) => role === "admin" || role === "superadmin";
 const buildUsuarioScopeFilter = (role?: string, userId?: string) => (isAdminRole(role) || !userId ? {} : { usuario: userId });
@@ -25,6 +26,24 @@ const buildStatusFilter = (rawStatus?: string) => {
   return {
     filters: {
       codigos: { $elemMatch: { status } },
+    },
+  };
+};
+
+const buildObraSocialFilter = (rawObraSocial?: string) => {
+  const obraSocial = typeof rawObraSocial === "string" ? rawObraSocial.trim() : "";
+
+  if (!obraSocial) {
+    return { filters: {} };
+  }
+
+  if (!mongoIdRegex.test(obraSocial)) {
+    return { error: "La obra social no es válida" };
+  }
+
+  return {
+    filters: {
+      obraSocial,
     },
   };
 };
@@ -122,6 +141,7 @@ export class AtencionController {
         typeof req.query.month === "string" ? req.query.month : undefined,
       );
       const statusFilters = buildStatusFilter(typeof req.query.status === "string" ? req.query.status : undefined);
+      const obraSocialFilters = buildObraSocialFilter(typeof req.query.obraSocial === "string" ? req.query.obraSocial : undefined);
 
       if ("error" in dateFilters) {
         return res.status(400).json({
@@ -137,10 +157,18 @@ export class AtencionController {
         });
       }
 
+      if ("error" in obraSocialFilters) {
+        return res.status(400).json({
+          data: null,
+          message: obraSocialFilters.error,
+        });
+      }
+
       const filters = {
         ...buildUsuarioScopeFilter(req.user?.role, req.user?._id),
         ...dateFilters.filters,
         ...statusFilters.filters,
+        ...obraSocialFilters.filters,
       };
 
       const [atenciones, total] = await Promise.all([
@@ -225,6 +253,7 @@ export class AtencionController {
         typeof req.query.month === "string" ? req.query.month : undefined,
       );
       const statusFilters = buildStatusFilter(typeof req.query.status === "string" ? req.query.status : undefined);
+      const obraSocialFilters = buildObraSocialFilter(typeof req.query.obraSocial === "string" ? req.query.obraSocial : undefined);
 
       if ("error" in dateFilters) {
         return res.status(400).json({
@@ -240,10 +269,18 @@ export class AtencionController {
         });
       }
 
+      if ("error" in obraSocialFilters) {
+        return res.status(400).json({
+          data: null,
+          message: obraSocialFilters.error,
+        });
+      }
+
       const atenciones = await Atencion.find({
         ...buildUsuarioScopeFilter(req.user?.role, req.user?._id),
         ...dateFilters.filters,
         ...statusFilters.filters,
+        ...obraSocialFilters.filters,
       })
         .populate("paciente")
         .populate("usuario")

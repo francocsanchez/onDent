@@ -3,11 +3,12 @@ import LoadingSpinner from "@/components/LoadingSpinner";
 import { formatDateOnly } from "@/utils/date";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft, CircleDollarSign, Pencil, Shield, UserRound } from "lucide-react";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
 
 export default function AtencionView() {
   const navigate = useNavigate();
   const params = useParams();
+  const [searchParams] = useSearchParams();
   const idAtencion = params.idAtencion!;
 
   const {
@@ -44,6 +45,18 @@ export default function AtencionView() {
   const totalCodigos = atencion.codigos.reduce((acc, item) => acc + (item.status === "OK" ? item.valor : 0), 0);
   const totalGeneral = totalCodigos + (atencion.coseguroOdonto ?? 0);
   const totalNoLiquidable = atencion.codigos.reduce((acc, item) => acc + (item.status !== "OK" ? item.valor : 0), 0);
+  const returnTo = searchParams.get("returnTo")?.trim() ?? "";
+
+  const getBackPath = () => {
+    if (returnTo !== "list") {
+      return null;
+    }
+
+    const nextParams = new URLSearchParams(searchParams);
+    nextParams.delete("returnTo");
+    const query = nextParams.toString();
+    return `/atenciones${query ? `?${query}` : ""}`;
+  };
 
   const statusClasses: Record<string, string> = {
     OK: "bg-green-50 text-green-700 border border-green-200",
@@ -75,7 +88,15 @@ export default function AtencionView() {
 
           <button
             type="button"
-            onClick={() => navigate(-1)}
+            onClick={() => {
+              const backPath = getBackPath();
+              if (backPath) {
+                navigate(backPath);
+                return;
+              }
+
+              navigate(-1);
+            }}
             className="inline-flex items-center justify-center gap-2 rounded-2xl border border-secondary-dark/60 bg-white px-4 py-3 text-sm font-semibold text-slate-700 transition-colors hover:border-primary/40 hover:bg-secondary/40 hover:text-primary-dark"
           >
             <ArrowLeft className="h-4 w-4" strokeWidth={2.2} />
@@ -134,6 +155,23 @@ export default function AtencionView() {
       </div>
 
       <div className="mt-6 space-y-6">
+        <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_280px]">
+          <div className="rounded-2xl border border-secondary-dark/60 bg-white p-5 shadow-sm">
+            <h3 className="text-base font-semibold text-slate-900">Observacion de la atencion</h3>
+            <p className="mt-3 text-sm leading-6 text-slate-700">{atencion.observaciones || "Sin observaciones."}</p>
+          </div>
+
+          <div className="rounded-2xl border border-secondary-dark/60 bg-white p-5 shadow-sm">
+            <p className="text-[11px] font-semibold uppercase tracking-wider text-primary-dark/80">Coseguro</p>
+            <p className="mt-2 text-sm font-semibold text-slate-900">
+              {atencion.coseguro == null ? "Sin coseguro registrado" : formatMoney(atencion.coseguro)}
+            </p>
+            <p className="mt-0.5 text-xs text-slate-500">
+              {atencion.coseguro == null ? "No se informó un importe para esta atención." : "Importe registrado para la atención."}
+            </p>
+          </div>
+        </div>
+
         <div className="rounded-2xl border border-secondary-dark/60 bg-white shadow-sm">
           <div className="border-b border-secondary-dark/40 px-4 py-4 sm:px-5">
             <h3 className="text-base font-semibold text-slate-900">Codigos de la atencion</h3>
@@ -192,10 +230,6 @@ export default function AtencionView() {
           </div>
         </div>
 
-        <div className="rounded-2xl border border-secondary-dark/60 bg-white p-5 shadow-sm">
-          <h3 className="text-base font-semibold text-slate-900">Observacion de la atencion</h3>
-          <p className="mt-3 text-sm leading-6 text-slate-700">{atencion.observaciones || "Sin observaciones."}</p>
-        </div>
       </div>
     </>
   );

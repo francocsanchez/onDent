@@ -54,6 +54,7 @@ type GetAtencionesParams = {
   year?: string;
   month?: string;
   status?: AtencionStatus;
+  obraSocial?: string;
 };
 
 type GetDisponibilidadPrestacionesParams = {
@@ -62,7 +63,7 @@ type GetDisponibilidadPrestacionesParams = {
   fecha?: string;
 };
 
-export async function getAtenciones({ page = 1, year, month, status }: GetAtencionesParams = {}) {
+export async function getAtenciones({ page = 1, year, month, status, obraSocial }: GetAtencionesParams = {}) {
   try {
     const { data } = await api("/atenciones", {
       params: {
@@ -70,6 +71,7 @@ export async function getAtenciones({ page = 1, year, month, status }: GetAtenci
         ...(year ? { year } : {}),
         ...(month ? { month } : {}),
         ...(status ? { status } : {}),
+        ...(obraSocial ? { obraSocial } : {}),
       },
     });
 
@@ -118,13 +120,14 @@ export async function getAtencionesAvailableFilters() {
   }
 }
 
-export async function getAtencionesForExport({ year, month, status }: Omit<GetAtencionesParams, "page"> = {}) {
+export async function getAtencionesForExport({ year, month, status, obraSocial }: Omit<GetAtencionesParams, "page"> = {}) {
   try {
     const { data } = await api.get("/atenciones/export", {
       params: {
         ...(year ? { year } : {}),
         ...(month ? { month } : {}),
         ...(status ? { status } : {}),
+        ...(obraSocial ? { obraSocial } : {}),
       },
     });
 

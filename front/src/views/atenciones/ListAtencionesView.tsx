@@ -1,11 +1,12 @@
 import { getAtenciones, getAtencionesAvailableFilters, getAtencionesForExport } from "@/api/atencioneAPI";
+import { getObrasSociales } from "@/api/obraSocialAPI";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import { useAuth } from "@/hooks/useAuth";
 import { formatDateOnly } from "@/utils/date";
 import { useQuery } from "@tanstack/react-query";
 import { exportAtencionesToExcel } from "@/utils/atencionesExcel";
 import { Download, Eye, FileSearch, Plus } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
 
@@ -36,13 +37,13 @@ const statusOptions = [
 
 const validStatuses = ["OK", "Pendiente", "Denegado", "Diferido", "No cargado"] as const;
 type AtencionStatus = (typeof validStatuses)[number];
+const mongoIdRegex = /^[a-f\d]{24}$/i;
 
 export default function ListAtencionesView() {
   const currentDate = new Date();
   const currentYear = String(currentDate.getFullYear());
   const { user } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
-  const [page, setPage] = useState(1);
   const [isExporting, setIsExporting] = useState(false);
   const canAuditAtenciones = user?.role === "admin" || user?.role === "superadmin";
 
@@ -61,6 +62,16 @@ export default function ListAtencionesView() {
     return validStatuses.includes(rawStatus as AtencionStatus) ? (rawStatus as AtencionStatus) : "";
   }, [searchParams]);
 
+  const selectedObraSocial = useMemo(() => {
+    const rawObraSocial = searchParams.get("obraSocial")?.trim() ?? "";
+    return mongoIdRegex.test(rawObraSocial) ? rawObraSocial : "";
+  }, [searchParams]);
+
+  const selectedPage = useMemo(() => {
+    const rawPage = Number(searchParams.get("page")?.trim() ?? "1");
+    return Number.isInteger(rawPage) && rawPage > 0 ? rawPage : 1;
+  }, [searchParams]);
+
   const {
     data: filtersData,
     isError: isFiltersError,
@@ -70,23 +81,28 @@ export default function ListAtencionesView() {
   });
 
   const {
+    data: obrasSociales,
+    isError: isObrasSocialesError,
+  } = useQuery({
+    queryKey: ["obras-sociales"],
+    queryFn: getObrasSociales,
+  });
+
+  const {
     data: atencionesResponse,
     isError,
     isLoading,
   } = useQuery({
-    queryKey: ["atenciones", "listar", page, selectedYear, selectedMonth, selectedStatus],
+    queryKey: ["atenciones", "listar", selectedPage, selectedYear, selectedMonth, selectedStatus, selectedObraSocial],
     queryFn: () =>
       getAtenciones({
-        page,
+        page: selectedPage,
         year: selectedYear || undefined,
         month: selectedMonth || undefined,
         status: selectedStatus || undefined,
+        obraSocial: selectedObraSocial || undefined,
       }),
   });
-
-  useEffect(() => {
-    setPage(1);
-  }, [selectedMonth, selectedStatus, selectedYear]);
 
   if (isLoading) {
     return <LoadingSpinner label="Cargando atenciones..." />;
@@ -105,8 +121,17 @@ export default function ListAtencionesView() {
   const availableYears = Array.from(
     new Set([currentYear, ...(filtersData?.availableYears.map(String) ?? [])]),
   ).sort((firstYear, secondYear) => Number(secondYear) - Number(firstYear));
+  const listSearchParams = new URLSearchParams(searchParams);
 
-  const updateFilter = (key: "year" | "month" | "status", value: string) => {
+  if (!listSearchParams.get("year")) {
+    listSearchParams.set("year", currentYear);
+  }
+
+  listSearchParams.set("returnTo", "list");
+  const listQueryString = listSearchParams.toString();
+  const listNavigationSuffix = listQueryString ? `?${listQueryString}` : "";
+
+  const updateFilter = (key: "year" | "month" | "status" | "obraSocial", value: string) => {
     const nextParams = new URLSearchParams(searchParams);
 
     if (value) {
@@ -119,6 +144,19 @@ export default function ListAtencionesView() {
       nextParams.set("year", currentYear);
     }
 
+    nextParams.delete("page");
+    setSearchParams(nextParams);
+  };
+
+  const updatePage = (nextPage: number) => {
+    const nextParams = new URLSearchParams(searchParams);
+
+    if (nextPage <= 1) {
+      nextParams.delete("page");
+    } else {
+      nextParams.set("page", String(nextPage));
+    }
+
     setSearchParams(nextParams);
   };
 
@@ -129,6 +167,7 @@ export default function ListAtencionesView() {
         year: selectedYear || undefined,
         month: selectedMonth || undefined,
         status: selectedStatus || undefined,
+        obraSocial: selectedObraSocial || undefined,
       });
 
       if (!atencionesToExport.length) {
@@ -203,6 +242,22 @@ export default function ListAtencionesView() {
             </select>
           </label>
 
+          <label className="flex min-w-[220px] flex-col gap-1">
+            <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">Obra social</span>
+            <select
+              value={selectedObraSocial}
+              onChange={(event) => updateFilter("obraSocial", event.target.value)}
+              className="rounded-2xl border border-secondary-dark/60 bg-white px-4 py-3 text-sm font-medium text-slate-700 outline-none transition focus:border-primary/40"
+            >
+              <option value="">Todas las obras sociales</option>
+              {(obrasSociales ?? []).map((obraSocial) => (
+                <option key={obraSocial._id} value={obraSocial._id}>
+                  {obraSocial.name}
+                </option>
+              ))}
+            </select>
+          </label>
+
           <button
             type="button"
             onClick={handleExport}
@@ -226,6 +281,12 @@ export default function ListAtencionesView() {
       {isFiltersError ? (
         <div className="mb-4 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-medium text-amber-700">
           No se pudieron cargar todos los años disponibles. Se muestran opciones locales.
+        </div>
+      ) : null}
+
+      {isObrasSocialesError ? (
+        <div className="mb-4 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-medium text-amber-700">
+          No se pudieron cargar todas las obras sociales disponibles.
         </div>
       ) : null}
 
@@ -278,7 +339,7 @@ export default function ListAtencionesView() {
                           <div className="flex justify-end gap-2">
                             {canAuditAtenciones ? (
                               <Link
-                                to={`${atencion._id}/auditar`}
+                                to={`${atencion._id}/auditar${listNavigationSuffix}`}
                                 className="inline-flex items-center gap-1.5 rounded-lg border border-amber-300 bg-amber-50 px-2.5 py-1.5 text-xs font-medium text-amber-800 transition-colors hover:border-amber-400 hover:bg-amber-100"
                               >
                                 <FileSearch className="h-3.5 w-3.5" strokeWidth={2} />
@@ -286,7 +347,7 @@ export default function ListAtencionesView() {
                               </Link>
                             ) : null}
                             <Link
-                              to={`${atencion._id}`}
+                              to={`${atencion._id}${listNavigationSuffix}`}
                               className="inline-flex items-center gap-1.5 rounded-lg border border-secondary-dark/60 bg-white px-2.5 py-1.5 text-xs font-medium text-slate-600 transition-colors hover:border-primary/40 hover:bg-secondary/40 hover:text-primary-dark"
                             >
                               <Eye className="h-3.5 w-3.5" strokeWidth={2} />
@@ -309,7 +370,7 @@ export default function ListAtencionesView() {
                   <div className="flex items-center justify-end gap-2">
                     <button
                       type="button"
-                      onClick={() => setPage((currentPage) => Math.max(currentPage - 1, 1))}
+                      onClick={() => updatePage(selectedPage - 1)}
                       disabled={!pagination.hasPrevPage}
                       className="inline-flex items-center justify-center rounded-lg border border-secondary-dark/60 bg-white px-3 py-2 text-sm font-medium text-slate-600 transition hover:border-primary/40 hover:bg-secondary/40 hover:text-primary-dark disabled:cursor-not-allowed disabled:opacity-50"
                     >
@@ -322,7 +383,7 @@ export default function ListAtencionesView() {
 
                     <button
                       type="button"
-                      onClick={() => setPage((currentPage) => currentPage + 1)}
+                      onClick={() => updatePage(selectedPage + 1)}
                       disabled={!pagination.hasNextPage}
                       className="inline-flex items-center justify-center rounded-lg border border-secondary-dark/60 bg-white px-3 py-2 text-sm font-medium text-slate-600 transition hover:border-primary/40 hover:bg-secondary/40 hover:text-primary-dark disabled:cursor-not-allowed disabled:opacity-50"
                     >

@@ -45,6 +45,7 @@ export default function AuditarAtencionView() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const periodo = searchParams.get("periodo")?.trim() ?? "";
+  const returnTo = searchParams.get("returnTo")?.trim() ?? "";
   const estado = validStatuses.includes(rawEstado as AtencionStatus) ? (rawEstado as AtencionStatus) : null;
 
   const {
@@ -108,6 +109,13 @@ export default function AuditarAtencionView() {
     }).format(value ?? 0);
 
   function getBackPath() {
+    if (returnTo === "list") {
+      const nextParams = new URLSearchParams(searchParams);
+      nextParams.delete("returnTo");
+      const query = nextParams.toString();
+      return `/atenciones${query ? `?${query}` : ""}`;
+    }
+
     if (!estado || !idUsuario) return "/atenciones";
     const query = periodo ? `?periodo=${encodeURIComponent(periodo)}` : "";
     return `/reports/atenciones/${encodeURIComponent(estado)}/${idUsuario}${query}`;
@@ -177,7 +185,7 @@ export default function AuditarAtencionView() {
             className="inline-flex items-center justify-center gap-2 rounded-2xl border border-secondary-dark/60 bg-white px-4 py-3 text-sm font-semibold text-slate-700 transition-colors hover:border-primary/40 hover:bg-secondary/40 hover:text-primary-dark"
           >
             <ArrowLeft className="h-4 w-4" strokeWidth={2.2} />
-            <span>Volver al reporte</span>
+            <span>{returnTo === "list" ? "Volver al listado" : "Volver al reporte"}</span>
           </Link>
         </div>
       </div>
