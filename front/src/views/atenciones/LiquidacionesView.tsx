@@ -2,7 +2,7 @@ import { getLiquidaciones, getLiquidacionesAvailableFilters, updateLiquidacionIt
 import LoadingSpinner from "@/components/LoadingSpinner";
 import { formatDateOnly } from "@/utils/date";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { RefreshCw } from "lucide-react";
+import { RefreshCw, Save } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
@@ -137,9 +137,9 @@ export default function LiquidacionesView() {
     });
   }, [liquidaciones, savingRows]);
 
-  const availableYears = Array.from(
-    new Set([currentYear, ...(filtersData?.availableYears.map(String) ?? [])]),
-  ).sort((firstYear, secondYear) => Number(secondYear) - Number(firstYear));
+  const availableYears = Array.from(new Set([currentYear, ...(filtersData?.availableYears.map(String) ?? [])])).sort(
+    (firstYear, secondYear) => Number(secondYear) - Number(firstYear),
+  );
 
   const updateFilter = (key: "usuario" | "obraSocial" | "status" | "month" | "year", value: string) => {
     const nextParams = new URLSearchParams(searchParams);
@@ -180,9 +180,19 @@ export default function LiquidacionesView() {
     }));
   };
 
-  const persistRowChanges = async (rowKey: string) => {
+  const hasRowChanges = (rowKey: string) => {
     const item = liquidaciones.find((entry) => getRowKey(entry.atencionId, entry.codigoId) === rowKey);
     const draft = rowDrafts[rowKey];
+
+    if (!item || !draft) return false;
+
+    const parsedValor = Number(draft.valor);
+    return item.status !== draft.status || Number(item.valor ?? 0) !== parsedValor;
+  };
+
+  const persistRowChanges = async (rowKey: string, draftOverride?: EditableRowState) => {
+    const item = liquidaciones.find((entry) => getRowKey(entry.atencionId, entry.codigoId) === rowKey);
+    const draft = draftOverride ?? rowDrafts[rowKey];
 
     if (!item || !draft) return;
 
@@ -337,12 +347,17 @@ export default function LiquidacionesView() {
                 <thead className="border-b border-secondary-dark/50 bg-secondary/40">
                   <tr>
                     <th className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-primary-dark/80">DNI paciente</th>
-                    <th className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-primary-dark/80">Nombre y apellido paciente</th>
+                    <th className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-primary-dark/80">
+                      Nombre y apellido paciente
+                    </th>
                     <th className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-primary-dark/80">Obra social</th>
-                    <th className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-primary-dark/80">Código de atención</th>
+                    <th className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-primary-dark/80">
+                      Código de atención
+                    </th>
                     <th className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-primary-dark/80">Pieza</th>
                     <th className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-primary-dark/80">Estado</th>
                     <th className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-primary-dark/80">Valor</th>
+                    <th className="px-4 py-3 text-right text-[11px] font-semibold uppercase tracking-wider text-primary-dark/80">Guardar</th>
                   </tr>
                 </thead>
 
@@ -354,6 +369,7 @@ export default function LiquidacionesView() {
                       valor: String(item.valor ?? 0),
                     };
                     const isSaving = !!savingRows[rowKey];
+                    const rowHasChanges = hasRowChanges(rowKey);
 
                     return (
                       <tr key={rowKey} className={`transition-colors hover:bg-secondary/20 ${isSaving ? "bg-secondary/10" : ""}`}>
@@ -388,8 +404,9 @@ export default function LiquidacionesView() {
                           <select
                             value={rowDraft.status}
                             disabled={isSaving}
-                            onChange={(event) => updateRowDraft(rowKey, { status: event.target.value as AtencionStatus })}
-                            onBlur={() => void persistRowChanges(rowKey)}
+                            onChange={(event) => {
+                              updateRowDraft(rowKey, { status: event.target.value as AtencionStatus });
+                            }}
                             className={`${selectClassName} ${isSaving ? "cursor-wait bg-slate-100 text-slate-500" : ""}`}
                           >
                             {editableStatusOptions.map((status) => (
@@ -410,7 +427,6 @@ export default function LiquidacionesView() {
                               value={rowDraft.valor}
                               disabled={isSaving}
                               onChange={(event) => updateRowDraft(rowKey, { valor: event.target.value })}
-                              onBlur={() => void persistRowChanges(rowKey)}
                               className={`${inputClassName} pr-10 ${isSaving ? "cursor-wait bg-slate-100 text-slate-500" : ""}`}
                             />
                             {isSaving ? (
@@ -418,6 +434,23 @@ export default function LiquidacionesView() {
                                 <RefreshCw className="h-4 w-4 animate-spin" strokeWidth={2} />
                               </span>
                             ) : null}
+                          </div>
+                        </td>
+
+                        <td className="px-4 py-3">
+                          <div className="flex justify-end">
+                            <button
+                              type="button"
+                              disabled={isSaving || !rowHasChanges}
+                              onClick={() => void persistRowChanges(rowKey)}
+                              className="inline-flex items-center gap-2 rounded-xl bg-primary px-3 py-2 text-xs font-semibold text-white transition-colors hover:bg-primary-dark disabled:cursor-not-allowed disabled:bg-slate-300"
+                            >
+                              {isSaving ? (
+                                <RefreshCw className="h-3.5 w-3.5 animate-spin" strokeWidth={2} />
+                              ) : (
+                                <Save className="h-3.5 w-3.5" strokeWidth={2} />
+                              )}
+                            </button>
                           </div>
                         </td>
                       </tr>
