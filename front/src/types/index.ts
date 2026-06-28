@@ -136,6 +136,7 @@ export const liquidacionItemSchema = z.object({
   atencionId: z.string(),
   codigoId: z.string(),
   fecha: z.string(),
+  pieza: z.string().optional().default(""),
   usuario: z.object({
     _id: z.string(),
     name: z.string(),

@@ -340,6 +340,7 @@ export default function LiquidacionesView() {
                     <th className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-primary-dark/80">Nombre y apellido paciente</th>
                     <th className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-primary-dark/80">Obra social</th>
                     <th className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-primary-dark/80">Código de atención</th>
+                    <th className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-primary-dark/80">Pieza</th>
                     <th className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-primary-dark/80">Estado</th>
                     <th className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-primary-dark/80">Valor</th>
                   </tr>
@@ -377,6 +378,10 @@ export default function LiquidacionesView() {
                         <td className="px-4 py-3">
                           <p className="text-sm font-semibold text-slate-900">{item.codigoAtencion.code}</p>
                           <p className="mt-0.5 text-xs text-slate-500">{item.codigoAtencion.description}</p>
+                        </td>
+
+                        <td className="whitespace-nowrap px-4 py-3">
+                          <p className="text-sm text-slate-700">{item.pieza || "-"}</p>
                         </td>
 
                         <td className="min-w-[190px] px-4 py-3">

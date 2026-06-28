@@ -347,6 +347,7 @@ export class AtencionController {
                   atencionId: "$_id",
                   codigoId: "$codigos.codigo",
                   fecha: 1,
+                  pieza: { $ifNull: ["$codigos.pieza", ""] },
                   usuario: {
                     $let: {
                       vars: { item: { $arrayElemAt: ["$usuario", 0] } },
@@ -911,6 +912,7 @@ export class AtencionController {
           atencionId: String(atencion._id),
           codigoId: String(codigoId),
           fecha: atencion.fecha,
+          pieza: codigoAtencion.pieza ?? "",
           usuario: {
             _id: String(usuario._id),
             name: usuario.name,
