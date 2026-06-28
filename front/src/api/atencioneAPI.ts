@@ -85,6 +85,7 @@ type GetLiquidacionesParams = {
 type UpdateLiquidacionItemPayload = {
   idAtencion: string;
   codigoId: string;
+  rowIndex: number;
   status: AtencionStatus;
   valor: number;
 };
@@ -381,9 +382,10 @@ export async function updateAtencionByID({ idAtencion, ...formData }: UpdateAten
   }
 }
 
-export async function updateLiquidacionItem({ idAtencion, codigoId, status, valor }: UpdateLiquidacionItemPayload) {
+export async function updateLiquidacionItem({ idAtencion, codigoId, rowIndex, status, valor }: UpdateLiquidacionItemPayload) {
   try {
     const { data } = await api.patch(`/atenciones/${idAtencion}/codigos/${codigoId}/liquidacion`, {
+      rowIndex,
       status,
       valor,
     });

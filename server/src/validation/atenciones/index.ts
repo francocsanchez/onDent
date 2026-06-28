@@ -47,6 +47,11 @@ export const changeStatusValidationAtencion = [
 export const updateLiquidacionValidationAtencion = [
   param("idAtencion").isMongoId().withMessage("ID de atención no válido"),
   param("codigoId").isMongoId().withMessage("ID de código no válido"),
+  body("rowIndex")
+    .notEmpty()
+    .withMessage("La fila es obligatoria")
+    .isInt({ min: 0 })
+    .withMessage("La fila no es válida"),
   body("status")
     .notEmpty()
     .withMessage("El estado es obligatorio")

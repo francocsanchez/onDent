@@ -135,6 +135,7 @@ export const atencionesAvailableFiltersSchema = z.object({
 export const liquidacionItemSchema = z.object({
   atencionId: z.string(),
   codigoId: z.string(),
+  rowIndex: z.number().int().nonnegative(),
   fecha: z.string(),
   pieza: z.string().optional().default(""),
   usuario: z.object({

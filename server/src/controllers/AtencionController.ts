@@ -296,7 +296,7 @@ export class AtencionController {
 
       const pipeline: PipelineStage[] = [
         { $match: matchFilters },
-        { $unwind: "$codigos" },
+        { $unwind: { path: "$codigos", includeArrayIndex: "rowIndex" } },
         ...(Object.keys(statusMatchStage).length > 0 ? [{ $match: statusMatchStage }] : []),
         {
           $sort: {
@@ -346,6 +346,7 @@ export class AtencionController {
                   _id: 0,
                   atencionId: "$_id",
                   codigoId: "$codigos.codigo",
+                  rowIndex: 1,
                   fecha: 1,
                   pieza: { $ifNull: ["$codigos.pieza", ""] },
                   usuario: {
@@ -872,7 +873,7 @@ export class AtencionController {
 
   static updateLiquidacionItem = async (req: Request, res: Response) => {
     const { idAtencion, codigoId } = req.params;
-    const { status, valor } = req.body;
+    const { rowIndex, status, valor } = req.body;
 
     try {
       const atencion = await Atencion.findById(idAtencion)
@@ -888,9 +889,18 @@ export class AtencionController {
         });
       }
 
-      const codigoAtencion = atencion.codigos.find((item) => getCodigoObjectIdString(item.codigo) === codigoId);
+      const parsedRowIndex = Number(rowIndex);
 
-      if (!codigoAtencion) {
+      if (!Number.isInteger(parsedRowIndex) || parsedRowIndex < 0 || parsedRowIndex >= atencion.codigos.length) {
+        return res.status(404).json({
+          data: null,
+          message: "Fila de liquidación no encontrada",
+        });
+      }
+
+      const codigoAtencion = atencion.codigos[parsedRowIndex];
+
+      if (!codigoAtencion || getCodigoObjectIdString(codigoAtencion.codigo) !== codigoId) {
         return res.status(404).json({
           data: null,
           message: "Código de atención no encontrado",
@@ -901,7 +911,7 @@ export class AtencionController {
       codigoAtencion.valor = Number(valor);
       await atencion.save();
 
-      const codigoPopulado = atencion.codigos.find((item) => getCodigoObjectIdString(item.codigo) === codigoId);
+      const codigoPopulado = atencion.codigos[parsedRowIndex];
       const codigoDocumento = codigoPopulado?.codigo as unknown as { _id: string; code: string; description: string } | undefined;
       const usuario = atencion.usuario as unknown as { _id: string; name: string; lastName: string };
       const paciente = atencion.paciente as unknown as { dni: number; name: string; lastName: string };
@@ -911,6 +921,7 @@ export class AtencionController {
         data: {
           atencionId: String(atencion._id),
           codigoId: String(codigoId),
+          rowIndex: parsedRowIndex,
           fecha: atencion.fecha,
           pieza: codigoAtencion.pieza ?? "",
           usuario: {

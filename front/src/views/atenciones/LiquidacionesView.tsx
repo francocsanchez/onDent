@@ -47,7 +47,7 @@ const selectClassName =
 const inputClassName =
   "w-full rounded-xl border border-secondary-dark/60 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-primary focus:ring-2 focus:ring-primary/20";
 
-const getRowKey = (atencionId: string, codigoId: string) => `${atencionId}:${codigoId}`;
+const getRowKey = (atencionId: string, rowIndex: number) => `${atencionId}:${rowIndex}`;
 
 export default function LiquidacionesView() {
   const currentYear = String(new Date().getFullYear());
@@ -124,7 +124,7 @@ export default function LiquidacionesView() {
       const nextDrafts = { ...currentDrafts };
 
       liquidaciones.forEach((item) => {
-        const rowKey = getRowKey(item.atencionId, item.codigoId);
+        const rowKey = getRowKey(item.atencionId, item.rowIndex);
         if (!savingRows[rowKey]) {
           nextDrafts[rowKey] = {
             status: item.status,
@@ -181,7 +181,7 @@ export default function LiquidacionesView() {
   };
 
   const hasRowChanges = (rowKey: string) => {
-    const item = liquidaciones.find((entry) => getRowKey(entry.atencionId, entry.codigoId) === rowKey);
+    const item = liquidaciones.find((entry) => getRowKey(entry.atencionId, entry.rowIndex) === rowKey);
     const draft = rowDrafts[rowKey];
 
     if (!item || !draft) return false;
@@ -191,7 +191,7 @@ export default function LiquidacionesView() {
   };
 
   const persistRowChanges = async (rowKey: string, draftOverride?: EditableRowState) => {
-    const item = liquidaciones.find((entry) => getRowKey(entry.atencionId, entry.codigoId) === rowKey);
+    const item = liquidaciones.find((entry) => getRowKey(entry.atencionId, entry.rowIndex) === rowKey);
     const draft = draftOverride ?? rowDrafts[rowKey];
 
     if (!item || !draft) return;
@@ -219,6 +219,7 @@ export default function LiquidacionesView() {
       const response = await mutation.mutateAsync({
         idAtencion: item.atencionId,
         codigoId: item.codigoId,
+        rowIndex: item.rowIndex,
         status: draft.status,
         valor: parsedValor,
       });
@@ -363,7 +364,7 @@ export default function LiquidacionesView() {
 
                 <tbody className="divide-y divide-secondary-dark/40">
                   {liquidaciones.map((item) => {
-                    const rowKey = getRowKey(item.atencionId, item.codigoId);
+                    const rowKey = getRowKey(item.atencionId, item.rowIndex);
                     const rowDraft = rowDrafts[rowKey] ?? {
                       status: item.status,
                       valor: String(item.valor ?? 0),
