@@ -10,6 +10,8 @@ import {
   atencionSchema,
   codigoSchema,
   disponibilidadPrestacionesSchema,
+  coseguroItemSchema,
+  cosegurosListResponseSchema,
   liquidacionItemSchema,
   liquidacionesAvailableFiltersSchema,
   liquidacionesListResponseSchema,
@@ -19,6 +21,8 @@ import {
   type AtencionesAvailableFilters,
   type AtencionesGlobalReport,
   type Codigo,
+  type CoseguroItem,
+  type CosegurosListResponse,
   type DisponibilidadPrestaciones,
   type LiquidacionItem,
   type LiquidacionesAvailableFilters,
@@ -83,6 +87,15 @@ type UpdateLiquidacionItemPayload = {
   codigoId: string;
   status: AtencionStatus;
   valor: number;
+};
+
+type GetCosegurosParams = {
+  page?: number;
+};
+
+type UpdateCoseguroOdontoPayload = {
+  idAtencion: string;
+  coseguroOdonto: number;
 };
 
 export async function getAtenciones({ page = 1, year, month, status, obraSocial }: GetAtencionesParams = {}) {
@@ -192,6 +205,34 @@ export async function getLiquidaciones({ page = 1, usuario, obraSocial, status, 
     }
 
     throw new Error("Error inesperado al obtener las liquidaciones");
+  }
+}
+
+export async function getCoseguros({ page = 1 }: GetCosegurosParams = {}) {
+  try {
+    const { data } = await api.get("/atenciones/coseguros", {
+      params: {
+        page,
+      },
+    });
+
+    const response = cosegurosListResponseSchema.safeParse({
+      data: data.data,
+      pagination: data.pagination,
+    });
+
+    if (!response.success) {
+      console.error("Error en la validación de getCoseguros:", response.error);
+      throw new Error("La estructura de los datos es inválida");
+    }
+
+    return response.data satisfies CosegurosListResponse;
+  } catch (error) {
+    if (isAxiosError(error) && error.response) {
+      throw new Error(error.response.data.error || error.response.data.message || "Error al obtener los coseguros");
+    }
+
+    throw new Error("Error inesperado al obtener los coseguros");
   }
 }
 
@@ -363,6 +404,31 @@ export async function updateLiquidacionItem({ idAtencion, codigoId, status, valo
     }
 
     throw new Error("Error inesperado al actualizar la liquidación");
+  }
+}
+
+export async function updateCoseguroOdonto({ idAtencion, coseguroOdonto }: UpdateCoseguroOdontoPayload) {
+  try {
+    const { data } = await api.patch(`/atenciones/${idAtencion}/coseguro-odonto`, {
+      coseguroOdonto,
+    });
+
+    const response = coseguroItemSchema.safeParse(data.data);
+    if (!response.success) {
+      console.error("Error en la validación de updateCoseguroOdonto:", response.error);
+      throw new Error("La estructura de los datos es inválida");
+    }
+
+    return {
+      data: response.data satisfies CoseguroItem,
+      message: data.message as string,
+    };
+  } catch (error) {
+    if (isAxiosError(error) && error.response) {
+      throw new Error(error.response.data.error || error.response.data.message || "Error al actualizar el coseguro odontológico");
+    }
+
+    throw new Error("Error inesperado al actualizar el coseguro odontológico");
   }
 }
 

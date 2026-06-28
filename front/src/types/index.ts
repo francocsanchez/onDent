@@ -184,6 +184,25 @@ export const liquidacionesAvailableFiltersSchema = z.object({
   ),
 });
 
+export const coseguroItemSchema = z.object({
+  atencionId: z.string(),
+  fecha: z.string(),
+  paciente: z.object({
+    dni: z.number(),
+    name: z.string(),
+    lastName: z.string(),
+  }),
+  coseguro: z.number(),
+  coseguroOdonto: z.number(),
+});
+
+export const cosegurosTableSchema = z.array(coseguroItemSchema);
+
+export const cosegurosListResponseSchema = z.object({
+  data: cosegurosTableSchema,
+  pagination: pacientesPaginationSchema,
+});
+
 export const atencionesDashPorDiaSchema = z.object({
   fecha: z.string(),
   dia: z.number(),
@@ -293,6 +312,8 @@ export type AtencionesAvailableFilters = z.infer<typeof atencionesAvailableFilte
 export type LiquidacionItem = z.infer<typeof liquidacionItemSchema>;
 export type LiquidacionesListResponse = z.infer<typeof liquidacionesListResponseSchema>;
 export type LiquidacionesAvailableFilters = z.infer<typeof liquidacionesAvailableFiltersSchema>;
+export type CoseguroItem = z.infer<typeof coseguroItemSchema>;
+export type CosegurosListResponse = z.infer<typeof cosegurosListResponseSchema>;
 export type AtencionesDash = z.infer<typeof atencionesDashSchema>;
 export type AtencionStatusCounter = z.infer<typeof atencionStatusCounterSchema>;
 export type AtencionesGlobalMontoPorUsuario = z.infer<typeof atencionesGlobalMontoPorUsuarioSchema>;

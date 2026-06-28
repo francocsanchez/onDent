@@ -13,6 +13,7 @@ const validCodigoStatuses = ["OK", "Pendiente", "Denegado", "Diferido", "No carg
 type CodigoStatus = (typeof validCodigoStatuses)[number];
 const mongoIdRegex = /^[a-f\d]{24}$/i;
 const LIQUIDACIONES_PAGE_SIZE = 50;
+const COSEGUROS_PAGE_SIZE = 50;
 const toObjectId = (value: string) => new Types.ObjectId(value);
 const getCodigoObjectIdString = (codigo: unknown) => {
   if (!codigo) return "";
@@ -141,6 +142,64 @@ const buildDateFilters = (rawYear?: string, rawMonth?: string) => {
 };
 
 export class AtencionController {
+  static getCoseguros = async (req: Request, res: Response) => {
+    try {
+      const page = Math.max(Number(req.query.page) || 1, 1);
+      const skip = (page - 1) * COSEGUROS_PAGE_SIZE;
+
+      const filters = {
+        coseguro: { $gt: 0 },
+        $or: [{ coseguroOdonto: { $exists: false } }, { coseguroOdonto: 0 }],
+      };
+
+      const [atenciones, total] = await Promise.all([
+        Atencion.find(filters)
+          .populate("paciente")
+          .sort({ fecha: -1, _id: -1 })
+          .skip(skip)
+          .limit(COSEGUROS_PAGE_SIZE)
+          .lean(),
+        Atencion.countDocuments(filters),
+      ]);
+
+      const totalPages = Math.ceil(total / COSEGUROS_PAGE_SIZE);
+
+      return res.status(200).json({
+        data: atenciones.map((atencion) => {
+          const paciente = atencion.paciente as unknown as { dni: number; name: string; lastName: string };
+
+          return {
+            atencionId: String(atencion._id),
+            fecha: atencion.fecha,
+            paciente: {
+              dni: paciente.dni,
+              name: paciente.name,
+              lastName: paciente.lastName,
+            },
+            coseguro: atencion.coseguro ?? 0,
+            coseguroOdonto: atencion.coseguroOdonto ?? 0,
+          };
+        }),
+        pagination: {
+          total,
+          page,
+          limit: COSEGUROS_PAGE_SIZE,
+          totalPages,
+          hasNextPage: page < totalPages,
+          hasPrevPage: page > 1,
+        },
+        message: "Listado de coseguros pendientes",
+      });
+    } catch (error) {
+      logError("AtencionController.getCoseguros");
+      console.error(error);
+      return res.status(500).json({
+        data: null,
+        message: "Error del servidor",
+      });
+    }
+  };
+
   static getLiquidacionesFilters = async (_req: Request, res: Response) => {
     try {
       const [years, usuarios, obrasSociales] = await Promise.all([
@@ -878,6 +937,47 @@ export class AtencionController {
       });
     } catch (error) {
       logError("AtencionController.updateLiquidacionItem");
+      console.error(error);
+      return res.status(500).json({
+        data: null,
+        message: "Error del servidor",
+      });
+    }
+  };
+
+  static updateCoseguroOdonto = async (req: Request, res: Response) => {
+    const { idAtencion } = req.params;
+    const { coseguroOdonto } = req.body;
+
+    try {
+      const atencion = await Atencion.findById(idAtencion).populate("paciente");
+
+      if (!atencion) {
+        return res.status(404).json({
+          data: null,
+          message: "Atención no encontrada",
+        });
+      }
+
+      atencion.coseguroOdonto = Number(coseguroOdonto);
+      await atencion.save();
+
+      return res.status(200).json({
+        data: {
+          atencionId: String(atencion._id),
+          fecha: atencion.fecha,
+          paciente: {
+            dni: ((atencion.paciente as unknown as { dni: number }).dni ?? 0),
+            name: ((atencion.paciente as unknown as { name: string }).name ?? ""),
+            lastName: ((atencion.paciente as unknown as { lastName: string }).lastName ?? ""),
+          },
+          coseguro: atencion.coseguro ?? 0,
+          coseguroOdonto: atencion.coseguroOdonto ?? 0,
+        },
+        message: "Coseguro odontológico actualizado correctamente",
+      });
+    } catch (error) {
+      logError("AtencionController.updateCoseguroOdonto");
       console.error(error);
       return res.status(500).json({
         data: null,

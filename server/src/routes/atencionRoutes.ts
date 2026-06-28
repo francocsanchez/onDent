@@ -7,6 +7,7 @@ import {
   changeStatusValidationAtencion,
   createValidationAtencion,
   disponibilidadPrestacionesValidationAtencion,
+  updateCoseguroOdontoValidationAtencion,
   updateLiquidacionValidationAtencion,
   updateValidationAtencion,
 } from "../validation/atenciones";
@@ -75,6 +76,14 @@ router.get("/liquidaciones", authorizeRoles("admin", "superadmin"), AtencionCont
 
 /**
  * @method GET
+ * @route /coseguros
+ * @params page
+ * @description Lista atenciones pendientes de completar coseguro odontológico.
+ */
+router.get("/coseguros", authorizeRoles("admin", "superadmin"), AtencionController.getCoseguros);
+
+/**
+ * @method GET
  * @route /filtrar
  * @params periodo: período con formato YYYY-MM. status: estado del código dentro de la atención. page: número de página.
  * @description Lista atenciones filtradas por período mensual y estado.
@@ -130,6 +139,20 @@ router.patch(
   updateLiquidacionValidationAtencion,
   handleImputErrors,
   AtencionController.updateLiquidacionItem,
+);
+
+/**
+ * @method PATCH
+ * @route /:idAtencion/coseguro-odonto
+ * @params idAtencion: ID de la atención.
+ * @description Actualiza el valor de coseguro odontológico de una atención.
+ */
+router.patch(
+  "/:idAtencion/coseguro-odonto",
+  authorizeRoles("admin", "superadmin"),
+  updateCoseguroOdontoValidationAtencion,
+  handleImputErrors,
+  AtencionController.updateCoseguroOdonto,
 );
 
 /**

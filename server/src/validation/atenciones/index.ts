@@ -59,6 +59,15 @@ export const updateLiquidacionValidationAtencion = [
     .withMessage("El valor debe ser numérico y no negativo"),
 ];
 
+export const updateCoseguroOdontoValidationAtencion = [
+  param("idAtencion").isMongoId().withMessage("ID de atención no válido"),
+  body("coseguroOdonto")
+    .notEmpty()
+    .withMessage("El coseguro odonto es obligatorio")
+    .isFloat({ min: 0 })
+    .withMessage("El coseguro odonto debe ser numérico y no negativo"),
+];
+
 export const disponibilidadPrestacionesValidationAtencion = [
   query("paciente").notEmpty().withMessage("El paciente es obligatorio").isMongoId().withMessage("El ID del paciente no es válido"),
   query("obraSocial").notEmpty().withMessage("La obra social es obligatoria").isMongoId().withMessage("El ID de la obra social no es válido"),
