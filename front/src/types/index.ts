@@ -132,6 +132,58 @@ export const atencionesAvailableFiltersSchema = z.object({
   availableYears: z.array(z.number()),
 });
 
+export const liquidacionItemSchema = z.object({
+  atencionId: z.string(),
+  codigoId: z.string(),
+  fecha: z.string(),
+  usuario: z.object({
+    _id: z.string(),
+    name: z.string(),
+    lastName: z.string(),
+  }),
+  paciente: z.object({
+    dni: z.number(),
+    name: z.string(),
+    lastName: z.string(),
+  }),
+  obraSocial: z.object({
+    _id: z.string(),
+    name: z.string(),
+  }),
+  codigoAtencion: z.object({
+    _id: z.string(),
+    code: z.string(),
+    description: z.string(),
+  }),
+  status: z.enum(["OK", "Pendiente", "Denegado", "Diferido", "No cargado"]),
+  valor: z.number(),
+});
+
+export const liquidacionesTableSchema = z.array(liquidacionItemSchema);
+
+export const liquidacionesListResponseSchema = z.object({
+  data: liquidacionesTableSchema,
+  pagination: pacientesPaginationSchema,
+});
+
+export const liquidacionesAvailableFiltersSchema = z.object({
+  availableYears: z.array(z.number()),
+  usuarios: z.array(
+    z.object({
+      _id: z.string(),
+      name: z.string(),
+      lastName: z.string(),
+      role: z.string(),
+    }),
+  ),
+  obrasSociales: z.array(
+    z.object({
+      _id: z.string(),
+      name: z.string(),
+    }),
+  ),
+});
+
 export const atencionesDashPorDiaSchema = z.object({
   fecha: z.string(),
   dia: z.number(),
@@ -238,6 +290,9 @@ export type AtencionCodigo = z.infer<typeof atencionCodigoSchema>;
 export type Codigo = z.infer<typeof codigoSchema>;
 export type AtencionesListResponse = z.infer<typeof atencionesListResponseSchema>;
 export type AtencionesAvailableFilters = z.infer<typeof atencionesAvailableFiltersSchema>;
+export type LiquidacionItem = z.infer<typeof liquidacionItemSchema>;
+export type LiquidacionesListResponse = z.infer<typeof liquidacionesListResponseSchema>;
+export type LiquidacionesAvailableFilters = z.infer<typeof liquidacionesAvailableFiltersSchema>;
 export type AtencionesDash = z.infer<typeof atencionesDashSchema>;
 export type AtencionStatusCounter = z.infer<typeof atencionStatusCounterSchema>;
 export type AtencionesGlobalMontoPorUsuario = z.infer<typeof atencionesGlobalMontoPorUsuarioSchema>;

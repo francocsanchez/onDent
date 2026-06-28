@@ -16,6 +16,7 @@ const ListAtencionesFilteredView = lazy(() => import("./views/atenciones/ListAte
 const CreateAtencionView = lazy(() => import("./views/atenciones/CreateAtencionView"));
 const EditAtencionView = lazy(() => import("./views/atenciones/EditAtencionView"));
 const AtencionView = lazy(() => import("./views/atenciones/AtencionView"));
+const LiquidacionesView = lazy(() => import("./views/atenciones/LiquidacionesView"));
 const ListPacientesView = lazy(() => import("./views/pacientes/ListPacientesView"));
 const CreatePacienteView = lazy(() => import("./views/pacientes/CreatePacienteView"));
 const EditPacienteView = lazy(() => import("./views/pacientes/EditPacienteView"));
@@ -57,6 +58,7 @@ export default function Router() {
             <Route path="/pacientes/:idPaciente/editar" element={withSuspense(<EditPacienteView />, "Cargando paciente...")} />
 
             <Route element={<RoleProtectedRoute allowedRoles={["admin", "superadmin"]} />}>
+              <Route path="/liquidaciones" element={withSuspense(<LiquidacionesView />, "Cargando liquidaciones...")} />
               <Route path="/atenciones/:idAtencion/auditar" element={withSuspense(<AuditarAtencionView />, "Cargando auditoría...")} />
               <Route path="/reports" element={withSuspense(<ReportesView />, "Cargando reportes...")} />
               <Route

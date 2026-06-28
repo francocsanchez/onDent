@@ -10,6 +10,9 @@ import {
   atencionSchema,
   codigoSchema,
   disponibilidadPrestacionesSchema,
+  liquidacionItemSchema,
+  liquidacionesAvailableFiltersSchema,
+  liquidacionesListResponseSchema,
   pacienteSchema,
   type Atencion,
   type AtencionesDash,
@@ -17,6 +20,9 @@ import {
   type AtencionesGlobalReport,
   type Codigo,
   type DisponibilidadPrestaciones,
+  type LiquidacionItem,
+  type LiquidacionesAvailableFilters,
+  type LiquidacionesListResponse,
   type Paciente,
 } from "../types";
 
@@ -61,6 +67,22 @@ type GetDisponibilidadPrestacionesParams = {
   paciente: string;
   obraSocial: string;
   fecha?: string;
+};
+
+type GetLiquidacionesParams = {
+  page?: number;
+  usuario?: string;
+  obraSocial?: string;
+  status?: AtencionStatus;
+  month?: string;
+  year?: string;
+};
+
+type UpdateLiquidacionItemPayload = {
+  idAtencion: string;
+  codigoId: string;
+  status: AtencionStatus;
+  valor: number;
 };
 
 export async function getAtenciones({ page = 1, year, month, status, obraSocial }: GetAtencionesParams = {}) {
@@ -117,6 +139,59 @@ export async function getAtencionesAvailableFilters() {
     }
 
     throw new Error("Error inesperado al obtener los filtros disponibles");
+  }
+}
+
+export async function getLiquidacionesAvailableFilters() {
+  try {
+    const { data } = await api.get("/atenciones/liquidaciones/filtros");
+
+    const response = liquidacionesAvailableFiltersSchema.safeParse(data.data);
+    if (!response.success) {
+      console.error("Error en la validación de getLiquidacionesAvailableFilters:", response.error);
+      throw new Error("La estructura de los datos es inválida");
+    }
+
+    return response.data satisfies LiquidacionesAvailableFilters;
+  } catch (error) {
+    if (isAxiosError(error) && error.response) {
+      throw new Error(error.response.data.error || error.response.data.message || "Error al obtener los filtros de liquidaciones");
+    }
+
+    throw new Error("Error inesperado al obtener los filtros de liquidaciones");
+  }
+}
+
+export async function getLiquidaciones({ page = 1, usuario, obraSocial, status, month, year }: GetLiquidacionesParams = {}) {
+  try {
+    const { data } = await api.get("/atenciones/liquidaciones", {
+      params: {
+        page,
+        ...(usuario ? { usuario } : {}),
+        ...(obraSocial ? { obraSocial } : {}),
+        ...(status ? { status } : {}),
+        ...(month ? { month } : {}),
+        ...(year ? { year } : {}),
+      },
+    });
+
+    const response = liquidacionesListResponseSchema.safeParse({
+      data: data.data,
+      pagination: data.pagination,
+    });
+
+    if (!response.success) {
+      console.error("Error en la validación de getLiquidaciones:", response.error);
+      throw new Error("La estructura de los datos es inválida");
+    }
+
+    return response.data satisfies LiquidacionesListResponse;
+  } catch (error) {
+    if (isAxiosError(error) && error.response) {
+      throw new Error(error.response.data.error || error.response.data.message || "Error al obtener las liquidaciones");
+    }
+
+    throw new Error("Error inesperado al obtener las liquidaciones");
   }
 }
 
@@ -262,6 +337,32 @@ export async function updateAtencionByID({ idAtencion, ...formData }: UpdateAten
     }
 
     throw new Error("Error inesperado al actualizar la atención");
+  }
+}
+
+export async function updateLiquidacionItem({ idAtencion, codigoId, status, valor }: UpdateLiquidacionItemPayload) {
+  try {
+    const { data } = await api.patch(`/atenciones/${idAtencion}/codigos/${codigoId}/liquidacion`, {
+      status,
+      valor,
+    });
+
+    const response = liquidacionItemSchema.safeParse(data.data);
+    if (!response.success) {
+      console.error("Error en la validación de updateLiquidacionItem:", response.error);
+      throw new Error("La estructura de los datos es inválida");
+    }
+
+    return {
+      data: response.data satisfies LiquidacionItem,
+      message: data.message as string,
+    };
+  } catch (error) {
+    if (isAxiosError(error) && error.response) {
+      throw new Error(error.response.data.error || error.response.data.message || "Error al actualizar la liquidación");
+    }
+
+    throw new Error("Error inesperado al actualizar la liquidación");
   }
 }
 

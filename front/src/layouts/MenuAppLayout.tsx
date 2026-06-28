@@ -1,6 +1,6 @@
 import useRoleGuard from "@/hooks/useRoleGuard";
 import { useQueryClient } from "@tanstack/react-query";
-import { ChartColumn, LayoutDashboard, LogOut, Settings, Stethoscope, UserCircle2, Users } from "lucide-react";
+import { ChartColumn, ClipboardList, LayoutDashboard, LogOut, Settings, Stethoscope, UserCircle2, Users } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 
@@ -27,6 +27,11 @@ const navigationItems: NavigationItem[] = [
     icon: Users,
   },
   {
+    label: "Liquidaciones",
+    href: "/liquidaciones",
+    icon: ClipboardList,
+  },
+  {
     label: "Reportes",
     href: "/reports",
     icon: ChartColumn,
@@ -51,6 +56,7 @@ export default function MenuAppLayout() {
 
   const { allowed: canShowConfig } = useRoleGuard(["superadmin"]);
   const { allowed: canShowReports } = useRoleGuard(["admin", "superadmin"]);
+  const { allowed: canShowLiquidaciones } = useRoleGuard(["admin", "superadmin"]);
 
   return (
     <aside className="sticky top-0 flex h-screen w-full max-w-sm flex-col overflow-y-auto border-r border-secondary-dark/60 bg-white px-4 py-6 sm:px-6 lg:w-2/12 lg:min-w-[280px]">
@@ -65,6 +71,7 @@ export default function MenuAppLayout() {
           .filter((item) => {
             if (item.href === "/config") return canShowConfig;
             if (item.href === "/reports") return canShowReports;
+            if (item.href === "/liquidaciones") return canShowLiquidaciones;
             return true;
           })
           .map((item) => {

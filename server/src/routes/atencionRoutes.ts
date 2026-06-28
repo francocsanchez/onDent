@@ -7,6 +7,7 @@ import {
   changeStatusValidationAtencion,
   createValidationAtencion,
   disponibilidadPrestacionesValidationAtencion,
+  updateLiquidacionValidationAtencion,
   updateValidationAtencion,
 } from "../validation/atenciones";
 import { idValidationUsuario } from "../validation/usuarios";
@@ -58,6 +59,22 @@ router.get("/reportes/global", authorizeRoles("admin", "superadmin"), AtencionCo
 
 /**
  * @method GET
+ * @route /liquidaciones/filtros
+ * @params Ninguno.
+ * @description Obtiene filtros disponibles para liquidaciones masivas.
+ */
+router.get("/liquidaciones/filtros", authorizeRoles("admin", "superadmin"), AtencionController.getLiquidacionesFilters);
+
+/**
+ * @method GET
+ * @route /liquidaciones
+ * @params usuario, obraSocial, status, month, year, page
+ * @description Lista filas de liquidaciones masivas, una por código dentro de la atención.
+ */
+router.get("/liquidaciones", authorizeRoles("admin", "superadmin"), AtencionController.getLiquidaciones);
+
+/**
+ * @method GET
  * @route /filtrar
  * @params periodo: período con formato YYYY-MM. status: estado del código dentro de la atención. page: número de página.
  * @description Lista atenciones filtradas por período mensual y estado.
@@ -100,6 +117,20 @@ router.post("/", createValidationAtencion, handleImputErrors, AtencionController
  * @description Actualiza una atención por su ID.
  */
 router.put("/:idAtencion", updateValidationAtencion, handleImputErrors, AtencionController.updateByID);
+
+/**
+ * @method PATCH
+ * @route /:idAtencion/codigos/:codigoId/liquidacion
+ * @params idAtencion: ID de la atención. codigoId: ID del código dentro de la atención.
+ * @description Actualiza estado y valor de un código dentro de una atención para liquidaciones masivas.
+ */
+router.patch(
+  "/:idAtencion/codigos/:codigoId/liquidacion",
+  authorizeRoles("admin", "superadmin"),
+  updateLiquidacionValidationAtencion,
+  handleImputErrors,
+  AtencionController.updateLiquidacionItem,
+);
 
 /**
  * @method PATCH

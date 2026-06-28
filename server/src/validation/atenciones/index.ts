@@ -44,6 +44,21 @@ export const changeStatusValidationAtencion = [
   body("observaciones").optional().isString().withMessage("Las observaciones deben ser un texto").trim(),
 ];
 
+export const updateLiquidacionValidationAtencion = [
+  param("idAtencion").isMongoId().withMessage("ID de atención no válido"),
+  param("codigoId").isMongoId().withMessage("ID de código no válido"),
+  body("status")
+    .notEmpty()
+    .withMessage("El estado es obligatorio")
+    .isIn(["OK", "Pendiente", "Denegado", "Diferido", "No cargado"])
+    .withMessage("El estado no es válido"),
+  body("valor")
+    .notEmpty()
+    .withMessage("El valor es obligatorio")
+    .isFloat({ min: 0 })
+    .withMessage("El valor debe ser numérico y no negativo"),
+];
+
 export const disponibilidadPrestacionesValidationAtencion = [
   query("paciente").notEmpty().withMessage("El paciente es obligatorio").isMongoId().withMessage("El ID del paciente no es válido"),
   query("obraSocial").notEmpty().withMessage("La obra social es obligatoria").isMongoId().withMessage("El ID de la obra social no es válido"),
