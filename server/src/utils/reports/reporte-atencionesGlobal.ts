@@ -9,6 +9,7 @@ type StatusCounter = Record<AtencionStatus, number>;
 type AtencionGlobalCodigoItem = {
   valor?: number;
   status?: string;
+  pagadoOdonto?: boolean;
   codigo?: {
     _id?: { toString(): string } | string;
     code?: string;
@@ -25,6 +26,10 @@ type AtencionGlobalUsuarioItem = {
 type AtencionGlobalItem = {
   fecha?: string | Date;
   coseguroOdonto?: number;
+  odontologoPagos?: {
+    coseguroOdontoPagado?: number;
+    totalPagado?: number;
+  };
   usuario?: AtencionGlobalUsuarioItem;
   codigos?: AtencionGlobalCodigoItem[];
 };
@@ -44,6 +49,12 @@ type MontoPorUsuarioItem = {
   montoAtencion: number;
   montoCoseguroOdonto: number;
   montoTotal: number;
+  montoAtencionPagado: number;
+  montoAtencionPendientePago: number;
+  montoCoseguroOdontoPagado: number;
+  montoCoseguroOdontoPendientePago: number;
+  montoTotalPagado: number;
+  montoTotalPendientePago: number;
 };
 
 type ResumenMensualGlobalItem = {
@@ -56,6 +67,12 @@ type ResumenMensualGlobalItem = {
   montoAtencion: number;
   montoCoseguroOdonto: number;
   montoTotal: number;
+  montoAtencionPagado: number;
+  montoAtencionPendientePago: number;
+  montoCoseguroOdontoPagado: number;
+  montoCoseguroOdontoPendientePago: number;
+  montoTotalPagado: number;
+  montoTotalPendientePago: number;
 };
 
 type ResumenAnualGlobal = {
@@ -68,6 +85,12 @@ type ResumenAnualGlobal = {
   montoAtencion: number;
   montoCoseguroOdonto: number;
   montoTotal: number;
+  montoAtencionPagado: number;
+  montoAtencionPendientePago: number;
+  montoCoseguroOdontoPagado: number;
+  montoCoseguroOdontoPendientePago: number;
+  montoTotalPagado: number;
+  montoTotalPendientePago: number;
 };
 
 export type AtencionesGlobalReport = {
@@ -92,6 +115,12 @@ const getStatus = (value?: string): AtencionStatus => {
 const getMontoLiquidable = (codigos: AtencionGlobalCodigoItem[] = []) =>
   codigos.reduce((total, codigo) => total + (getStatus(codigo.status) === "OK" ? (codigo.valor ?? 0) : 0), 0);
 
+const getMontoAtencionPagado = (codigos: AtencionGlobalCodigoItem[] = []) =>
+  codigos.reduce((total, codigo) => total + (getStatus(codigo.status) === "OK" && codigo.pagadoOdonto === true ? (codigo.valor ?? 0) : 0), 0);
+
+const getMontoAtencionPendientePago = (codigos: AtencionGlobalCodigoItem[] = []) =>
+  codigos.reduce((total, codigo) => total + (getStatus(codigo.status) === "OK" && codigo.pagadoOdonto !== true ? (codigo.valor ?? 0) : 0), 0);
+
 export function reporteAtencionesGlobal(atenciones: AtencionGlobalItem[], requestedYear?: number): AtencionesGlobalReport {
   const datedAtenciones = atenciones
     .map((atencion) => ({
@@ -114,6 +143,12 @@ export function reporteAtencionesGlobal(atenciones: AtencionGlobalItem[], reques
     montoAtencion: 0,
     montoCoseguroOdonto: 0,
     montoTotal: 0,
+    montoAtencionPagado: 0,
+    montoAtencionPendientePago: 0,
+    montoCoseguroOdontoPagado: 0,
+    montoCoseguroOdontoPendientePago: 0,
+    montoTotalPagado: 0,
+    montoTotalPendientePago: 0,
   };
 
   const resumenMensualMap = new Map<string, ResumenMensualGlobalItem>();
@@ -126,13 +161,25 @@ export function reporteAtencionesGlobal(atenciones: AtencionGlobalItem[], reques
     const mes = date.getMonth() + 1;
     const periodo = `${selectedYear}-${String(mes).padStart(2, "0")}`;
     const montoAtencion = getMontoLiquidable(atencion.codigos ?? []);
+    const montoAtencionPagado = getMontoAtencionPagado(atencion.codigos ?? []);
+    const montoAtencionPendientePago = getMontoAtencionPendientePago(atencion.codigos ?? []);
     const montoCoseguroOdonto = atencion.coseguroOdonto ?? 0;
+    const montoCoseguroOdontoPagado = Number(atencion.odontologoPagos?.coseguroOdontoPagado ?? 0);
+    const montoCoseguroOdontoPendientePago = Math.max(montoCoseguroOdonto - montoCoseguroOdontoPagado, 0);
     const montoTotal = montoAtencion + montoCoseguroOdonto;
+    const montoTotalPagado = montoAtencionPagado + montoCoseguroOdontoPagado;
+    const montoTotalPendientePago = montoAtencionPendientePago + montoCoseguroOdontoPendientePago;
 
     resumenAnual.cantidadAtenciones += 1;
     resumenAnual.montoAtencion += montoAtencion;
     resumenAnual.montoCoseguroOdonto += montoCoseguroOdonto;
     resumenAnual.montoTotal += montoTotal;
+    resumenAnual.montoAtencionPagado += montoAtencionPagado;
+    resumenAnual.montoAtencionPendientePago += montoAtencionPendientePago;
+    resumenAnual.montoCoseguroOdontoPagado += montoCoseguroOdontoPagado;
+    resumenAnual.montoCoseguroOdontoPendientePago += montoCoseguroOdontoPendientePago;
+    resumenAnual.montoTotalPagado += montoTotalPagado;
+    resumenAnual.montoTotalPendientePago += montoTotalPendientePago;
 
     const resumenMensualActual = resumenMensualMap.get(periodo) ?? {
       periodo,
@@ -144,12 +191,24 @@ export function reporteAtencionesGlobal(atenciones: AtencionGlobalItem[], reques
       montoAtencion: 0,
       montoCoseguroOdonto: 0,
       montoTotal: 0,
+      montoAtencionPagado: 0,
+      montoAtencionPendientePago: 0,
+      montoCoseguroOdontoPagado: 0,
+      montoCoseguroOdontoPendientePago: 0,
+      montoTotalPagado: 0,
+      montoTotalPendientePago: 0,
     };
 
     resumenMensualActual.cantidadAtenciones += 1;
     resumenMensualActual.montoAtencion += montoAtencion;
     resumenMensualActual.montoCoseguroOdonto += montoCoseguroOdonto;
     resumenMensualActual.montoTotal += montoTotal;
+    resumenMensualActual.montoAtencionPagado += montoAtencionPagado;
+    resumenMensualActual.montoAtencionPendientePago += montoAtencionPendientePago;
+    resumenMensualActual.montoCoseguroOdontoPagado += montoCoseguroOdontoPagado;
+    resumenMensualActual.montoCoseguroOdontoPendientePago += montoCoseguroOdontoPendientePago;
+    resumenMensualActual.montoTotalPagado += montoTotalPagado;
+    resumenMensualActual.montoTotalPendientePago += montoTotalPendientePago;
 
     const usuarioId = atencion.usuario?._id ? String(atencion.usuario._id) : "sin-usuario";
     const nombreUsuario = atencion.usuario ? `${atencion.usuario.lastName ?? ""} ${atencion.usuario.name ?? ""}`.trim() : "Sin usuario";
@@ -160,12 +219,24 @@ export function reporteAtencionesGlobal(atenciones: AtencionGlobalItem[], reques
       montoAtencion: 0,
       montoCoseguroOdonto: 0,
       montoTotal: 0,
+      montoAtencionPagado: 0,
+      montoAtencionPendientePago: 0,
+      montoCoseguroOdontoPagado: 0,
+      montoCoseguroOdontoPendientePago: 0,
+      montoTotalPagado: 0,
+      montoTotalPendientePago: 0,
     };
 
     montoPorUsuarioActual.cantidadAtenciones += 1;
     montoPorUsuarioActual.montoAtencion += montoAtencion;
     montoPorUsuarioActual.montoCoseguroOdonto += montoCoseguroOdonto;
     montoPorUsuarioActual.montoTotal += montoTotal;
+    montoPorUsuarioActual.montoAtencionPagado += montoAtencionPagado;
+    montoPorUsuarioActual.montoAtencionPendientePago += montoAtencionPendientePago;
+    montoPorUsuarioActual.montoCoseguroOdontoPagado += montoCoseguroOdontoPagado;
+    montoPorUsuarioActual.montoCoseguroOdontoPendientePago += montoCoseguroOdontoPendientePago;
+    montoPorUsuarioActual.montoTotalPagado += montoTotalPagado;
+    montoPorUsuarioActual.montoTotalPendientePago += montoTotalPendientePago;
     montoPorUsuarioMap.set(usuarioId, montoPorUsuarioActual);
 
     (atencion.codigos ?? []).forEach((codigoItem) => {

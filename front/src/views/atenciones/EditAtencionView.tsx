@@ -13,9 +13,9 @@ type EditAtencionFormValues = {
     codigo: string;
     pieza: string;
     observaciones: string;
+    coseguro: number | "";
   }[];
   observaciones: string;
-  coseguro: number | "";
 };
 
 const inputClassName =
@@ -59,9 +59,9 @@ export default function EditAtencionView() {
             codigo: item.codigo._id,
             pieza: item.pieza,
             observaciones: item.observaciones ?? "",
+            coseguro: item.coseguro ?? "",
           })),
           observaciones: atencion.observaciones ?? "",
-          coseguro: atencion.coseguro ?? "",
         }
       : undefined,
   });
@@ -99,7 +99,8 @@ export default function EditAtencionView() {
   }
 
   const canEditAnyCodigo = user?.role === "admin" || user?.role === "superadmin";
-  const isCodigoLocked = (status: string) => !canEditAnyCodigo && user?.role === "odontologo" && status !== "Pendiente";
+  const isCodigoLocked = (status: string, pagadoOdonto?: boolean) =>
+    pagadoOdonto === true || (!canEditAnyCodigo && user?.role === "odontologo" && status !== "Pendiente");
 
   const onSubmit = (formData: EditAtencionFormValues) => {
     mutation.mutate({
@@ -109,16 +110,17 @@ export default function EditAtencionView() {
       usuario: atencion.usuario._id,
       obraSocial: atencion.obraSocial._id,
       codigos: atencion.codigos.map((item, index) => ({
-        codigo: isCodigoLocked(item.status) ? item.codigo._id : formData.codigos[index].codigo,
-        pieza: isCodigoLocked(item.status) ? item.pieza : formData.codigos[index].pieza.trim(),
+        codigo: isCodigoLocked(item.status, item.pagadoOdonto) ? item.codigo._id : formData.codigos[index].codigo,
+        pieza: isCodigoLocked(item.status, item.pagadoOdonto) ? item.pieza : formData.codigos[index].pieza.trim(),
         valor: item.valor,
+        coseguro:
+          isCodigoLocked(item.status, item.pagadoOdonto) ? item.coseguro ?? 0 : formData.codigos[index].coseguro === "" ? 0 : Number(formData.codigos[index].coseguro),
         status: item.status,
-        observaciones: isCodigoLocked(item.status)
+        observaciones: isCodigoLocked(item.status, item.pagadoOdonto)
           ? item.observaciones
           : formData.codigos[index].observaciones.trim() || undefined,
       })),
       observaciones: formData.observaciones.trim() || undefined,
-      coseguro: formData.coseguro === "" ? 0 : formData.coseguro,
       coseguroOdonto: atencion.coseguroOdonto ?? 0,
     });
   };
@@ -129,7 +131,7 @@ export default function EditAtencionView() {
         <div>
           <p className="text-sm font-medium text-primary">Atenciones</p>
           <h2 className="text-2xl font-semibold tracking-tight text-slate-900">Editar atención</h2>
-          <p className="mt-1 text-sm text-slate-500">Podés modificar código, pieza, observaciones y coseguro.</p>
+          <p className="mt-1 text-sm text-slate-500">Podés modificar código, pieza, observaciones y coseguro por código.</p>
           {user?.role === "odontologo" ? (
             <p className="mt-2 text-sm text-amber-700">Solo podés editar códigos en estado Pendiente. Los ya auditados quedan bloqueados.</p>
           ) : null}
@@ -163,6 +165,7 @@ export default function EditAtencionView() {
                 <tr>
                   <th className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-primary-dark/80">Código</th>
                   <th className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-primary-dark/80">Pieza</th>
+                  <th className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-primary-dark/80">Coseguro</th>
                   <th className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-primary-dark/80">Observación</th>
                 </tr>
               </thead>
@@ -171,12 +174,14 @@ export default function EditAtencionView() {
                 {fields.map((field, index) => (
                   <tr key={field.id} className="align-top transition-colors hover:bg-secondary/20">
                     <td className="px-4 py-3">
-                      {isCodigoLocked(atencion.codigos[index].status) ? (
-                        <p className="mb-2 text-xs font-medium text-slate-500">Bloqueado por auditoría: {atencion.codigos[index].status}</p>
+                      {isCodigoLocked(atencion.codigos[index].status, atencion.codigos[index].pagadoOdonto) ? (
+                        <p className="mb-2 text-xs font-medium text-slate-500">
+                          {atencion.codigos[index].pagadoOdonto ? "Bloqueado por pago" : `Bloqueado por auditoría: ${atencion.codigos[index].status}`}
+                        </p>
                       ) : null}
                       <select
                         className={`${inputClassName} max-w-[320px]`}
-                        disabled={isCodigoLocked(atencion.codigos[index].status)}
+                        disabled={isCodigoLocked(atencion.codigos[index].status, atencion.codigos[index].pagadoOdonto)}
                         {...register(`codigos.${index}.codigo`, {
                           required: "El código es obligatorio",
                         })}
@@ -196,18 +201,33 @@ export default function EditAtencionView() {
                     <td className="px-4 py-3">
                       <input
                         placeholder="Ej: 14"
-                        readOnly={isCodigoLocked(atencion.codigos[index].status)}
-                        className={`${inputClassName} max-w-[96px] ${isCodigoLocked(atencion.codigos[index].status) ? "bg-slate-100 text-slate-500" : ""}`}
+                        readOnly={isCodigoLocked(atencion.codigos[index].status, atencion.codigos[index].pagadoOdonto)}
+                        className={`${inputClassName} max-w-[96px] ${isCodigoLocked(atencion.codigos[index].status, atencion.codigos[index].pagadoOdonto) ? "bg-slate-100 text-slate-500" : ""}`}
                         {...register(`codigos.${index}.pieza`, {})}
                       />
                       {errors.codigos?.[index]?.pieza ? <p className="mt-2 text-sm text-rose-600">{errors.codigos[index]?.pieza?.message}</p> : null}
                     </td>
 
                     <td className="px-4 py-3">
+                      <input
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        readOnly={isCodigoLocked(atencion.codigos[index].status, atencion.codigos[index].pagadoOdonto)}
+                        className={`${inputClassName} max-w-[140px] ${isCodigoLocked(atencion.codigos[index].status, atencion.codigos[index].pagadoOdonto) ? "bg-slate-100 text-slate-500" : ""}`}
+                        {...register(`codigos.${index}.coseguro`, {
+                          setValueAs: (value) => (value === "" ? "" : Number(value)),
+                          validate: (value) => value === "" || value >= 0 || "El coseguro no puede ser negativo",
+                        })}
+                      />
+                      {errors.codigos?.[index]?.coseguro ? <p className="mt-2 text-sm text-rose-600">{errors.codigos[index]?.coseguro?.message}</p> : null}
+                    </td>
+
+                    <td className="px-4 py-3">
                       <textarea
                         rows={2}
-                        readOnly={isCodigoLocked(atencion.codigos[index].status)}
-                        className={`${textareaClassName} min-w-[360px] ${isCodigoLocked(atencion.codigos[index].status) ? "bg-slate-100 text-slate-500" : ""}`}
+                        readOnly={isCodigoLocked(atencion.codigos[index].status, atencion.codigos[index].pagadoOdonto)}
+                        className={`${textareaClassName} min-w-[360px] ${isCodigoLocked(atencion.codigos[index].status, atencion.codigos[index].pagadoOdonto) ? "bg-slate-100 text-slate-500" : ""}`}
                         {...register(`codigos.${index}.observaciones`)}
                       />
                     </td>
@@ -219,25 +239,7 @@ export default function EditAtencionView() {
         </section>
 
         <section className="rounded-2xl border border-secondary-dark/60 bg-white p-5 shadow-sm">
-          <div className="grid gap-4 md:grid-cols-[220px_minmax(0,1fr)]">
-            <div className="space-y-2">
-              <label htmlFor="coseguro" className="text-sm font-medium text-slate-700">
-                Coseguro
-              </label>
-              <input
-                id="coseguro"
-                type="number"
-                min="0"
-                step="0.01"
-                className={inputClassName}
-                {...register("coseguro", {
-                  setValueAs: (value) => (value === "" ? "" : Number(value)),
-                  validate: (value) => value === "" || value >= 0 || "El coseguro no puede ser negativo",
-                })}
-              />
-              {errors.coseguro ? <p className="text-sm text-rose-600">{errors.coseguro.message}</p> : null}
-            </div>
-
+          <div className="grid gap-4 md:grid-cols-[minmax(0,1fr)]">
             <div className="space-y-2">
               <label htmlFor="observaciones" className="text-sm font-medium text-slate-700">
                 Observación general

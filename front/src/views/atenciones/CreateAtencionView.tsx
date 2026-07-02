@@ -17,6 +17,7 @@ type LocalAtencionCodigoPayload = {
   codigo: string;
   pieza: string;
   valor: number;
+  coseguro: number;
   status: AtencionStatus;
   observaciones?: string;
 };
@@ -28,7 +29,6 @@ type LocalAtencionPayload = {
   obraSocial: string;
   codigos: LocalAtencionCodigoPayload[];
   observaciones?: string;
-  coseguro?: number;
   coseguroOdonto?: number;
 };
 
@@ -36,6 +36,7 @@ type AttentionCodeFormItem = {
   dentalCodeId: string;
   piece: string;
   observation: string;
+  coseguro: number | "";
 };
 
 type CreateAtencionFormValues = {
@@ -44,7 +45,6 @@ type CreateAtencionFormValues = {
   patientId: string;
   codes: AttentionCodeFormItem[];
   generalObservation: string;
-  coseguro: number | "";
 };
 
 type SearchStatus = "idle" | "found" | "not-found";
@@ -53,6 +53,7 @@ const createEmptyCodeRow = (): AttentionCodeFormItem => ({
   dentalCodeId: "",
   piece: "",
   observation: "",
+  coseguro: "",
 });
 
 const inputBaseClassName =
@@ -66,7 +67,6 @@ const initialValues: CreateAtencionFormValues = {
   patientId: "",
   codes: [],
   generalObservation: "",
-  coseguro: "",
 };
 
 export default function CreateAtencionView() {
@@ -100,7 +100,6 @@ export default function CreateAtencionView() {
   });
 
   const watchedCodes = watch("codes");
-  const watchedCoseguro = watch("coseguro");
   const watchedFecha = watch("fecha");
   const canShowFormSections = foundPatient !== null;
   const cantidadCodigosSeleccionados = fields.length;
@@ -112,7 +111,6 @@ export default function CreateAtencionView() {
     setValue("patientId", "");
     replace([]);
     setValue("generalObservation", "");
-    setValue("coseguro", "");
   };
 
   const handlePatientFound = (patient: Paciente) => {
@@ -257,11 +255,11 @@ export default function CreateAtencionView() {
         codigo: item.dentalCodeId,
         pieza: item.piece.trim(),
         valor: 0,
+        coseguro: item.coseguro === "" ? 0 : Number(item.coseguro),
         status: "Pendiente",
         observaciones: item.observation.trim() || undefined,
       })),
       observaciones: formData.generalObservation.trim() || undefined,
-      coseguro: formData.coseguro === "" ? 0 : formData.coseguro,
       coseguroOdonto: 0,
     };
 
@@ -524,7 +522,7 @@ export default function CreateAtencionView() {
                     </div>
                   </div>
 
-                  <div className="mt-3 grid gap-3 md:grid-cols-[160px_minmax(0,1fr)]">
+                  <div className="mt-3 grid gap-3 md:grid-cols-[160px_180px_minmax(0,1fr)]">
                     <div className="space-y-2">
                       <label htmlFor={`codes.${index}.piece`} className="text-sm font-medium text-slate-700">
                         Pieza
@@ -536,6 +534,32 @@ export default function CreateAtencionView() {
                         className={inputBaseClassName}
                         {...register(`codes.${index}.piece`)}
                       />
+                    </div>
+
+                    <div className="space-y-2">
+                      <label htmlFor={`codes.${index}.coseguro`} className="text-sm font-medium text-slate-700">
+                        Coseguro
+                      </label>
+                      <input
+                        id={`codes.${index}.coseguro`}
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        placeholder="0.00"
+                        className={inputBaseClassName}
+                        {...register(`codes.${index}.coseguro`, {
+                          setValueAs: (value: string) => {
+                            if (value === "") {
+                              return "";
+                            }
+
+                            const parsedValue = Number(value);
+                            return Number.isNaN(parsedValue) ? "" : parsedValue;
+                          },
+                          validate: (value) => value === "" || value >= 0 || "El coseguro no puede ser negativo",
+                        })}
+                      />
+                      {errors.codes?.[index]?.coseguro ? <p className="text-sm text-rose-600">{errors.codes[index]?.coseguro?.message}</p> : null}
                     </div>
 
                     <div className="space-y-2">
@@ -565,10 +589,10 @@ export default function CreateAtencionView() {
           <div className="border-b border-secondary-dark/50 bg-gradient-to-r from-slate-50 via-white to-white px-5 py-4">
             <p className="text-sm font-medium text-primary">Paso 3</p>
             <h3 className="text-base font-semibold text-slate-900">Datos finales de la atencion</h3>
-            <p className="mt-0.5 text-sm text-slate-500">Completá la observacion general y el coseguro antes de guardar.</p>
+            <p className="mt-0.5 text-sm text-slate-500">Completá la observacion general antes de guardar.</p>
           </div>
 
-          <div className="grid gap-4 px-5 py-5 lg:grid-cols-[minmax(0,1fr)_240px]">
+          <div className="grid gap-4 px-5 py-5 lg:grid-cols-[minmax(0,1fr)_280px]">
             <div className="space-y-2">
               <label htmlFor="generalObservation" className="text-sm font-medium text-slate-700">
                 Observacion general
@@ -583,30 +607,6 @@ export default function CreateAtencionView() {
             </div>
 
             <div className="space-y-2">
-              <label htmlFor="coseguro" className="text-sm font-medium text-slate-700">
-                Coseguro
-              </label>
-              <input
-                id="coseguro"
-                type="number"
-                min="0"
-                step="0.01"
-                placeholder="0.00"
-                className={inputBaseClassName}
-                {...register("coseguro", {
-                  setValueAs: (value: string) => {
-                    if (value === "") {
-                      return "";
-                    }
-
-                    const parsedValue = Number(value);
-                    return Number.isNaN(parsedValue) ? "" : parsedValue;
-                  },
-                  validate: (value) => value === "" || value >= 0 || "El coseguro no puede ser negativo",
-                })}
-              />
-              {errors.coseguro ? <p className="text-sm text-rose-600">{errors.coseguro.message}</p> : null}
-
               <div className="rounded-xl border border-secondary-dark/50 bg-slate-50 p-3.5">
                 <p className="text-xs font-medium uppercase tracking-[0.14em] text-slate-400">Resumen</p>
                 <p className="mt-2 text-sm text-slate-600">
@@ -618,15 +618,20 @@ export default function CreateAtencionView() {
                   </p>
                 ) : null}
                 <p className="mt-1 text-sm text-slate-600">
-                  Coseguro actual:{" "}
-                  <span className="font-semibold text-slate-900">${typeof watchedCoseguro === "number" ? watchedCoseguro.toFixed(2) : "0.00"}</span>
+                  Coseguro total:{" "}
+                  <span className="font-semibold text-slate-900">
+                    $
+                    {(watchedCodes ?? [])
+                      .reduce((total, item) => total + (typeof item?.coseguro === "number" ? item.coseguro : 0), 0)
+                      .toFixed(2)}
+                  </span>
                 </p>
               </div>
             </div>
           </div>
         </section>
 
-        <section className="rounded-[1.35rem] border border-secondary-dark/60 bg-white p-5 shadow-sm">
+        <section className="rounded-[1.35rem] border border-secondary-dark/60 bg-white p-4 shadow-sm">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div>
               <p className="text-sm font-medium text-primary">Acciones</p>

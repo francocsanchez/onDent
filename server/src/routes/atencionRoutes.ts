@@ -5,9 +5,12 @@ import { authorizeRoles } from "../middleware/authorizeRoles";
 import { handleImputErrors } from "../middleware/validation";
 import {
   changeStatusValidationAtencion,
+  createPagoOdontologoValidationAtencion,
   createValidationAtencion,
   disponibilidadPrestacionesValidationAtencion,
+  getPagosPendientesValidationAtencion,
   updateCoseguroOdontoValidationAtencion,
+  updateLiquidacionesBulkValidationAtencion,
   updateLiquidacionValidationAtencion,
   updateValidationAtencion,
 } from "../validation/atenciones";
@@ -66,6 +69,24 @@ router.get("/reportes/global", authorizeRoles("admin", "superadmin"), AtencionCo
  */
 router.get("/liquidaciones/filtros", authorizeRoles("admin", "superadmin"), AtencionController.getLiquidacionesFilters);
 
+router.get("/pagos/filtros", authorizeRoles("admin", "superadmin"), AtencionController.getPagosFilters);
+router.get(
+  "/pagos/pendientes",
+  authorizeRoles("admin", "superadmin"),
+  getPagosPendientesValidationAtencion,
+  handleImputErrors,
+  AtencionController.getPagosPendientes,
+);
+router.post(
+  "/pagos",
+  authorizeRoles("admin", "superadmin"),
+  createPagoOdontologoValidationAtencion,
+  handleImputErrors,
+  AtencionController.createPagoOdontologo,
+);
+router.get("/pagos/odontologo/:idUsuario", authorizeRoles("admin", "superadmin"), idValidationUsuario, handleImputErrors, AtencionController.getPagosByUsuario);
+router.get("/pagos/:idPago", authorizeRoles("admin", "superadmin"), AtencionController.getPagoOdontologoById);
+
 /**
  * @method GET
  * @route /liquidaciones
@@ -73,6 +94,20 @@ router.get("/liquidaciones/filtros", authorizeRoles("admin", "superadmin"), Aten
  * @description Lista filas de liquidaciones masivas, una por código dentro de la atención.
  */
 router.get("/liquidaciones", authorizeRoles("admin", "superadmin"), AtencionController.getLiquidaciones);
+
+/**
+ * @method PATCH
+ * @route /liquidaciones/bulk
+ * @params Ninguno.
+ * @description Actualiza múltiples liquidaciones agrupadas por atención.
+ */
+router.patch(
+  "/liquidaciones/bulk",
+  authorizeRoles("admin", "superadmin"),
+  updateLiquidacionesBulkValidationAtencion,
+  handleImputErrors,
+  AtencionController.updateLiquidacionesBulk,
+);
 
 /**
  * @method GET

@@ -8,7 +8,7 @@ import { Link, useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
 
 type DraftRowState = {
-  porcentaje: string;
+  coseguroOdonto: string;
 };
 
 const inputClassName =
@@ -51,7 +51,7 @@ export default function CosegurosView() {
         const rowKey = getRowKey(item.atencionId);
         if (!savingRows[rowKey] && !nextDrafts[rowKey]) {
           nextDrafts[rowKey] = {
-            porcentaje: "",
+            coseguroOdonto: String(item.coseguroOdonto ?? 0),
           };
         }
       });
@@ -72,11 +72,11 @@ export default function CosegurosView() {
     setSearchParams(nextParams);
   };
 
-  const updateRowDraft = (rowKey: string, porcentaje: string) => {
+  const updateRowDraft = (rowKey: string, coseguroOdonto: string) => {
     setRowDrafts((currentDrafts) => ({
       ...currentDrafts,
       [rowKey]: {
-        porcentaje,
+        coseguroOdonto,
       },
     }));
   };
@@ -88,30 +88,15 @@ export default function CosegurosView() {
       maximumFractionDigits: 2,
     }).format(value ?? 0);
 
-  const calculateCoseguroOdonto = (coseguro: number, porcentaje: string) => {
-    const parsedPorcentaje = Number(porcentaje);
-    if (!Number.isFinite(parsedPorcentaje) || parsedPorcentaje < 0) {
-      return null;
-    }
-
-    return Number(((coseguro * parsedPorcentaje) / 100).toFixed(2));
-  };
-
   const persistRowChanges = async (atencionId: string) => {
     const item = coseguros.find((entry) => entry.atencionId === atencionId);
     const draft = rowDrafts[atencionId];
 
     if (!item || !draft) return;
 
-    const porcentaje = Number(draft.porcentaje);
-    if (!Number.isFinite(porcentaje) || porcentaje < 0) {
-      toast.error("El % coseguro debe ser numérico y no negativo");
-      return;
-    }
-
-    const coseguroOdonto = calculateCoseguroOdonto(item.coseguro, draft.porcentaje);
-    if (coseguroOdonto === null) {
-      toast.error("No se pudo calcular el coseguro odontológico");
+    const coseguroOdonto = Number(draft.coseguroOdonto);
+    if (!Number.isFinite(coseguroOdonto) || coseguroOdonto < 0) {
+      toast.error("El coseguro odontológico debe ser numérico y no negativo");
       return;
     }
 
@@ -167,7 +152,7 @@ export default function CosegurosView() {
         <div>
           <p className="text-sm font-medium text-primary">Coseguros</p>
           <h2 className="text-2xl font-semibold tracking-tight text-slate-900">Coseguros pendientes</h2>
-          <p className="mt-1 text-sm text-slate-500">Completá el porcentaje por atención para calcular y guardar el coseguro odontológico.</p>
+          <p className="mt-1 text-sm text-slate-500">Ingresá manualmente el coseguro odontológico por atención. El coseguro se calcula desde los códigos.</p>
         </div>
       </div>
 
@@ -181,8 +166,8 @@ export default function CosegurosView() {
                     <th className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-primary-dark/80">DNI</th>
                     <th className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-primary-dark/80">Nombre y apellido paciente</th>
                     <th className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-primary-dark/80">Coseguro</th>
-                    <th className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-primary-dark/80">% coseguro</th>
                     <th className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-primary-dark/80">Coseguro odonto</th>
+                    <th className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-primary-dark/80">Vista previa</th>
                     <th className="px-4 py-3 text-right text-[11px] font-semibold uppercase tracking-wider text-primary-dark/80">Acciones</th>
                   </tr>
                 </thead>
@@ -190,9 +175,8 @@ export default function CosegurosView() {
                 <tbody className="divide-y divide-secondary-dark/40">
                   {coseguros.map((item) => {
                     const rowKey = getRowKey(item.atencionId);
-                    const rowDraft = rowDrafts[rowKey] ?? { porcentaje: "" };
+                    const rowDraft = rowDrafts[rowKey] ?? { coseguroOdonto: String(item.coseguroOdonto ?? 0) };
                     const isSaving = !!savingRows[rowKey];
-                    const coseguroOdontoCalculado = calculateCoseguroOdonto(item.coseguro, rowDraft.porcentaje);
 
                     return (
                       <tr key={rowKey} className={`transition-colors hover:bg-secondary/20 ${isSaving ? "bg-secondary/10" : ""}`}>
@@ -217,8 +201,8 @@ export default function CosegurosView() {
                             min="0"
                             step="0.01"
                             inputMode="decimal"
-                            placeholder="Ej: 25"
-                            value={rowDraft.porcentaje}
+                            placeholder="0.00"
+                            value={rowDraft.coseguroOdonto}
                             disabled={isSaving}
                             onChange={(event) => updateRowDraft(rowKey, event.target.value)}
                             className={`${inputClassName} ${isSaving ? "cursor-wait bg-slate-100 text-slate-500" : ""}`}
@@ -226,7 +210,7 @@ export default function CosegurosView() {
                         </td>
 
                         <td className="whitespace-nowrap px-4 py-3">
-                          <p className="text-sm font-semibold text-slate-900">{formatMoney(coseguroOdontoCalculado ?? 0)}</p>
+                          <p className="text-sm font-semibold text-slate-900">{formatMoney(Number(rowDraft.coseguroOdonto || 0))}</p>
                         </td>
 
                         <td className="px-4 py-3">
@@ -241,7 +225,7 @@ export default function CosegurosView() {
 
                             <button
                               type="button"
-                              disabled={isSaving || coseguroOdontoCalculado === null}
+                              disabled={isSaving}
                               onClick={() => void persistRowChanges(item.atencionId)}
                               className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-2.5 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-primary-dark disabled:cursor-not-allowed disabled:opacity-50"
                             >

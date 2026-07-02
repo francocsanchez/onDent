@@ -24,7 +24,7 @@ export async function exportAtencionesToExcel(atenciones: Atencion[], filters: E
       Valor: codigo.valor,
       "Observaciones código": codigo.observaciones || "",
       "Observaciones atención": atencion.observaciones || "",
-      Coseguro: atencion.coseguro ?? 0,
+      Coseguro: codigo.coseguro ?? 0,
       "Coseguro odonto": atencion.coseguroOdonto ?? 0,
     })),
   );

@@ -159,11 +159,11 @@ export default function AuditarAtencionView() {
         codigo: item.codigo._id,
         pieza: item.pieza,
         valor: formData.codigos[index].valor === "" ? 0 : Number(formData.codigos[index].valor),
-        status: formData.codigos[index].status,
+        coseguro: item.coseguro ?? 0,
+        status: item.pagadoOdonto ? item.status : formData.codigos[index].status,
         observaciones: item.observaciones?.trim() || undefined,
       })),
       observaciones: atencion.observaciones?.trim() || undefined,
-      coseguro: atencion.coseguro ?? 0,
       coseguroOdonto: formData.coseguroOdonto === "" ? 0 : Number(formData.coseguroOdonto),
     });
   };
@@ -191,7 +191,7 @@ export default function AuditarAtencionView() {
       </div>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-        <section className="rounded-2xl border border-secondary-dark/60 bg-white p-4 shadow-sm sm:p-5">
+        <section className="rounded-2xl border border-secondary-dark/60 bg-white p-3 shadow-sm sm:p-4">
           <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
             <div className="rounded-xl bg-secondary/20 px-3 py-3">
               <div className="flex items-start gap-3">
@@ -259,8 +259,10 @@ export default function AuditarAtencionView() {
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
               <div className="rounded-xl border border-secondary-dark/50 bg-secondary/10 px-4 py-3">
                 <p className="text-[11px] font-semibold uppercase tracking-wider text-primary-dark/80">Coseguro</p>
-                <p className="mt-2 text-sm font-semibold text-slate-900">{formatMoney(atencion.coseguro)}</p>
-                <p className="mt-0.5 text-xs text-slate-500">Solo lectura</p>
+                <p className="mt-2 text-sm font-semibold text-slate-900">
+                  {formatMoney(atencion.codigos.reduce((acc, item) => acc + (item.coseguro ?? 0), 0))}
+                </p>
+                <p className="mt-0.5 text-xs text-slate-500">Suma de coseguros por código</p>
               </div>
 
               <div className="rounded-xl border border-secondary-dark/50 bg-secondary/10 px-4 py-3">
@@ -311,12 +313,14 @@ export default function AuditarAtencionView() {
               <tbody className="divide-y divide-secondary-dark/40">
                 {fields.map((field, index) => {
                   const codigo = atencion.codigos[index];
+                  const isPaid = codigo.pagadoOdonto === true;
 
                   return (
                     <tr key={field.id} className="align-top transition-colors hover:bg-secondary/20">
                       <td className="px-4 py-3">
                         <p className="text-sm font-semibold text-slate-900">{codigo.codigo.code}</p>
                         <p className="mt-1 text-xs text-slate-500">Pieza {codigo.pieza || "Sin especificar"}</p>
+                        <p className="mt-1 text-xs text-slate-500">Coseguro {formatMoney(codigo.coseguro ?? 0)}</p>
                       </td>
 
                       <td className="px-4 py-3">
@@ -325,13 +329,18 @@ export default function AuditarAtencionView() {
                       </td>
 
                       <td className="px-4 py-3">
-                        <select className={`${selectClassName} min-w-[170px]`} {...register(`codigos.${index}.status`, { required: true })}>
+                        <select
+                          disabled={isPaid}
+                          className={`${selectClassName} min-w-[170px] ${isPaid ? "cursor-not-allowed bg-slate-100 text-slate-500" : ""}`}
+                          {...register(`codigos.${index}.status`, { required: true })}
+                        >
                           {validStatuses.map((status) => (
                             <option key={status} value={status}>
                               {status}
                             </option>
                           ))}
                         </select>
+                        {isPaid ? <p className="mt-2 text-xs font-medium text-amber-700">Código pagado: bloqueado</p> : null}
                       </td>
 
                       <td className="px-4 py-3">
@@ -339,7 +348,8 @@ export default function AuditarAtencionView() {
                           type="number"
                           min="0"
                           step="0.01"
-                          className={`${inputClassName} min-w-[140px]`}
+                          readOnly={isPaid}
+                          className={`${inputClassName} min-w-[140px] ${isPaid ? "bg-slate-100 text-slate-500" : ""}`}
                           {...register(`codigos.${index}.valor`, {
                             setValueAs: (value) => (value === "" ? "" : Number(value)),
                             validate: (value) => value === "" || value >= 0 || "El valor no puede ser negativo",
@@ -355,8 +365,8 @@ export default function AuditarAtencionView() {
           </div>
         </section>
 
-        <section className="rounded-2xl border border-secondary-dark/60 bg-white p-5 shadow-sm">
-          <div className="grid gap-4 md:grid-cols-[260px_minmax(0,1fr)]">
+        <section className="rounded-2xl border border-secondary-dark/60 bg-white p-4 shadow-sm">
+          <div className="grid gap-3 md:grid-cols-[240px_minmax(0,1fr)]">
             <div className="space-y-2">
               <label htmlFor="coseguroOdonto" className="text-sm font-medium text-slate-700">
                 Coseguro Odonto

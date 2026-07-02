@@ -39,6 +39,11 @@ const navigationItems: NavigationItem[] = [
     icon: ClipboardList,
   },
   {
+    label: "Pagos",
+    href: "/pagos",
+    icon: ClipboardList,
+  },
+  {
     label: "Coseguros",
     href: "/coseguros",
     icon: ClipboardList,
@@ -70,12 +75,14 @@ export default function MenuAppLayout({ isOpen, isCollapsed, onClose, onToggleCo
   const { allowed: canShowConfig } = useRoleGuard(["superadmin"]);
   const { allowed: canShowReports } = useRoleGuard(["admin", "superadmin"]);
   const { allowed: canShowLiquidaciones } = useRoleGuard(["admin", "superadmin"]);
+  const { allowed: canShowPagos } = useRoleGuard(["admin", "superadmin"]);
   const { allowed: canShowCoseguros } = useRoleGuard(["admin", "superadmin"]);
 
   const visibleNavigationItems = navigationItems.filter((item) => {
     if (item.href === "/config") return canShowConfig;
     if (item.href === "/reports") return canShowReports;
     if (item.href === "/liquidaciones") return canShowLiquidaciones;
+    if (item.href === "/pagos") return canShowPagos;
     if (item.href === "/coseguros") return canShowCoseguros;
     return true;
   });

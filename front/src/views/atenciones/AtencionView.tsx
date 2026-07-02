@@ -45,6 +45,7 @@ export default function AtencionView() {
   const totalCodigos = atencion.codigos.reduce((acc, item) => acc + (item.status === "OK" ? item.valor : 0), 0);
   const totalGeneral = totalCodigos + (atencion.coseguroOdonto ?? 0);
   const totalNoLiquidable = atencion.codigos.reduce((acc, item) => acc + (item.status !== "OK" ? item.valor : 0), 0);
+  const totalCoseguroEmpresa = atencion.codigos.reduce((acc, item) => acc + (item.coseguro ?? 0), 0);
   const returnTo = searchParams.get("returnTo")?.trim() ?? "";
 
   const getBackPath = () => {
@@ -163,12 +164,8 @@ export default function AtencionView() {
 
           <div className="rounded-2xl border border-secondary-dark/60 bg-white p-5 shadow-sm">
             <p className="text-[11px] font-semibold uppercase tracking-wider text-primary-dark/80">Coseguro</p>
-            <p className="mt-2 text-sm font-semibold text-slate-900">
-              {atencion.coseguro == null ? "Sin coseguro registrado" : formatMoney(atencion.coseguro)}
-            </p>
-            <p className="mt-0.5 text-xs text-slate-500">
-              {atencion.coseguro == null ? "No se informó un importe para esta atención." : "Importe registrado para la atención."}
-            </p>
+            <p className="mt-2 text-sm font-semibold text-slate-900">{formatMoney(totalCoseguroEmpresa)}</p>
+            <p className="mt-0.5 text-xs text-slate-500">Suma de los coseguros cargados en cada código.</p>
           </div>
         </div>
 
@@ -186,7 +183,9 @@ export default function AtencionView() {
                   <th className="px-3 py-2.5 text-left text-[10px] font-semibold uppercase tracking-wider text-primary-dark/80 sm:px-4">Descripcion</th>
                   <th className="px-3 py-2.5 text-left text-[10px] font-semibold uppercase tracking-wider text-primary-dark/80 sm:px-4">Pieza</th>
                   <th className="px-3 py-2.5 text-left text-[10px] font-semibold uppercase tracking-wider text-primary-dark/80 sm:px-4">Valor</th>
+                  <th className="px-3 py-2.5 text-left text-[10px] font-semibold uppercase tracking-wider text-primary-dark/80 sm:px-4">Coseguro</th>
                   <th className="px-3 py-2.5 text-left text-[10px] font-semibold uppercase tracking-wider text-primary-dark/80 sm:px-4">Estado</th>
+                  <th className="px-3 py-2.5 text-left text-[10px] font-semibold uppercase tracking-wider text-primary-dark/80 sm:px-4">Pago</th>
                   <th className="px-3 py-2.5 text-left text-[10px] font-semibold uppercase tracking-wider text-primary-dark/80 sm:px-4">Observaciones</th>
                 </tr>
               </thead>
@@ -210,6 +209,10 @@ export default function AtencionView() {
                       <p className="text-xs text-slate-700 sm:text-sm">{formatMoney(item.valor)}</p>
                     </td>
 
+                    <td className="whitespace-nowrap px-3 py-2.5 sm:px-4">
+                      <p className="text-xs text-slate-700 sm:text-sm">{formatMoney(item.coseguro ?? 0)}</p>
+                    </td>
+
                     <td className="px-3 py-2.5 sm:px-4">
                       <span
                         className={`inline-flex rounded-full px-2 py-0.5 text-[11px] font-semibold ${
@@ -217,6 +220,16 @@ export default function AtencionView() {
                         }`}
                       >
                         {item.status}
+                      </span>
+                    </td>
+
+                    <td className="px-3 py-2.5 sm:px-4">
+                      <span
+                        className={`inline-flex rounded-full px-2 py-0.5 text-[11px] font-semibold ${
+                          item.pagadoOdonto ? "border border-emerald-200 bg-emerald-50 text-emerald-700" : "border border-slate-200 bg-slate-100 text-slate-700"
+                        }`}
+                      >
+                        {item.pagadoOdonto ? "Pagado" : "Pendiente"}
                       </span>
                     </td>
 
