@@ -44,13 +44,14 @@ type AtencionStatus = (typeof validStatuses)[number];
 type EditableRowState = {
   status: AtencionStatus;
   valor: string;
+  coseguro: string;
 };
 
 const mongoIdRegex = /^[a-f\d]{24}$/i;
 const selectClassName =
-  "w-full rounded-xl border border-secondary-dark/60 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20";
+  "w-full rounded-lg border border-secondary-dark/60 bg-white px-1.5 py-1 text-sm text-slate-900 outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20";
 const inputClassName =
-  "w-full rounded-xl border border-secondary-dark/60 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-primary focus:ring-2 focus:ring-primary/20";
+  "w-full rounded-lg border border-secondary-dark/60 bg-white px-1.5 py-1 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-primary focus:ring-2 focus:ring-primary/20";
 
 const getRowKey = (atencionId: string, rowIndex: number) => `${atencionId}:${rowIndex}`;
 
@@ -94,6 +95,7 @@ export default function LiquidacionesView() {
     const rawPage = Number(searchParams.get("page")?.trim() ?? "1");
     return Number.isInteger(rawPage) && rawPage > 0 ? rawPage : 1;
   }, [searchParams]);
+  const shouldFetchLiquidaciones = selectedUsuario.length > 0;
 
   const {
     data: filtersData,
@@ -120,6 +122,7 @@ export default function LiquidacionesView() {
         month: selectedMonth || undefined,
         year: selectedYear || undefined,
       }),
+    enabled: shouldFetchLiquidaciones,
   });
 
   const bulkMutation = useMutation({
@@ -140,6 +143,7 @@ export default function LiquidacionesView() {
             nextDrafts[rowKey] = {
               status: codigo.status,
               valor: String(codigo.valor ?? 0),
+              coseguro: String(codigo.coseguro ?? 0),
             };
           }
         });
@@ -152,6 +156,7 @@ export default function LiquidacionesView() {
   const availableYears = Array.from(new Set([currentYear, ...(filtersData?.availableYears.map(String) ?? [])])).sort(
     (firstYear, secondYear) => Number(secondYear) - Number(firstYear),
   );
+  const odontologos = useMemo(() => (filtersData?.usuarios ?? []).filter((usuario) => usuario.role === "odontologo"), [filtersData?.usuarios]);
 
   const updateFilter = (key: "usuario" | "obraSocial" | "status" | "pagoEstado" | "month" | "year", value: string) => {
     const nextParams = new URLSearchParams(searchParams);
@@ -186,7 +191,7 @@ export default function LiquidacionesView() {
     setRowDrafts((currentDrafts) => ({
       ...currentDrafts,
       [rowKey]: {
-        ...(currentDrafts[rowKey] ?? { status: "Pendiente", valor: "0" }),
+        ...(currentDrafts[rowKey] ?? { status: "Pendiente", valor: "0", coseguro: "0" }),
         ...partial,
       },
     }));
@@ -205,9 +210,10 @@ export default function LiquidacionesView() {
         if (!draft) return [];
 
         const parsedValor = Number(draft.valor);
-        if (!Number.isFinite(parsedValor) || parsedValor < 0) return [];
+        const parsedCoseguro = Number(draft.coseguro);
+        if (!Number.isFinite(parsedValor) || parsedValor < 0 || !Number.isFinite(parsedCoseguro) || parsedCoseguro < 0) return [];
 
-        if (codigo.status === draft.status && Number(codigo.valor ?? 0) === parsedValor) {
+        if (codigo.status === draft.status && Number(codigo.valor ?? 0) === parsedValor && Number(codigo.coseguro ?? 0) === parsedCoseguro) {
           return [];
         }
 
@@ -218,6 +224,7 @@ export default function LiquidacionesView() {
             rowIndex: codigo.rowIndex,
             status: draft.status,
             valor: parsedValor,
+            coseguro: parsedCoseguro,
           },
         ];
       }),
@@ -255,7 +262,7 @@ export default function LiquidacionesView() {
     }
   };
 
-  if (isLoading || isFiltersLoading) {
+  if ((shouldFetchLiquidaciones && isLoading) || isFiltersLoading) {
     return <LoadingSpinner label="Cargando liquidaciones..." />;
   }
 
@@ -290,10 +297,10 @@ export default function LiquidacionesView() {
       <div className="mb-6 rounded-2xl border border-secondary-dark/60 bg-white p-4 shadow-sm">
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-6">
           <label className="flex flex-col gap-1">
-            <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">Usuario</span>
+            <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">Odontólogo</span>
             <select value={selectedUsuario} onChange={(event) => updateFilter("usuario", event.target.value)} className={selectClassName}>
-              <option value="">Todos los usuarios</option>
-              {(filtersData?.usuarios ?? []).map((usuario) => (
+              <option value="">Seleccionar un odontólogo</option>
+              {odontologos.map((usuario) => (
                 <option key={usuario._id} value={usuario._id}>
                   {usuario.lastName}, {usuario.name}
                 </option>
@@ -360,42 +367,46 @@ export default function LiquidacionesView() {
       </div>
 
       <div className="space-y-6">
-        {liquidaciones.length > 0 ? (
+        {!shouldFetchLiquidaciones ? (
+          <div className="rounded-2xl border border-secondary-dark/60 bg-white px-4 py-10 text-center shadow-sm">
+            <p className="text-sm font-medium text-slate-700">Seleccioná un odontólogo para cargar las liquidaciones masivas.</p>
+          </div>
+        ) : liquidaciones.length > 0 ? (
           liquidaciones.map((atencion) => (
             <section key={atencion.atencionId} className="overflow-hidden rounded-2xl border border-secondary-dark/60 bg-white shadow-sm">
-              <div className="border-b border-secondary-dark/40 bg-secondary/20 px-4 py-4">
-                <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-                  <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+              <div className="border-b border-secondary-dark/40 bg-secondary/20 px-2 py-2">
+                <div className="flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between">
+                  <div className="grid gap-x-3 gap-y-2 md:grid-cols-2 xl:grid-cols-4">
                     <div>
                       <p className="text-[11px] font-semibold uppercase tracking-wider text-primary-dark/80">Paciente</p>
-                      <p className="mt-1 text-sm font-semibold uppercase text-slate-900">
+                      <p className="mt-0.5 text-sm font-semibold uppercase text-slate-900">
                         {atencion.paciente.lastName} {atencion.paciente.name}
                       </p>
-                      <p className="mt-0.5 text-xs text-slate-600">DNI {atencion.paciente.dni}</p>
+                      <p className="text-xs text-slate-600">DNI {atencion.paciente.dni}</p>
                     </div>
 
                     <div>
                       <p className="text-[11px] font-semibold uppercase tracking-wider text-primary-dark/80">Obra social</p>
-                      <p className="mt-1 text-sm font-semibold text-slate-900">{atencion.obraSocial.name}</p>
+                      <p className="mt-0.5 text-sm font-semibold text-slate-900">{atencion.obraSocial.name}</p>
                     </div>
 
                     <div>
                       <p className="text-[11px] font-semibold uppercase tracking-wider text-primary-dark/80">Profesional</p>
-                      <p className="mt-1 text-sm font-semibold text-slate-900">
+                      <p className="mt-0.5 text-sm font-semibold text-slate-900">
                         {atencion.usuario.lastName}, {atencion.usuario.name}
                       </p>
                     </div>
 
                     <div>
                       <p className="text-[11px] font-semibold uppercase tracking-wider text-primary-dark/80">Fecha</p>
-                      <p className="mt-1 text-sm font-semibold text-slate-900">{formatDateOnly(atencion.fecha)}</p>
+                      <p className="mt-0.5 text-sm font-semibold text-slate-900">{formatDateOnly(atencion.fecha)}</p>
                     </div>
                   </div>
 
                   <div className="flex justify-end">
                     <Link
                       to={`/atenciones/${atencion.atencionId}`}
-                      className="inline-flex items-center gap-2 rounded-xl border border-secondary-dark/60 bg-white px-3 py-2 text-sm font-semibold text-slate-700 transition-colors hover:border-primary/40 hover:bg-secondary/40 hover:text-primary-dark"
+                      className="inline-flex items-center gap-2 rounded-lg border border-secondary-dark/60 bg-white px-2 py-1 text-sm font-semibold text-slate-700 transition-colors hover:border-primary/40 hover:bg-secondary/40 hover:text-primary-dark"
                     >
                       <Eye className="h-4 w-4" strokeWidth={2} />
                       <span>Ver atención</span>
@@ -408,11 +419,12 @@ export default function LiquidacionesView() {
                 <table className="min-w-full">
                   <thead className="border-b border-secondary-dark/40 bg-white">
                     <tr>
-                      <th className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-primary-dark/80">Código</th>
-                      <th className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-primary-dark/80">Descripción</th>
-                      <th className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-primary-dark/80">Pieza</th>
-                      <th className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-primary-dark/80">Estado</th>
-                      <th className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-primary-dark/80">Valor</th>
+                      <th className="px-2 py-1 text-left text-[11px] font-semibold uppercase tracking-wider text-primary-dark/80">Código</th>
+                      <th className="px-2 py-1 text-left text-[11px] font-semibold uppercase tracking-wider text-primary-dark/80">Descripción</th>
+                      <th className="px-2 py-1 text-left text-[11px] font-semibold uppercase tracking-wider text-primary-dark/80">Pieza</th>
+                      <th className="px-2 py-1 text-left text-[11px] font-semibold uppercase tracking-wider text-primary-dark/80">Estado</th>
+                      <th className="px-2 py-1 text-left text-[11px] font-semibold uppercase tracking-wider text-primary-dark/80">Valor</th>
+                      <th className="px-2 py-1 text-left text-[11px] font-semibold uppercase tracking-wider text-primary-dark/80">Coseguro</th>
                     </tr>
                   </thead>
 
@@ -422,24 +434,25 @@ export default function LiquidacionesView() {
                       const rowDraft = rowDrafts[rowKey] ?? {
                         status: codigo.status,
                         valor: String(codigo.valor ?? 0),
+                        coseguro: String(codigo.coseguro ?? 0),
                       };
                       const isPaid = codigo.pagadoOdonto === true;
 
                       return (
                         <tr key={rowKey} className="transition-colors hover:bg-secondary/20">
-                          <td className="px-4 py-3">
+                          <td className="px-2 py-1">
                             <p className="text-sm font-semibold text-slate-900">{codigo.codigoAtencion.code}</p>
                           </td>
 
-                          <td className="px-4 py-3">
+                          <td className="px-2 py-1">
                             <p className="text-sm text-slate-700">{codigo.codigoAtencion.description}</p>
                           </td>
 
-                          <td className="px-4 py-3">
+                          <td className="px-2 py-1">
                             <p className="text-sm text-slate-700">{codigo.pieza || "-"}</p>
                           </td>
 
-                          <td className="min-w-[190px] px-4 py-3">
+                          <td className="min-w-[170px] px-2 py-1">
                             <select
                               value={rowDraft.status}
                               disabled={bulkMutation.isPending || isPaid}
@@ -454,7 +467,7 @@ export default function LiquidacionesView() {
                             </select>
                           </td>
 
-                          <td className="min-w-[160px] px-4 py-3">
+                          <td className="min-w-[120px] px-2 py-1">
                             <input
                               type="number"
                               min="0"
@@ -465,7 +478,20 @@ export default function LiquidacionesView() {
                               onChange={(event) => updateRowDraft(rowKey, { valor: event.target.value })}
                               className={`${inputClassName} ${bulkMutation.isPending || isPaid ? "cursor-wait bg-slate-100 text-slate-500" : ""}`}
                             />
-                            {isPaid ? <p className="mt-2 text-xs font-medium text-amber-700">Pagado al odontólogo</p> : null}
+                            {isPaid ? <p className="mt-1 text-xs font-medium text-amber-700">Pagado al odontólogo</p> : null}
+                          </td>
+
+                          <td className="min-w-[120px] px-2 py-1">
+                            <input
+                              type="number"
+                              min="0"
+                              step="0.01"
+                              inputMode="decimal"
+                              value={rowDraft.coseguro}
+                              disabled={bulkMutation.isPending || isPaid}
+                              onChange={(event) => updateRowDraft(rowKey, { coseguro: event.target.value })}
+                              className={`${inputClassName} ${bulkMutation.isPending || isPaid ? "cursor-wait bg-slate-100 text-slate-500" : ""}`}
+                            />
                           </td>
                         </tr>
                       );
@@ -482,7 +508,7 @@ export default function LiquidacionesView() {
         )}
       </div>
 
-      {pagination ? (
+      {shouldFetchLiquidaciones && pagination ? (
         <div className="mt-6 flex flex-col gap-3 rounded-2xl border border-secondary-dark/40 bg-white px-4 py-4 shadow-sm sm:flex-row sm:items-center sm:justify-between">
           <p className="text-sm text-slate-500">
             Página {pagination.page} de {pagination.totalPages || 1}

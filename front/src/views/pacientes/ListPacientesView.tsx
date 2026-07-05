@@ -3,7 +3,7 @@ import { getPacientes } from "@/api/pacienteAPI";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import type { Paciente } from "@/types/index";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { Pencil, Plus, Search } from "lucide-react";
+import { Eye, Pencil, Plus, Search } from "lucide-react";
 import { useState } from "react";
 import { Link } from "react-router-dom";
 
@@ -189,6 +189,14 @@ export default function ListPacientesView() {
 
                       <td className="px-4 py-3">
                         <div className="flex justify-end gap-2">
+                          <Link
+                            to={`/pacientes/${paciente._id}/atenciones`}
+                            className="inline-flex items-center gap-1.5 rounded-lg border border-secondary-dark/60 bg-white px-2.5 py-1.5 text-xs font-medium text-slate-700 transition-colors hover:border-primary/40 hover:bg-secondary/40 hover:text-primary-dark"
+                          >
+                            <Eye className="h-3.5 w-3.5" strokeWidth={2} />
+                            <span>Ver atenciones</span>
+                          </Link>
+
                           <Link
                             to={`/atenciones/create?pacienteId=${paciente._id}`}
                             className="inline-flex items-center gap-1.5 rounded-lg border border-primary/40 bg-secondary/40 px-2.5 py-1.5 text-xs font-medium text-primary-dark transition-colors hover:bg-secondary/60"

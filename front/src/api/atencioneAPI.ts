@@ -19,6 +19,7 @@ import {
   pagosCuentaCorrienteResponseSchema,
   pagosPendientesResponseSchema,
   pacienteSchema,
+  pacienteAtencionesHistorialResponseSchema,
   type Atencion,
   type AtencionesDash,
   type AtencionesAvailableFilters,
@@ -32,6 +33,7 @@ import {
   type PagoOdontologo,
   type PagosAvailableFilters,
   type PagosCuentaCorrienteResponse,
+  type PacienteAtencionesHistorialResponse,
   type PagosPendientesResponse,
   type Paciente,
 } from "../types";
@@ -95,6 +97,7 @@ type UpdateLiquidacionItemPayload = {
   rowIndex: number;
   status: AtencionStatus;
   valor: number;
+  coseguro: number;
 };
 
 type UpdateLiquidacionesBulkPayload = {
@@ -505,12 +508,13 @@ export async function updateAtencionByID({ idAtencion, ...formData }: UpdateAten
   }
 }
 
-export async function updateLiquidacionItem({ idAtencion, codigoId, rowIndex, status, valor }: UpdateLiquidacionItemPayload) {
+export async function updateLiquidacionItem({ idAtencion, codigoId, rowIndex, status, valor, coseguro }: UpdateLiquidacionItemPayload) {
   try {
     const { data } = await api.patch(`/atenciones/${idAtencion}/codigos/${codigoId}/liquidacion`, {
       rowIndex,
       status,
       valor,
+      coseguro,
     });
 
     return {
@@ -607,6 +611,32 @@ export async function getAtencionesByUsuario(idUsuario: string) {
     }
 
     throw new Error("Error inesperado al obtener las atenciones del usuario");
+  }
+}
+
+export async function getAtencionesByPaciente(idPaciente: string, page = 1) {
+  try {
+    const { data } = await api.get(`/atenciones/paciente/${idPaciente}`, {
+      params: { page },
+    });
+
+    const response = pacienteAtencionesHistorialResponseSchema.safeParse({
+      data: data.data,
+      pagination: data.pagination,
+    });
+
+    if (!response.success) {
+      console.error("Error en la validación de getAtencionesByPaciente:", response.error);
+      throw new Error("La estructura de los datos es inválida");
+    }
+
+    return response.data satisfies PacienteAtencionesHistorialResponse;
+  } catch (error) {
+    if (isAxiosError(error) && error.response) {
+      throw new Error(error.response.data.error || error.response.data.message || "Error al obtener las atenciones del paciente");
+    }
+
+    throw new Error("Error inesperado al obtener las atenciones del paciente");
   }
 }
 

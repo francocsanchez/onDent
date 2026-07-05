@@ -47,9 +47,15 @@ export default function AtencionView() {
   const totalNoLiquidable = atencion.codigos.reduce((acc, item) => acc + (item.status !== "OK" ? item.valor : 0), 0);
   const totalCoseguroEmpresa = atencion.codigos.reduce((acc, item) => acc + (item.coseguro ?? 0), 0);
   const returnTo = searchParams.get("returnTo")?.trim() ?? "";
+  const pacienteId = searchParams.get("pacienteId")?.trim() ?? "";
+  const isReadonly = searchParams.get("readonly")?.trim() === "1";
 
   const getBackPath = () => {
     if (returnTo !== "list") {
+      if (returnTo === "patient-history" && pacienteId) {
+        return `/pacientes/${pacienteId}/atenciones`;
+      }
+
       return null;
     }
 
@@ -79,13 +85,15 @@ export default function AtencionView() {
         </div>
 
         <div className="flex flex-wrap gap-3">
-          <Link
-            to={`/atenciones/${idAtencion}/editar`}
-            className="inline-flex items-center justify-center gap-2 rounded-2xl bg-primary px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-primary-dark"
-          >
-            <Pencil className="h-4 w-4" strokeWidth={2.2} />
-            <span>Editar</span>
-          </Link>
+          {!isReadonly ? (
+            <Link
+              to={`/atenciones/${idAtencion}/editar`}
+              className="inline-flex items-center justify-center gap-2 rounded-2xl bg-primary px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-primary-dark"
+            >
+              <Pencil className="h-4 w-4" strokeWidth={2.2} />
+              <span>Editar</span>
+            </Link>
+          ) : null}
 
           <button
             type="button"

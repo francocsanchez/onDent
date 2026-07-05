@@ -57,9 +57,9 @@ const createEmptyCodeRow = (): AttentionCodeFormItem => ({
 });
 
 const inputBaseClassName =
-  "w-full rounded-xl border border-secondary-dark/60 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-primary focus:ring-2 focus:ring-primary/20";
+  "w-full rounded-lg border border-secondary-dark/60 bg-white px-1.5 py-1 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-primary focus:ring-2 focus:ring-primary/20";
 
-const disabledInputClassName = "w-full rounded-xl border border-secondary-dark/50 bg-slate-100 px-3 py-2.5 text-sm text-slate-500 outline-none";
+const disabledInputClassName = "w-full rounded-lg border border-secondary-dark/50 bg-slate-100 px-1.5 py-1 text-sm text-slate-500 outline-none";
 
 const initialValues: CreateAtencionFormValues = {
   fecha: getTodayDateLocal(),
@@ -283,16 +283,16 @@ export default function CreateAtencionView() {
         </div>
       </div>
 
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         <section className="overflow-hidden rounded-[1.35rem] border border-secondary-dark/60 bg-white shadow-sm">
-          <div className="border-b border-secondary-dark/50 bg-gradient-to-r from-secondary/50 via-white to-white px-5 py-4">
+          <div className="border-b border-secondary-dark/50 bg-gradient-to-r from-secondary/50 via-white to-white px-3 py-2.5">
             <p className="text-sm font-medium text-primary">Paso 1</p>
             <h3 className="text-base font-semibold text-slate-900">Busqueda de paciente</h3>
             <p className="mt-0.5 text-sm text-slate-500">Ingresá el DNI para validar si el paciente ya existe en el sistema.</p>
           </div>
 
-          <div className="grid gap-4 px-5 py-5 lg:grid-cols-[220px_minmax(0,1fr)_auto] lg:items-end">
-            <div className="space-y-2">
+          <div className="grid gap-3 px-3 py-3 lg:grid-cols-[220px_minmax(0,1fr)_auto] lg:items-end">
+            <div className="space-y-1.5">
               <label htmlFor="fecha" className="text-sm font-medium text-slate-700">
                 Fecha de atencion
               </label>
@@ -310,7 +310,7 @@ export default function CreateAtencionView() {
               {errors.fecha ? <p className="text-sm text-rose-600">{errors.fecha.message}</p> : null}
             </div>
 
-            <div className="space-y-2">
+            <div className="space-y-1.5">
               <label htmlFor="patientSearchDni" className="text-sm font-medium text-slate-700">
                 DNI del paciente
               </label>
@@ -337,7 +337,7 @@ export default function CreateAtencionView() {
               type="button"
               onClick={() => performPatientSearch()}
               disabled={searchPatientMutation.isPending || searchPatientByIdMutation.isPending || searchCodesMutation.isPending}
-              className="inline-flex h-[46px] w-[46px] items-center justify-center rounded-xl bg-primary text-white transition hover:bg-primary-dark disabled:cursor-not-allowed disabled:bg-slate-300"
+              className="inline-flex h-[34px] w-[34px] items-center justify-center rounded-lg bg-primary text-white transition hover:bg-primary-dark disabled:cursor-not-allowed disabled:bg-slate-300"
               aria-label="Buscar paciente"
               title="Buscar paciente"
             >
@@ -350,19 +350,19 @@ export default function CreateAtencionView() {
           </div>
 
           {searchStatus === "found" && foundPatient ? (
-            <div className="border-t border-emerald-100 bg-emerald-50/70 px-5 py-3">
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="border-t border-emerald-100 bg-emerald-50/70 px-3 py-2">
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                   <p className="text-sm font-semibold text-emerald-700">Paciente encontrado</p>
                   <p className="text-sm text-emerald-600">Podés continuar con la carga de la atención.</p>
                 </div>
-                <span className="inline-flex rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold uppercase tracking-[0.14em] text-emerald-700">
+                <span className="inline-flex rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-semibold uppercase tracking-[0.14em] text-emerald-700">
                   Validado
                 </span>
               </div>
 
-              <div className="mt-3 rounded-xl border border-emerald-100 bg-white px-4 py-3">
-                <div className="flex flex-col gap-2 text-sm text-slate-700 md:flex-row md:items-center md:gap-4">
+              <div className="mt-2 rounded-lg border border-emerald-100 bg-white px-2.5 py-2">
+                <div className="flex flex-col gap-1.5 text-sm text-slate-700 md:flex-row md:items-center md:gap-3">
                   <span className="font-semibold text-slate-900">
                     {foundPatient.lastName}, {foundPatient.name}
                   </span>
@@ -380,8 +380,8 @@ export default function CreateAtencionView() {
           ) : null}
 
           {searchStatus === "not-found" ? (
-            <div className="border-t border-rose-100 bg-rose-50/70 px-5 py-4">
-              <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="border-t border-rose-100 bg-rose-50/70 px-3 py-2.5">
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                   <p className="text-sm font-semibold text-rose-700">Paciente inexistente</p>
                   <p className="text-sm text-rose-600">No encontramos un paciente con ese DNI.</p>
@@ -389,7 +389,7 @@ export default function CreateAtencionView() {
 
                 <Link
                   to="/pacientes/create"
-                  className="inline-flex items-center justify-center rounded-xl border border-rose-200 bg-white px-4 py-2.5 text-sm font-semibold text-rose-700 transition hover:bg-rose-100"
+                  className="inline-flex items-center justify-center rounded-lg border border-rose-200 bg-white px-3 py-1.5 text-sm font-semibold text-rose-700 transition hover:bg-rose-100"
                 >
                   Crear paciente
                 </Link>
@@ -403,8 +403,8 @@ export default function CreateAtencionView() {
             canShowFormSections ? "opacity-100" : "pointer-events-none opacity-60"
           }`}
         >
-          <div className="border-b border-secondary-dark/50 bg-gradient-to-r from-slate-50 via-white to-white px-5 py-4">
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="border-b border-secondary-dark/50 bg-gradient-to-r from-slate-50 via-white to-white px-3 py-2.5">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <p className="text-sm font-medium text-primary">Paso 2</p>
                 <h3 className="text-base font-semibold text-slate-900">Codigos de atencion</h3>
@@ -415,29 +415,29 @@ export default function CreateAtencionView() {
                 type="button"
                 onClick={() => append(createEmptyCodeRow())}
                 disabled={!canShowFormSections}
-                className="inline-flex items-center justify-center rounded-xl border border-secondary-dark/60 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-primary/40 hover:bg-secondary/40 hover:text-primary-dark disabled:cursor-not-allowed disabled:opacity-50"
+                className="inline-flex items-center justify-center rounded-lg border border-secondary-dark/60 px-3 py-1.5 text-sm font-semibold text-slate-700 transition hover:border-primary/40 hover:bg-secondary/40 hover:text-primary-dark disabled:cursor-not-allowed disabled:opacity-50"
               >
                 Agregar codigo
               </button>
             </div>
           </div>
 
-          <div className="space-y-3 px-5 py-5">
+          <div className="space-y-2.5 px-3 py-3">
             {canShowFormSections && prestacionesDisponibilidadError ? (
-              <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+              <div className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700">
                 {prestacionesDisponibilidadError}
               </div>
             ) : null}
 
             {canShowFormSections && !prestacionesDisponibilidadError && disponibilidadPrestacionesMutation.isPending ? (
-              <div className="rounded-2xl border border-secondary-dark/50 bg-slate-50 px-4 py-3 text-sm text-slate-600">
+              <div className="rounded-xl border border-secondary-dark/50 bg-slate-50 px-3 py-2 text-sm text-slate-600">
                 Consultando disponibilidad mensual de prestaciones...
               </div>
             ) : null}
 
             {canShowFormSections && prestacionesDisponibles ? (
               <div
-                className={`rounded-2xl px-4 py-3 text-sm ${
+                className={`rounded-xl px-3 py-2 text-sm ${
                   prestacionesDisponibles.tieneLimiteConfigurado
                     ? "border border-amber-200 bg-amber-50 text-amber-800"
                     : "border border-emerald-200 bg-emerald-50 text-emerald-700"
@@ -455,13 +455,13 @@ export default function CreateAtencionView() {
             ) : null}
 
             {!canShowFormSections ? (
-              <div className="rounded-2xl border border-dashed border-secondary-dark/60 bg-slate-50 px-4 py-8 text-center text-sm text-slate-500">
+              <div className="rounded-xl border border-dashed border-secondary-dark/60 bg-slate-50 px-3 py-5 text-center text-sm text-slate-500">
                 Primero buscá y validá un paciente para habilitar la carga de codigos.
               </div>
             ) : null}
 
             {canShowFormSections && fields.length === 0 ? (
-              <div className="rounded-2xl border border-dashed border-secondary-dark/60 bg-slate-50 px-4 py-8 text-center text-sm text-slate-500">
+              <div className="rounded-xl border border-dashed border-secondary-dark/60 bg-slate-50 px-3 py-5 text-center text-sm text-slate-500">
                 Aun no agregaste codigos. Usá el boton <span className="font-semibold text-slate-700">Agregar codigo</span> para comenzar.
               </div>
             ) : null}
@@ -471,8 +471,8 @@ export default function CreateAtencionView() {
               const selectedCode = availableCodes.find((dentalCode) => dentalCode._id === selectedCodeId) ?? null;
 
               return (
-                <div key={field.id} className="rounded-[1.1rem] border border-secondary-dark/50 bg-slate-50/70 p-3.5">
-                  <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                <div key={field.id} className="rounded-xl border border-secondary-dark/50 bg-slate-50/70 p-2.5">
+                  <div className="mb-2 flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
                     <div>
                       <p className="text-sm font-semibold text-slate-900">Codigo #{index + 1}</p>
                       <p className="text-sm text-slate-500">Seleccioná el codigo y completá la pieza.</p>
@@ -481,14 +481,14 @@ export default function CreateAtencionView() {
                     <button
                       type="button"
                       onClick={() => remove(index)}
-                      className="inline-flex items-center justify-center rounded-xl border border-rose-200 bg-white px-3 py-1.5 text-sm font-medium text-rose-700 transition hover:bg-rose-50"
+                      className="inline-flex items-center justify-center rounded-lg border border-rose-200 bg-white px-2.5 py-1 text-sm font-medium text-rose-700 transition hover:bg-rose-50"
                     >
                       Eliminar
                     </button>
                   </div>
 
-                  <div className="grid gap-3 xl:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)]">
-                    <div className="space-y-2">
+                  <div className="grid gap-2.5 xl:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)]">
+                    <div className="space-y-1.5">
                       <label htmlFor={`codes.${index}.dentalCodeId`} className="text-sm font-medium text-slate-700">
                         Codigo odontologico
                       </label>
@@ -511,9 +511,9 @@ export default function CreateAtencionView() {
                       ) : null}
                     </div>
 
-                    <div className="space-y-2">
+                    <div className="space-y-1.5">
                       <label className="text-sm font-medium text-slate-700">Detalle automatico</label>
-                      <div className="rounded-xl border border-secondary-dark/50 bg-white px-3 py-2">
+                      <div className="rounded-lg border border-secondary-dark/50 bg-white px-2 py-1.5">
                         <p className="text-[11px] font-medium uppercase tracking-[0.14em] text-slate-400">{selectedCode?.code ?? "Sin codigo"}</p>
                         <p className="mt-0.5 text-sm text-slate-700">
                           {selectedCode?.description ?? "Seleccioná un codigo para ver su descripcion."}
@@ -522,8 +522,8 @@ export default function CreateAtencionView() {
                     </div>
                   </div>
 
-                  <div className="mt-3 grid gap-3 md:grid-cols-[160px_180px_minmax(0,1fr)]">
-                    <div className="space-y-2">
+                  <div className="mt-2.5 grid gap-2.5 md:grid-cols-[160px_180px_minmax(0,1fr)]">
+                    <div className="space-y-1.5">
                       <label htmlFor={`codes.${index}.piece`} className="text-sm font-medium text-slate-700">
                         Pieza
                       </label>
@@ -536,7 +536,7 @@ export default function CreateAtencionView() {
                       />
                     </div>
 
-                    <div className="space-y-2">
+                    <div className="space-y-1.5">
                       <label htmlFor={`codes.${index}.coseguro`} className="text-sm font-medium text-slate-700">
                         Coseguro
                       </label>
@@ -562,7 +562,7 @@ export default function CreateAtencionView() {
                       {errors.codes?.[index]?.coseguro ? <p className="text-sm text-rose-600">{errors.codes[index]?.coseguro?.message}</p> : null}
                     </div>
 
-                    <div className="space-y-2">
+                    <div className="space-y-1.5">
                       <label htmlFor={`codes.${index}.observation`} className="text-sm font-medium text-slate-700">
                         Observacion del codigo
                       </label>
@@ -586,14 +586,14 @@ export default function CreateAtencionView() {
             canShowFormSections ? "opacity-100" : "pointer-events-none opacity-60"
           }`}
         >
-          <div className="border-b border-secondary-dark/50 bg-gradient-to-r from-slate-50 via-white to-white px-5 py-4">
+          <div className="border-b border-secondary-dark/50 bg-gradient-to-r from-slate-50 via-white to-white px-3 py-2.5">
             <p className="text-sm font-medium text-primary">Paso 3</p>
             <h3 className="text-base font-semibold text-slate-900">Datos finales de la atencion</h3>
             <p className="mt-0.5 text-sm text-slate-500">Completá la observacion general antes de guardar.</p>
           </div>
 
-          <div className="grid gap-4 px-5 py-5 lg:grid-cols-[minmax(0,1fr)_280px]">
-            <div className="space-y-2">
+          <div className="grid gap-3 px-3 py-3 lg:grid-cols-[minmax(0,1fr)_280px]">
+            <div className="space-y-1.5">
               <label htmlFor="generalObservation" className="text-sm font-medium text-slate-700">
                 Observacion general
               </label>
@@ -606,8 +606,8 @@ export default function CreateAtencionView() {
               />
             </div>
 
-            <div className="space-y-2">
-              <div className="rounded-xl border border-secondary-dark/50 bg-slate-50 p-3.5">
+            <div className="space-y-1.5">
+              <div className="rounded-lg border border-secondary-dark/50 bg-slate-50 p-2.5">
                 <p className="text-xs font-medium uppercase tracking-[0.14em] text-slate-400">Resumen</p>
                 <p className="mt-2 text-sm text-slate-600">
                   {fields.length} {fields.length === 1 ? "codigo cargado" : "codigos cargados"}
@@ -631,18 +631,18 @@ export default function CreateAtencionView() {
           </div>
         </section>
 
-        <section className="rounded-[1.35rem] border border-secondary-dark/60 bg-white p-4 shadow-sm">
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+        <section className="rounded-[1.35rem] border border-secondary-dark/60 bg-white p-3 shadow-sm">
+          <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
             <div>
               <p className="text-sm font-medium text-primary">Acciones</p>
               <h3 className="text-base font-semibold text-slate-900">Confirmar registro</h3>
               <p className="mt-0.5 text-sm text-slate-500">El envio final trabaja en modo local y muestra el resultado en consola.</p>
             </div>
 
-            <div className="flex flex-col gap-3 sm:flex-row">
+            <div className="flex flex-col gap-2 sm:flex-row">
               <Link
                 to="/atenciones"
-                className="inline-flex items-center justify-center rounded-xl border border-secondary-dark/60 px-4 py-2.5 text-sm font-medium text-slate-600 transition hover:bg-secondary/40"
+                className="inline-flex items-center justify-center rounded-lg border border-secondary-dark/60 px-3 py-1.5 text-sm font-medium text-slate-600 transition hover:bg-secondary/40"
               >
                 Cancelar
               </Link>
@@ -658,15 +658,15 @@ export default function CreateAtencionView() {
                     prestacionesDisponibles.disponibles !== null &&
                     cantidadCodigosSeleccionados > prestacionesDisponibles.disponibles)
                 }
-                className="inline-flex items-center justify-center rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-primary-dark disabled:cursor-not-allowed disabled:bg-slate-300"
+                className="inline-flex items-center justify-center rounded-lg bg-primary px-4 py-1.5 text-sm font-semibold text-white transition hover:bg-primary-dark disabled:cursor-not-allowed disabled:bg-slate-300"
               >
                 {createAtencionMutation.isPending ? "Guardando..." : "Guardar atencion"}
               </button>
             </div>
           </div>
 
-          <div className="mt-4 grid gap-3 md:grid-cols-4">
-            <div className="space-y-2">
+          <div className="mt-3 grid gap-2.5 md:grid-cols-4">
+            <div className="space-y-1.5">
               <p className="text-xs font-medium uppercase tracking-[0.14em] text-slate-400">Paciente</p>
               <input
                 type="text"
@@ -676,17 +676,17 @@ export default function CreateAtencionView() {
               />
             </div>
 
-            <div className="space-y-2">
+            <div className="space-y-1.5">
               <p className="text-xs font-medium uppercase tracking-[0.14em] text-slate-400">DNI</p>
               <input type="text" value={foundPatient ? String(foundPatient.dni) : "Sin validar"} readOnly className={disabledInputClassName} />
             </div>
 
-            <div className="space-y-2">
+            <div className="space-y-1.5">
               <p className="text-xs font-medium uppercase tracking-[0.14em] text-slate-400">Obra social</p>
               <input type="text" value={foundPatient?.obraSocial.name ?? "Sin validar"} readOnly className={disabledInputClassName} />
             </div>
 
-            <div className="space-y-2">
+            <div className="space-y-1.5">
               <p className="text-xs font-medium uppercase tracking-[0.14em] text-slate-400">Profesional</p>
               <input type="text" value={`${user.lastName}, ${user.name}`} readOnly className={disabledInputClassName} />
             </div>

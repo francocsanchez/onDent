@@ -16,6 +16,7 @@ const mongoIdRegex = /^[a-f\d]{24}$/i;
 const LIQUIDACIONES_PAGE_SIZE = 50;
 const COSEGUROS_PAGE_SIZE = 50;
 const PAGOS_PAGE_SIZE = 50;
+const PACIENTE_ATENCIONES_PAGE_SIZE = 50;
 const toObjectId = (value: string) => new Types.ObjectId(value);
 type LiquidacionBulkItemPayload = {
   idAtencion: string;
@@ -23,6 +24,7 @@ type LiquidacionBulkItemPayload = {
   rowIndex: number;
   status: CodigoStatus;
   valor: number;
+  coseguro?: number;
 };
 type CreatePagoOdontologoPayload = {
   usuario: string;
@@ -439,7 +441,7 @@ export class AtencionController {
           { $group: { _id: "$year" } },
           { $sort: { _id: -1 } },
         ]),
-        Usuario.find({ enable: true }, "_id name lastName role").sort({ lastName: 1, name: 1 }).lean(),
+        Usuario.find({ enable: true, role: "odontologo" }, "_id name lastName role").sort({ lastName: 1, name: 1 }).lean(),
         ObraSocial.find({ enable: true }, "_id name").sort({ name: 1 }).lean(),
       ]);
 
@@ -898,6 +900,7 @@ export class AtencionController {
                   },
                   status: codigo.status,
                   valor: codigo.valor ?? 0,
+                  coseguro: codigo.coseguro ?? 0,
                   pagadoOdonto: codigo.pagadoOdonto === true,
                 };
               })
@@ -980,6 +983,7 @@ export class AtencionController {
 
         codigoAtencion.status = item.status;
         codigoAtencion.valor = Number(item.valor);
+        codigoAtencion.coseguro = Number(item.coseguro ?? 0);
         await atencion.save();
         touchedAtenciones.add(item.idAtencion);
       }
@@ -1623,6 +1627,7 @@ export class AtencionController {
 
   static getByPaciente = async (req: Request, res: Response) => {
     const { idPaciente } = req.params;
+    const page = Math.max(Number(req.query.page) || 1, 1);
 
     try {
       const atenciones = await Atencion.find({ paciente: idPaciente })
@@ -1630,10 +1635,79 @@ export class AtencionController {
         .populate("usuario")
         .populate("obraSocial")
         .populate("codigos.codigo")
+        .sort({ fecha: -1, _id: -1 })
         .lean();
 
+      const groupedAtenciones = Array.from(
+        atenciones
+          .reduce(
+          (acc, atencion) => {
+            const paciente = atencion.paciente as unknown as { _id: string; dni: number; name: string; lastName: string };
+            const usuario = atencion.usuario as unknown as { _id: string; name: string; lastName: string };
+            const groupKey = `${String(paciente._id)}|${atencion.fecha}|${String(usuario._id)}`;
+            const existing = acc.get(groupKey);
+            const codigos = (atencion.codigos ?? []).map((codigo) => {
+              const codigoDocumento = codigo.codigo as unknown as { _id: string; code: string; description: string };
+
+              return {
+                codigoId: String(codigoDocumento._id),
+                code: codigoDocumento.code ?? "",
+                description: codigoDocumento.description ?? "",
+                pieza: codigo.pieza ?? "",
+              };
+            });
+
+            if (existing) {
+              existing.codigos.push(...codigos);
+              return acc;
+            }
+
+            acc.set(groupKey, {
+              fecha: atencion.fecha,
+              paciente: {
+                _id: String(paciente._id),
+                dni: paciente.dni,
+                name: paciente.name,
+                lastName: paciente.lastName,
+              },
+              usuario: {
+                _id: String(usuario._id),
+                name: usuario.name,
+                lastName: usuario.lastName,
+              },
+              codigos,
+            });
+
+            return acc;
+          },
+          new Map<
+            string,
+            {
+              fecha: string;
+              paciente: { _id: string; dni: number; name: string; lastName: string };
+              usuario: { _id: string; name: string; lastName: string };
+              codigos: Array<{ codigoId: string; code: string; description: string; pieza: string }>;
+            }
+          >(),
+        )
+          .values(),
+      );
+
+      const total = groupedAtenciones.length;
+      const totalPages = Math.ceil(total / PACIENTE_ATENCIONES_PAGE_SIZE);
+      const skip = (page - 1) * PACIENTE_ATENCIONES_PAGE_SIZE;
+      const paginatedAtenciones = groupedAtenciones.slice(skip, skip + PACIENTE_ATENCIONES_PAGE_SIZE);
+
       return res.status(200).json({
-        data: atenciones,
+        data: paginatedAtenciones,
+        pagination: {
+          total,
+          page,
+          limit: PACIENTE_ATENCIONES_PAGE_SIZE,
+          totalPages,
+          hasNextPage: page < totalPages,
+          hasPrevPage: page > 1,
+        },
         message: "Listado de atenciones por paciente",
       });
     } catch (error) {

@@ -62,6 +62,10 @@ export const updateLiquidacionValidationAtencion = [
     .withMessage("El valor es obligatorio")
     .isFloat({ min: 0 })
     .withMessage("El valor debe ser numérico y no negativo"),
+  body("coseguro")
+    .optional()
+    .isFloat({ min: 0 })
+    .withMessage("El coseguro debe ser numérico y no negativo"),
 ];
 
 export const updateLiquidacionesBulkValidationAtencion = [
@@ -79,6 +83,10 @@ export const updateLiquidacionesBulkValidationAtencion = [
     .withMessage("El valor es obligatorio")
     .isFloat({ min: 0 })
     .withMessage("El valor debe ser numérico y no negativo"),
+  body("items.*.coseguro")
+    .optional()
+    .isFloat({ min: 0 })
+    .withMessage("El coseguro debe ser numérico y no negativo"),
 ];
 
 export const updateCoseguroOdontoValidationAtencion = [

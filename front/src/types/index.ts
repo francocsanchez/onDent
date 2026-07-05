@@ -155,6 +155,7 @@ export const liquidacionCodigoItemSchema = z.object({
   }),
   status: z.enum(["OK", "Pendiente", "Denegado", "Diferido", "No cargado"]),
   valor: z.number(),
+  coseguro: z.number().optional().default(0),
   pagadoOdonto: z.boolean().optional(),
 });
 
@@ -201,6 +202,34 @@ export const liquidacionesAvailableFiltersSchema = z.object({
       name: z.string(),
     }),
   ),
+});
+
+export const pacienteAtencionHistorialItemSchema = z.object({
+  fecha: z.string(),
+  paciente: z.object({
+    _id: z.string(),
+    name: z.string(),
+    lastName: z.string(),
+    dni: z.number(),
+  }),
+  usuario: z.object({
+    _id: z.string(),
+    name: z.string(),
+    lastName: z.string(),
+  }),
+  codigos: z.array(
+    z.object({
+      codigoId: z.string(),
+      code: z.string(),
+      description: z.string(),
+      pieza: z.string().optional().default(""),
+    }),
+  ),
+});
+
+export const pacienteAtencionesHistorialResponseSchema = z.object({
+  data: z.array(pacienteAtencionHistorialItemSchema),
+  pagination: pacientesPaginationSchema,
 });
 
 export const pagosAvailableFiltersSchema = z.object({
@@ -437,6 +466,8 @@ export type LiquidacionCodigoItem = z.infer<typeof liquidacionCodigoItemSchema>;
 export type LiquidacionAtencionGroup = z.infer<typeof liquidacionAtencionGroupSchema>;
 export type LiquidacionesListResponse = z.infer<typeof liquidacionesListResponseSchema>;
 export type LiquidacionesAvailableFilters = z.infer<typeof liquidacionesAvailableFiltersSchema>;
+export type PacienteAtencionHistorialItem = z.infer<typeof pacienteAtencionHistorialItemSchema>;
+export type PacienteAtencionesHistorialResponse = z.infer<typeof pacienteAtencionesHistorialResponseSchema>;
 export type PagosAvailableFilters = z.infer<typeof pagosAvailableFiltersSchema>;
 export type PagoPendienteRow = z.infer<typeof pagoPendienteRowSchema>;
 export type PagosPendientesResponse = z.infer<typeof pagosPendientesResponseSchema>;
