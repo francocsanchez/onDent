@@ -1,6 +1,19 @@
 import useRoleGuard from "@/hooks/useRoleGuard";
 import { useQueryClient } from "@tanstack/react-query";
-import { ChartColumn, ChevronLeft, ChevronRight, ClipboardList, LayoutDashboard, LogOut, Settings, Stethoscope, UserCircle2, Users, X, ScanLine } from "lucide-react";
+import {
+  ChartColumn,
+  ChevronLeft,
+  ChevronRight,
+  ClipboardList,
+  LayoutDashboard,
+  LogOut,
+  Settings,
+  Stethoscope,
+  UserCircle2,
+  Users,
+  X,
+  ScanLine,
+} from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 
@@ -24,7 +37,7 @@ const navigationItems: NavigationItem[] = [
     icon: LayoutDashboard,
   },
   {
-    label: "Atencionces",
+    label: "Atenciones",
     href: "/atenciones",
     icon: Stethoscope,
   },
@@ -110,7 +123,11 @@ export default function MenuAppLayout({ isOpen, isCollapsed, onClose, onToggleCo
       >
         <div className={`mb-8 flex items-center ${isCollapsed ? "justify-center" : "justify-between"} px-1`}>
           <div className="flex min-w-0 flex-1 justify-center">
-            <img src="/logo.png" alt="OnDent" className={`h-auto object-contain transition-all ${isCollapsed ? "max-w-[52px]" : "w-full max-w-[120px]"}`} />
+            <img
+              src="/logo.png"
+              alt="OnDent"
+              className={`h-auto object-contain transition-all ${isCollapsed ? "max-w-[52px]" : "w-full max-w-[120px]"}`}
+            />
           </div>
 
           <div className={`flex items-center gap-2 ${isCollapsed ? "absolute right-3 top-4 lg:static" : ""}`}>

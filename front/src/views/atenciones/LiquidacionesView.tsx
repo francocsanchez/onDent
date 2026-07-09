@@ -134,20 +134,39 @@ export default function LiquidacionesView() {
 
   useEffect(() => {
     setRowDrafts((currentDrafts) => {
-      const nextDrafts = { ...currentDrafts };
+      if (bulkMutation.isPending) {
+        return currentDrafts;
+      }
+
+      const nextDrafts: Record<string, EditableRowState> = {};
+      let hasChanges = false;
 
       liquidaciones.forEach((atencion) => {
         atencion.codigos.forEach((codigo) => {
           const rowKey = getRowKey(atencion.atencionId, codigo.rowIndex);
-          if (!bulkMutation.isPending) {
-            nextDrafts[rowKey] = {
-              status: codigo.status,
-              valor: String(codigo.valor ?? 0),
-              coseguro: String(codigo.coseguro ?? 0),
-            };
+          const nextDraft = {
+            status: codigo.status,
+            valor: String(codigo.valor ?? 0),
+            coseguro: String(codigo.coseguro ?? 0),
+          } satisfies EditableRowState;
+
+          nextDrafts[rowKey] = nextDraft;
+
+          const currentDraft = currentDrafts[rowKey];
+          if (
+            !currentDraft ||
+            currentDraft.status !== nextDraft.status ||
+            currentDraft.valor !== nextDraft.valor ||
+            currentDraft.coseguro !== nextDraft.coseguro
+          ) {
+            hasChanges = true;
           }
         });
       });
+
+      if (!hasChanges && Object.keys(currentDrafts).length === Object.keys(nextDrafts).length) {
+        return currentDrafts;
+      }
 
       return nextDrafts;
     });
