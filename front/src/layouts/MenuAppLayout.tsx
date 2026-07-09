@@ -1,6 +1,6 @@
 import useRoleGuard from "@/hooks/useRoleGuard";
 import { useQueryClient } from "@tanstack/react-query";
-import { ChartColumn, ChevronLeft, ChevronRight, ClipboardList, LayoutDashboard, LogOut, Settings, Stethoscope, UserCircle2, Users, X } from "lucide-react";
+import { ChartColumn, ChevronLeft, ChevronRight, ClipboardList, LayoutDashboard, LogOut, Settings, Stethoscope, UserCircle2, Users, X, ScanLine } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 
@@ -32,6 +32,11 @@ const navigationItems: NavigationItem[] = [
     label: "Pacientes",
     href: "/pacientes",
     icon: Users,
+  },
+  {
+    label: "RX",
+    href: "/rx",
+    icon: ScanLine,
   },
   {
     label: "Liquidaciones",
@@ -77,6 +82,7 @@ export default function MenuAppLayout({ isOpen, isCollapsed, onClose, onToggleCo
   const { allowed: canShowLiquidaciones } = useRoleGuard(["admin", "superadmin"]);
   const { allowed: canShowPagos } = useRoleGuard(["admin", "superadmin"]);
   const { allowed: canShowCoseguros } = useRoleGuard(["admin", "superadmin"]);
+  const { allowed: canShowRx } = useRoleGuard(["rayos", "superadmin"]);
 
   const visibleNavigationItems = navigationItems.filter((item) => {
     if (item.href === "/config") return canShowConfig;
@@ -84,6 +90,7 @@ export default function MenuAppLayout({ isOpen, isCollapsed, onClose, onToggleCo
     if (item.href === "/liquidaciones") return canShowLiquidaciones;
     if (item.href === "/pagos") return canShowPagos;
     if (item.href === "/coseguros") return canShowCoseguros;
+    if (item.href === "/rx") return canShowRx;
     return true;
   });
 

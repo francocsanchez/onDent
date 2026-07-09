@@ -4,6 +4,7 @@ import Atencion from "../models/Atencion";
 import Usuario from "../models/Usuario";
 import ObraSocial from "../models/ObraSocial";
 import PagoOdontologo from "../models/PagoOdontologo";
+import Rx from "../models/Rx";
 import { logError } from "../utils/logError";
 import { reporteAtencionesDash } from "../utils/reports/reporte-atencionesDash";
 import { reporteAtencionesGlobal } from "../utils/reports/reporte-atencionesGlobal";
@@ -1630,13 +1631,22 @@ export class AtencionController {
     const page = Math.max(Number(req.query.page) || 1, 1);
 
     try {
-      const atenciones = await Atencion.find({ paciente: idPaciente })
-        .populate("paciente")
-        .populate("usuario")
-        .populate("obraSocial")
-        .populate("codigos.codigo")
-        .sort({ fecha: -1, _id: -1 })
-        .lean();
+      const [atenciones, rxList] = await Promise.all([
+        Atencion.find({ paciente: idPaciente })
+          .populate("paciente")
+          .populate("usuario")
+          .populate("obraSocial")
+          .populate("codigos.codigo")
+          .sort({ fecha: -1, _id: -1 })
+          .lean(),
+        Rx.find({ paciente: idPaciente })
+          .populate("paciente")
+          .populate("tipoRx")
+          .populate("usuarioCarga", "_id name lastName")
+          .populate("derivanteUsuario", "_id name lastName")
+          .sort({ fecha: -1, _id: -1 })
+          .lean(),
+      ]);
 
       const groupedAtenciones = Array.from(
         atenciones
@@ -1693,10 +1703,59 @@ export class AtencionController {
           .values(),
       );
 
-      const total = groupedAtenciones.length;
+      const rxTimelineItems = rxList.map((rx) => {
+        const paciente = rx.paciente as unknown as { _id: string; dni: number; name: string; lastName: string };
+        const usuarioCarga = rx.usuarioCarga as unknown as { _id: string; name: string; lastName: string };
+        const tipoRx = rx.tipoRx as unknown as { _id: string; name: string };
+        const derivanteUsuario = rx.derivanteUsuario as unknown as { _id: string; name: string; lastName: string } | undefined;
+
+        return {
+          tipoRegistro: "rx" as const,
+          fecha: rx.fecha,
+          paciente: {
+            _id: String(paciente._id),
+            dni: paciente.dni,
+            name: paciente.name,
+            lastName: paciente.lastName,
+          },
+          usuario: {
+            _id: String(usuarioCarga._id),
+            name: usuarioCarga.name,
+            lastName: usuarioCarga.lastName,
+          },
+          tipoRx: {
+            _id: String(tipoRx._id),
+            name: tipoRx.name,
+          },
+          derivanteTipo: rx.derivanteTipo,
+          derivante: rx.derivanteTipo === "interno" && derivanteUsuario ? `${derivanteUsuario.lastName}, ${derivanteUsuario.name}` : (rx.derivanteExterno ?? ""),
+          valor: rx.valor,
+          observacion: rx.observacion ?? "",
+        };
+      });
+
+      const timeline = [
+        ...groupedAtenciones.map((atencion) => ({
+          ...atencion,
+          tipoRegistro: "atencion" as const,
+        })),
+        ...rxTimelineItems,
+      ].sort((a, b) => {
+        if (a.fecha === b.fecha) {
+          if (a.tipoRegistro === b.tipoRegistro) {
+            return 0;
+          }
+
+          return a.tipoRegistro === "rx" ? 1 : -1;
+        }
+
+        return a.fecha < b.fecha ? 1 : -1;
+      });
+
+      const total = timeline.length;
       const totalPages = Math.ceil(total / PACIENTE_ATENCIONES_PAGE_SIZE);
       const skip = (page - 1) * PACIENTE_ATENCIONES_PAGE_SIZE;
-      const paginatedAtenciones = groupedAtenciones.slice(skip, skip + PACIENTE_ATENCIONES_PAGE_SIZE);
+      const paginatedAtenciones = timeline.slice(skip, skip + PACIENTE_ATENCIONES_PAGE_SIZE);
 
       return res.status(200).json({
         data: paginatedAtenciones,

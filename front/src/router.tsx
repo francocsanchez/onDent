@@ -33,6 +33,11 @@ const EditUsuarioView = lazy(() => import("./views/usuarios/EditUsuarioView"));
 const ListObrasSocialesView = lazy(() => import("./views/obrasSociales/ListObrasSocialesView"));
 const CreateObraSocialView = lazy(() => import("./views/obrasSociales/CreateObraSocialView"));
 const EditObraSocialView = lazy(() => import("./views/obrasSociales/EditObraSocialView"));
+const ListRxView = lazy(() => import("./views/rx/ListRxView"));
+const CreateRxView = lazy(() => import("./views/rx/CreateRxView"));
+const ListTiposRxView = lazy(() => import("./views/tiposRx/ListTiposRxView"));
+const CreateTipoRxView = lazy(() => import("./views/tiposRx/CreateTipoRxView"));
+const EditTipoRxView = lazy(() => import("./views/tiposRx/EditTipoRxView"));
 
 function withSuspense(element: ReactNode, label?: string) {
   return <Suspense fallback={<LoadingSpinner label={label} />}>{element}</Suspense>;
@@ -60,6 +65,11 @@ export default function Router() {
             <Route path="/pacientes/create" element={withSuspense(<CreatePacienteView />, "Cargando formulario...")} />
             <Route path="/pacientes/:idPaciente/editar" element={withSuspense(<EditPacienteView />, "Cargando paciente...")} />
             <Route path="/pacientes/:idPaciente/atenciones" element={withSuspense(<PacienteAtencionesView />, "Cargando atenciones...")} />
+
+            <Route element={<RoleProtectedRoute allowedRoles={["rayos", "superadmin"]} />}>
+              <Route path="/rx" element={withSuspense(<ListRxView />, "Cargando RX...")} />
+              <Route path="/rx/create" element={withSuspense(<CreateRxView />, "Cargando formulario...")} />
+            </Route>
 
             <Route element={<RoleProtectedRoute allowedRoles={["admin", "superadmin"]} />}>
               <Route path="/coseguros" element={withSuspense(<CosegurosView />, "Cargando coseguros...")} />
@@ -91,6 +101,9 @@ export default function Router() {
                   path="/config/obras-sociales/:idObraSocial/editar"
                   element={withSuspense(<EditObraSocialView />, "Cargando obra social...")}
                 />
+                <Route path="/config/tipos-rx" element={withSuspense(<ListTiposRxView />, "Cargando tipos de RX...")} />
+                <Route path="/config/tipos-rx/create" element={withSuspense(<CreateTipoRxView />, "Cargando formulario...")} />
+                <Route path="/config/tipos-rx/:idTipoRx/editar" element={withSuspense(<EditTipoRxView />, "Cargando tipo de RX...")} />
               </Route>
             </Route>
           </Route>

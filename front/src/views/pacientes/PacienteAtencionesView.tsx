@@ -3,7 +3,7 @@ import { getPacienteByID } from "@/api/pacienteAPI";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import { formatDateOnly } from "@/utils/date";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, ScanLine, Stethoscope } from "lucide-react";
 import { Link, useParams, useSearchParams } from "react-router-dom";
 
 export default function PacienteAtencionesView() {
@@ -38,12 +38,12 @@ export default function PacienteAtencionesView() {
   if (!idPaciente || isPacienteError || isAtencionesError || !paciente || !atencionesResponse) {
     return (
       <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
-        Ocurrió un error al cargar las atenciones del paciente.
+        Ocurrió un error al cargar el historial del paciente.
       </div>
     );
   }
 
-  const atenciones = atencionesResponse.data ?? [];
+  const historial = atencionesResponse.data ?? [];
   const pagination = atencionesResponse.pagination;
 
   const updatePage = (nextPage: number) => {
@@ -63,7 +63,7 @@ export default function PacienteAtencionesView() {
       <div className="mb-4 flex flex-col gap-3 border-b border-secondary-dark/60 pb-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <p className="text-sm font-medium text-primary">Pacientes</p>
-          <h2 className="text-2xl font-semibold tracking-tight text-slate-900">Atenciones del paciente</h2>
+          <h2 className="text-2xl font-semibold tracking-tight text-slate-900">Historial del paciente</h2>
           <p className="mt-1 text-sm text-slate-600">
             {paciente.lastName} {paciente.name} · DNI {paciente.dni}
           </p>
@@ -80,41 +80,53 @@ export default function PacienteAtencionesView() {
       </div>
 
       <section className="rounded-2xl border border-secondary-dark/60 bg-white shadow-sm">
-        {atenciones.length > 0 ? (
+        {historial.length > 0 ? (
           <div className="space-y-2 p-2">
-            {atenciones.map((atencion) => (
-              <article
-                key={`${atencion.paciente._id}-${atencion.fecha}-${atencion.usuario._id}`}
-                className="rounded-xl border border-secondary-dark/40 bg-secondary/10 px-2.5 py-2"
-              >
-                <div className="flex flex-col gap-1 border-b border-secondary-dark/30 pb-1.5 sm:flex-row sm:flex-wrap sm:items-center sm:gap-x-3">
-                  <p className="text-sm font-semibold text-slate-900">
-                    {atencion.paciente.lastName} {atencion.paciente.name}
-                  </p>
-                  <p className="text-sm text-slate-600">{formatDateOnly(atencion.fecha)}</p>
-                  <p className="text-sm text-slate-600">
-                    {atencion.usuario.lastName}, {atencion.usuario.name}
-                  </p>
-                </div>
+            {historial.map((item, index) => {
+              const key = item.tipoRegistro === "atencion" ? `${item.tipoRegistro}-${item.paciente._id}-${item.fecha}-${item.usuario._id}-${index}` : `${item.tipoRegistro}-${item.paciente._id}-${item.fecha}-${item.tipoRx._id}-${index}`;
 
-                <div className="mt-1.5 rounded-lg bg-white/80 px-2 py-1.5">
-                  <p className="text-[11px] font-semibold uppercase tracking-wider text-primary-dark/80">Códigos</p>
-                  <div className="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-sm text-slate-700">
-                    {atencion.codigos.map((codigo, index) => (
-                      <span key={`${codigo.codigoId}-${index}`} className="inline-flex flex-wrap items-center gap-x-1">
-                        <span className="font-medium text-slate-900">{codigo.code}</span>
-                        <span>{codigo.description.trim()}</span>
-                        <span className="text-slate-500">-</span>
-                        <span>Pieza {codigo.pieza?.trim() ? codigo.pieza : "-"}</span>
-                      </span>
-                    ))}
+              return (
+                <article key={key} className="rounded-xl border border-secondary-dark/40 bg-secondary/10 px-2.5 py-2">
+                  <div className="flex flex-col gap-1 border-b border-secondary-dark/30 pb-1.5 sm:flex-row sm:flex-wrap sm:items-center sm:gap-x-3">
+                    <span className={`inline-flex w-fit items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold uppercase tracking-[0.14em] ${item.tipoRegistro === "rx" ? "bg-amber-100 text-amber-700" : "bg-emerald-100 text-emerald-700"}`}>
+                      {item.tipoRegistro === "rx" ? <ScanLine className="h-3.5 w-3.5" strokeWidth={2} /> : <Stethoscope className="h-3.5 w-3.5" strokeWidth={2} />}
+                      {item.tipoRegistro === "rx" ? "RX" : "Atención"}
+                    </span>
+                    <p className="text-sm font-semibold text-slate-900">{item.paciente.lastName} {item.paciente.name}</p>
+                    <p className="text-sm text-slate-600">{formatDateOnly(item.fecha)}</p>
+                    <p className="text-sm text-slate-600">{item.usuario.lastName}, {item.usuario.name}</p>
                   </div>
-                </div>
-              </article>
-            ))}
+
+                  {item.tipoRegistro === "atencion" ? (
+                    <div className="mt-1.5 rounded-lg bg-white/80 px-2 py-1.5">
+                      <p className="text-[11px] font-semibold uppercase tracking-wider text-primary-dark/80">Códigos</p>
+                      <div className="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-sm text-slate-700">
+                        {item.codigos.map((codigo, codigoIndex) => (
+                          <span key={`${codigo.codigoId}-${codigoIndex}`} className="inline-flex flex-wrap items-center gap-x-1">
+                            <span className="font-medium text-slate-900">{codigo.code}</span>
+                            <span>{codigo.description.trim()}</span>
+                            <span className="text-slate-500">-</span>
+                            <span>Pieza {codigo.pieza?.trim() ? codigo.pieza : "-"}</span>
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="mt-1.5 rounded-lg bg-white/80 px-2 py-1.5">
+                      <div className="flex flex-col gap-1 text-sm text-slate-700">
+                        <p><span className="font-semibold text-slate-900">Tipo RX:</span> <span className="uppercase">{item.tipoRx.name}</span></p>
+                        <p><span className="font-semibold text-slate-900">Derivante:</span> {item.derivante || "-"}</p>
+                        <p><span className="font-semibold text-slate-900">Valor:</span> ${item.valor.toLocaleString("es-AR")}</p>
+                        {item.observacion ? <p><span className="font-semibold text-slate-900">Observación:</span> {item.observacion}</p> : null}
+                      </div>
+                    </div>
+                  )}
+                </article>
+              );
+            })}
           </div>
         ) : (
-          <div className="px-3 py-6 text-center text-sm text-slate-500">Este paciente todavía no tiene atenciones registradas.</div>
+          <div className="px-3 py-6 text-center text-sm text-slate-500">Este paciente todavía no tiene registros en su historial.</div>
         )}
       </section>
 

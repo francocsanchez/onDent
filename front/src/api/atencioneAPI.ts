@@ -633,10 +633,10 @@ export async function getAtencionesByPaciente(idPaciente: string, page = 1) {
     return response.data satisfies PacienteAtencionesHistorialResponse;
   } catch (error) {
     if (isAxiosError(error) && error.response) {
-      throw new Error(error.response.data.error || error.response.data.message || "Error al obtener las atenciones del paciente");
+      throw new Error(error.response.data.error || error.response.data.message || "Error al obtener el historial del paciente");
     }
 
-    throw new Error("Error inesperado al obtener las atenciones del paciente");
+    throw new Error("Error inesperado al obtener el historial del paciente");
   }
 }
 

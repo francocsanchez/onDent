@@ -1,6 +1,6 @@
 import { Schema, model, Document } from "mongoose";
 
-export type UserRole = "superadmin" | "admin" | "odontologo";
+export type UserRole = "superadmin" | "admin" | "odontologo" | "rayos";
 
 export interface IUsuario extends Document {
   name: string;
@@ -20,7 +20,7 @@ const UsuarioSchema: Schema = new Schema<IUsuario>(
     password: { type: String, required: true },
     role: {
       type: String,
-      enum: ["superadmin", "admin", "odontologo"],
+      enum: ["superadmin", "admin", "odontologo", "rayos"],
       required: true,
       default: "odontologo",
     },

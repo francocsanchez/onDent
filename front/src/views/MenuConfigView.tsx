@@ -1,4 +1,4 @@
-import { BadgePercent, ChevronRight, Users } from "lucide-react";
+import { BadgePercent, ChevronRight, ScanLine, Users } from "lucide-react";
 import { Link } from "react-router-dom";
 
 const configItems = [
@@ -13,6 +13,12 @@ const configItems = [
     description: "Configura accesos, permisos y cuentas del equipo.",
     href: "/config/usuarios",
     icon: Users,
+  },
+  {
+    title: "Tipos de RX",
+    description: "Administra los estudios radiográficos disponibles para la carga.",
+    href: "/config/tipos-rx",
+    icon: ScanLine,
   },
 ];
 

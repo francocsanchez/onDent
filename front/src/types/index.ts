@@ -20,13 +20,14 @@ export const usuarioSchema = z.object({
   lastName: z.string(),
   enable: z.boolean(),
   email: z.string(),
-  role: z.string(),
+  role: z.enum(["superadmin", "admin", "odontologo", "rayos"]),
 });
 
 export const UsuariosTableSchema = z.array(usuarioSchema.pick({ _id: true, name: true, lastName: true, enable: true, email: true, role: true }));
 
 export type Usuario = z.infer<typeof usuarioSchema>;
-export type UsuarioFormData = Pick<Usuario, "name" | "lastName" | "email" | "role">;
+export type UserRole = Usuario["role"];
+export type UsuarioFormData = Pick<Usuario, "name" | "lastName" | "email"> & { role: UserRole | "" };
 
 export const pacienteSchema = z.object({
   _id: z.string(),
@@ -205,6 +206,7 @@ export const liquidacionesAvailableFiltersSchema = z.object({
 });
 
 export const pacienteAtencionHistorialItemSchema = z.object({
+  tipoRegistro: z.literal("atencion"),
   fecha: z.string(),
   paciente: z.object({
     _id: z.string(),
@@ -227,8 +229,105 @@ export const pacienteAtencionHistorialItemSchema = z.object({
   ),
 });
 
+export const tipoRxSchema = z.object({
+  _id: z.string(),
+  name: z.string(),
+  enable: z.boolean(),
+  createdAt: z.string().optional(),
+  updatedAt: z.string().optional(),
+});
+
+export const tiposRxTableSchema = z.array(tipoRxSchema);
+
+export const rxSchema = z.object({
+  _id: z.string(),
+  fecha: z.string(),
+  paciente: z.object({
+    _id: z.string(),
+    name: z.string(),
+    lastName: z.string(),
+    dni: z.number(),
+  }),
+  derivanteTipo: z.enum(["interno", "externo"]),
+  derivanteUsuario: z
+    .object({
+      _id: z.string(),
+      name: z.string(),
+      lastName: z.string(),
+      role: z.string().optional(),
+    })
+    .nullable()
+    .optional(),
+  derivanteExterno: z.string().optional(),
+  tipoRx: z.object({
+    _id: z.string(),
+    name: z.string(),
+    enable: z.boolean().optional(),
+  }),
+  valor: z.number(),
+  usuarioCarga: z.object({
+    _id: z.string(),
+    name: z.string(),
+    lastName: z.string(),
+    email: z.string().optional(),
+    role: z.string().optional(),
+    enable: z.boolean().optional(),
+  }),
+  observacion: z.string().optional(),
+  createdAt: z.string().optional(),
+  updatedAt: z.string().optional(),
+});
+
+export const rxListResponseSchema = z.object({
+  data: z.array(rxSchema),
+  pagination: pacientesPaginationSchema,
+});
+
+export const rxFiltersSchema = z.object({
+  odontologos: z.array(
+    z.object({
+      _id: z.string(),
+      name: z.string(),
+      lastName: z.string(),
+      role: z.string(),
+    }),
+  ),
+  tiposRx: z.array(
+    z.object({
+      _id: z.string(),
+      name: z.string(),
+    }),
+  ),
+});
+
+export const pacienteRxHistorialItemSchema = z.object({
+  tipoRegistro: z.literal("rx"),
+  fecha: z.string(),
+  paciente: z.object({
+    _id: z.string(),
+    name: z.string(),
+    lastName: z.string(),
+    dni: z.number(),
+  }),
+  usuario: z.object({
+    _id: z.string(),
+    name: z.string(),
+    lastName: z.string(),
+  }),
+  tipoRx: z.object({
+    _id: z.string(),
+    name: z.string(),
+  }),
+  derivanteTipo: z.enum(["interno", "externo"]),
+  derivante: z.string(),
+  valor: z.number(),
+  observacion: z.string().optional(),
+});
+
+export const pacienteHistorialItemSchema = z.discriminatedUnion("tipoRegistro", [pacienteAtencionHistorialItemSchema, pacienteRxHistorialItemSchema]);
+
 export const pacienteAtencionesHistorialResponseSchema = z.object({
-  data: z.array(pacienteAtencionHistorialItemSchema),
+  data: z.array(pacienteHistorialItemSchema),
   pagination: pacientesPaginationSchema,
 });
 
@@ -467,7 +566,14 @@ export type LiquidacionAtencionGroup = z.infer<typeof liquidacionAtencionGroupSc
 export type LiquidacionesListResponse = z.infer<typeof liquidacionesListResponseSchema>;
 export type LiquidacionesAvailableFilters = z.infer<typeof liquidacionesAvailableFiltersSchema>;
 export type PacienteAtencionHistorialItem = z.infer<typeof pacienteAtencionHistorialItemSchema>;
+export type PacienteRxHistorialItem = z.infer<typeof pacienteRxHistorialItemSchema>;
+export type PacienteHistorialItem = z.infer<typeof pacienteHistorialItemSchema>;
 export type PacienteAtencionesHistorialResponse = z.infer<typeof pacienteAtencionesHistorialResponseSchema>;
+export type TipoRx = z.infer<typeof tipoRxSchema>;
+export type TipoRxFormData = Pick<TipoRx, "name">;
+export type Rx = z.infer<typeof rxSchema>;
+export type RxListResponse = z.infer<typeof rxListResponseSchema>;
+export type RxFilters = z.infer<typeof rxFiltersSchema>;
 export type PagosAvailableFilters = z.infer<typeof pagosAvailableFiltersSchema>;
 export type PagoPendienteRow = z.infer<typeof pagoPendienteRowSchema>;
 export type PagosPendientesResponse = z.infer<typeof pagosPendientesResponseSchema>;

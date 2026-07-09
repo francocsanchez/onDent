@@ -73,6 +73,7 @@ export default function UsuarioForm({ register, errors }: UsuarioFormProps) {
           <option value="superadmin">1 - Super admin</option>
           <option value="admin">2 - Admin</option>
           <option value="odontologo">3 - Odontologo</option>
+          <option value="rayos">4 - Rayos</option>
         </select>
 
         {errors.role && <p className="text-xs text-red-500">{errors.role.message}</p>}
