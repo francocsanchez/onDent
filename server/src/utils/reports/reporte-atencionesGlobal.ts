@@ -131,7 +131,7 @@ export function reporteAtencionesGlobal(atenciones: AtencionGlobalItem[], reques
 
   const availableYears = Array.from(new Set(datedAtenciones.map(({ date }) => date.getFullYear()))).sort((a, b) => b - a);
   const fallbackYear = availableYears[0] ?? new Date().getFullYear();
-  const selectedYear = requestedYear && availableYears.includes(requestedYear) ? requestedYear : fallbackYear;
+  const selectedYear = requestedYear ?? fallbackYear;
 
   const resumenAnual: ResumenAnualGlobal = {
     cantidadAtenciones: 0,

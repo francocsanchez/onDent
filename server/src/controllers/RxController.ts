@@ -8,6 +8,116 @@ import { logError } from "../utils/logError";
 const RX_PAGE_SIZE = 30;
 
 export class RxController {
+  static tiposMensualReport = async (req: Request, res: Response) => {
+    try {
+      const rawYear = typeof req.query.year === "string" ? req.query.year.trim() : "";
+
+      if (rawYear && !/^\d{4}$/.test(rawYear)) {
+        return res.status(400).json({
+          data: null,
+          message: "El año debe tener formato YYYY",
+        });
+      }
+
+      const requestedYear = rawYear ? Number(rawYear) : new Date().getFullYear();
+      const rxYears = await Rx.aggregate([
+        {
+          $project: {
+            year: { $toInt: { $substr: ["$fecha", 0, 4] } },
+          },
+        },
+        {
+          $group: {
+            _id: "$year",
+          },
+        },
+        { $sort: { _id: -1 } },
+      ]);
+
+      const resumen = await Rx.aggregate([
+        {
+          $match: {
+            fecha: { $regex: `^${requestedYear}-` },
+          },
+        },
+        {
+          $lookup: {
+            from: "tipos_rx",
+            localField: "tipoRx",
+            foreignField: "_id",
+            as: "tipoRx",
+          },
+        },
+        { $unwind: "$tipoRx" },
+        {
+          $group: {
+            _id: {
+              tipoRxId: "$tipoRx._id",
+              tipoRxName: "$tipoRx.name",
+              periodo: { $substr: ["$fecha", 0, 7] },
+            },
+            cantidad: { $sum: 1 },
+          },
+        },
+        { $sort: { "_id.tipoRxName": 1, "_id.periodo": 1 } },
+      ]);
+
+      const countsMap = new Map<string, number>(
+        resumen.map((item) => [`${String(item._id.tipoRxId)}|${String(item._id.periodo)}`, item.cantidad as number]),
+      );
+
+      const tiposFromRx = Array.from(
+        new Map(
+          resumen.map((item) => [
+            String(item._id.tipoRxId),
+            {
+              _id: String(item._id.tipoRxId),
+              name: String(item._id.tipoRxName),
+            },
+          ]),
+        ).values(),
+      );
+
+      const tiposCatalogo = await TipoRx.find({}).select("_id name").sort({ name: 1 }).lean();
+      const tiposUnificados = Array.from(
+        new Map(
+          [...tiposFromRx, ...tiposCatalogo.map((tipoRx) => ({ _id: String(tipoRx._id), name: tipoRx.name }))].map((tipoRx) => [tipoRx._id, tipoRx]),
+        ).values(),
+      ).sort((a, b) => a.name.localeCompare(b.name, "es"));
+
+      const data = tiposUnificados.map((tipoRx) => ({
+        tipoRx: {
+          _id: tipoRx._id,
+          name: tipoRx.name,
+        },
+        meses: Array.from({ length: 12 }, (_, index) => {
+          const month = index + 1;
+          const periodo = `${requestedYear}-${String(month).padStart(2, "0")}`;
+
+          return {
+            periodo,
+            anio: requestedYear,
+            mes: month,
+            cantidad: countsMap.get(`${String(tipoRx._id)}|${periodo}`) ?? 0,
+          };
+        }),
+      }));
+
+      return res.status(200).json({
+        data: {
+          availableYears: rxYears.map((item) => item._id as number),
+          selectedYear: requestedYear,
+          resumenPorTipo: data,
+        },
+        message: "Reporte mensual de tipos de RX",
+      });
+    } catch (error) {
+      logError("RxController.tiposMensualReport");
+      console.error(error);
+      return res.status(500).json({ data: null, message: "Error del servidor" });
+    }
+  };
+
   static getAll = async (req: Request, res: Response) => {
     const page = Math.max(Number(req.query.page) || 1, 1);
     const skip = (page - 1) * RX_PAGE_SIZE;

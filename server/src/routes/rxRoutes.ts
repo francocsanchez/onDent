@@ -8,6 +8,7 @@ import { createValidationRx } from "../validation/rx";
 const router = Router();
 
 router.use(authenticate);
+router.get("/reportes/tipos-mensual", authorizeRoles("admin", "superadmin", "rayos"), RxController.tiposMensualReport);
 router.use(authorizeRoles("rayos", "superadmin"));
 
 router.get("/", RxController.getAll);

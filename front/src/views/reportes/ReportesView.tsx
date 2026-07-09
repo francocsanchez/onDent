@@ -1,10 +1,11 @@
 import { getAtencionesByUsuario, getAtencionesGlobalReport, getPagosByUsuario } from "@/api/atencioneAPI";
+import { getRxTiposMensualReport } from "@/api/rxAPI";
 import { getUsuarios } from "@/api/usuarioAPI";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import { getYearMonthFromDateOnly } from "@/utils/date";
 import { useQuery } from "@tanstack/react-query";
 import { BadgeCheck, UserRound } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 
 type ResumenMensualItem = {
@@ -73,11 +74,22 @@ export default function ReportesView() {
     queryFn: () => getAtencionesGlobalReport(selectedYear),
   });
 
-  useEffect(() => {
-    if (globalReport && globalReport.selectedYear !== selectedYear) {
-      setSelectedYear(globalReport.selectedYear);
-    }
-  }, [globalReport, selectedYear]);
+  const {
+    data: rxTiposReport,
+    isError: isRxTiposError,
+    isLoading: isRxTiposLoading,
+  } = useQuery({
+    queryKey: ["reportes", "rx", "tipos", selectedYear],
+    queryFn: () => getRxTiposMensualReport(selectedYear),
+  });
+
+  const availableReportYears = useMemo(() => {
+    const years = new Set<number>();
+    globalReport?.availableYears.forEach((year) => years.add(year));
+    rxTiposReport?.availableYears.forEach((year) => years.add(year));
+    years.add(selectedYear);
+    return Array.from(years).sort((a, b) => b - a);
+  }, [globalReport?.availableYears, rxTiposReport?.availableYears, selectedYear]);
 
   const selectedUsuario = usuarios?.find((usuario) => usuario._id === selectedUsuarioId) ?? null;
 
@@ -91,7 +103,11 @@ export default function ReportesView() {
     enabled: !!selectedUsuarioId,
   });
 
-  const { data: pagosUsuario, isLoading: isPagosLoading, isError: isPagosError } = useQuery({
+  const {
+    data: pagosUsuario,
+    isLoading: isPagosLoading,
+    isError: isPagosError,
+  } = useQuery({
     queryKey: ["pagos", "cuenta-corriente", selectedUsuarioId],
     queryFn: () => getPagosByUsuario(selectedUsuarioId!),
     enabled: !!selectedUsuarioId,
@@ -226,7 +242,7 @@ export default function ReportesView() {
         <div>
           <p className="text-sm font-medium text-primary">Reportes</p>
           <h2 className="text-2xl font-semibold tracking-tight text-slate-900">Panel de reportes</h2>
-          <p className="mt-1 text-sm text-slate-500">Resumen global anual de todas las atenciones y reporte mensual por usuario.</p>
+          <p className="mt-1 text-sm text-slate-500">Resumen global anual de atenciones, RX por tipo y mes, y reporte mensual por usuario.</p>
         </div>
 
         <div className="flex flex-wrap gap-2">
@@ -248,7 +264,7 @@ export default function ReportesView() {
               onChange={(event) => setSelectedYear(Number(event.target.value))}
               className="mt-2 rounded-xl border border-secondary-dark/60 bg-white px-3 py-2 text-sm font-medium text-slate-900 outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
             >
-              {(globalReport?.availableYears.length ? globalReport.availableYears : [selectedYear]).map((year) => (
+              {availableReportYears.map((year) => (
                 <option key={year} value={year}>
                   {year}
                 </option>
@@ -271,7 +287,9 @@ export default function ReportesView() {
           <div>
             <div className="mb-4">
               <h4 className="text-sm font-semibold text-slate-900">Resumen mensual global</h4>
-              <p className="mt-1 text-xs text-slate-500">Desglose del año seleccionado por mes, con estados, montos históricos, saldo pendiente de pago y monto ya abonado.</p>
+              <p className="mt-1 text-xs text-slate-500">
+                Desglose del año seleccionado por mes, con estados, montos históricos, saldo pendiente de pago y monto ya abonado.
+              </p>
             </div>
 
             {globalReport.resumenMensual.length > 0 ? (
@@ -289,8 +307,8 @@ export default function ReportesView() {
                       <th className="px-4 py-4 text-right text-[11px] font-semibold uppercase tracking-[0.16em] text-primary-dark/80">$ Atención</th>
                       <th className="px-4 py-4 text-right text-[11px] font-semibold uppercase tracking-[0.16em] text-primary-dark/80">$ Coseguro</th>
                       <th className="px-4 py-4 text-right text-[11px] font-semibold uppercase tracking-[0.16em] text-primary-dark/80">$ Total</th>
-                      <th className="px-4 py-4 text-right text-[11px] font-semibold uppercase tracking-[0.16em] text-amber-800">$ Pendiente pago</th>
-                      <th className="px-4 py-4 text-right text-[11px] font-semibold uppercase tracking-[0.16em] text-emerald-800">$ Ya pagado</th>
+                      <th className="px-4 py-4 text-right text-[11px] font-semibold uppercase tracking-[0.16em] text-amber-800">$ Pend. pago</th>
+                      <th className="px-4 py-4 text-right text-[11px] font-semibold uppercase tracking-[0.16em] text-emerald-800">$ Pagado</th>
                     </tr>
                   </thead>
 
@@ -307,35 +325,54 @@ export default function ReportesView() {
                           </Link>
                         </td>
                         <td className="px-4 py-5 text-center text-sm font-semibold text-emerald-700">
-                          <Link to={getGlobalAtencionesLink({ year: item.anio, month: item.mes, status: "OK" })} className="transition hover:text-emerald-900">
+                          <Link
+                            to={getGlobalAtencionesLink({ year: item.anio, month: item.mes, status: "OK" })}
+                            className="transition hover:text-emerald-900"
+                          >
                             {item.cantidadPorEstado.OK}
                           </Link>
                         </td>
                         <td className="px-4 py-5 text-center text-sm font-semibold text-amber-700">
-                          <Link to={getGlobalAtencionesLink({ year: item.anio, month: item.mes, status: "Pendiente" })} className="transition hover:text-amber-900">
+                          <Link
+                            to={getGlobalAtencionesLink({ year: item.anio, month: item.mes, status: "Pendiente" })}
+                            className="transition hover:text-amber-900"
+                          >
                             {item.cantidadPorEstado.Pendiente}
                           </Link>
                         </td>
                         <td className="px-4 py-5 text-center text-sm font-semibold text-rose-700">
-                          <Link to={getGlobalAtencionesLink({ year: item.anio, month: item.mes, status: "Denegado" })} className="transition hover:text-rose-900">
+                          <Link
+                            to={getGlobalAtencionesLink({ year: item.anio, month: item.mes, status: "Denegado" })}
+                            className="transition hover:text-rose-900"
+                          >
                             {item.cantidadPorEstado.Denegado}
                           </Link>
                         </td>
                         <td className="px-4 py-5 text-center text-sm font-semibold text-fuchsia-700">
-                          <Link to={getGlobalAtencionesLink({ year: item.anio, month: item.mes, status: "Diferido" })} className="transition hover:text-fuchsia-900">
+                          <Link
+                            to={getGlobalAtencionesLink({ year: item.anio, month: item.mes, status: "Diferido" })}
+                            className="transition hover:text-fuchsia-900"
+                          >
                             {item.cantidadPorEstado.Diferido}
                           </Link>
                         </td>
                         <td className="px-4 py-5 text-center text-sm font-semibold text-gray-700">
-                          <Link to={getGlobalAtencionesLink({ year: item.anio, month: item.mes, status: "No cargado" })} className="transition hover:text-gray-900">
+                          <Link
+                            to={getGlobalAtencionesLink({ year: item.anio, month: item.mes, status: "No cargado" })}
+                            className="transition hover:text-gray-900"
+                          >
                             {item.cantidadPorEstado["No cargado"]}
                           </Link>
                         </td>
-                        <td className="whitespace-nowrap px-4 py-5 text-right text-sm font-medium text-slate-800">{formatCurrency(item.montoAtencion)}</td>
+                        <td className="whitespace-nowrap px-4 py-5 text-right text-sm font-medium text-slate-800">
+                          {formatCurrency(item.montoAtencion)}
+                        </td>
                         <td className="whitespace-nowrap px-4 py-5 text-right text-sm font-medium text-slate-800">
                           {formatCurrency(item.montoCoseguroOdonto)}
                         </td>
-                        <td className="whitespace-nowrap px-4 py-5 text-right text-sm font-semibold text-primary-dark">{formatCurrency(item.montoTotal)}</td>
+                        <td className="whitespace-nowrap px-4 py-5 text-right text-sm font-semibold text-primary-dark">
+                          {formatCurrency(item.montoTotal)}
+                        </td>
                         <td className="whitespace-nowrap px-4 py-5 text-right text-sm font-semibold text-amber-700">
                           {formatCurrency(item.montoTotalPendientePago)}
                         </td>
@@ -352,6 +389,57 @@ export default function ReportesView() {
                 <p className="text-sm font-medium text-slate-700">No hay atenciones registradas para el año seleccionado.</p>
               </div>
             )}
+          </div>
+        ) : null}
+      </section>
+
+      <section className="mt-6 rounded-2xl border border-secondary-dark/60 bg-white shadow-sm">
+        <div className="border-b border-secondary-dark/50 px-6 py-5">
+          <h3 className="text-lg font-semibold text-slate-900">RX por tipo y mes</h3>
+          <p className="text-sm text-slate-500">Filas por tipo de RX y columnas por mes para el año seleccionado.</p>
+        </div>
+
+        {isRxTiposLoading ? <LoadingSpinner label="Cargando reporte de RX..." className="min-h-[180px]" /> : null}
+
+        {!isRxTiposLoading && isRxTiposError ? (
+          <div className="px-6 py-6">
+            <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
+              Ocurrió un error al cargar el reporte de RX.
+            </div>
+          </div>
+        ) : null}
+
+        {!isRxTiposLoading && !isRxTiposError && rxTiposReport ? (
+          <div className="overflow-x-auto">
+            <table className="min-w-full">
+              <thead className="border-b border-secondary-dark/50 bg-secondary/40">
+                <tr>
+                  <th className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-[0.16em] text-primary-dark/80">Tipo RX</th>
+                  {Array.from({ length: 12 }, (_, index) => index + 1).map((month) => (
+                    <th key={month} className="px-4 py-3 text-center text-[11px] font-semibold uppercase tracking-[0.16em] text-primary-dark/80">
+                      {new Date(selectedYear, month - 1, 1).toLocaleDateString("es-AR", { month: "short" })}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+
+              <tbody className="divide-y divide-secondary-dark/40">
+                {rxTiposReport.resumenPorTipo.map((item) => (
+                  <tr key={item.tipoRx._id} className="transition-colors hover:bg-secondary/20">
+                    <td className="whitespace-nowrap px-4 py-3">
+                      <p className="text-sm font-semibold uppercase text-slate-800">{item.tipoRx.name}</p>
+                    </td>
+                    {item.meses.map((mes) => (
+                      <td key={mes.periodo} className="px-4 py-3 text-center">
+                        <span className="inline-flex min-w-12 items-center justify-center rounded-full bg-amber-100 px-2.5 py-1 text-xs font-semibold text-amber-800">
+                          {mes.cantidad}
+                        </span>
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         ) : null}
       </section>
@@ -396,180 +484,194 @@ export default function ReportesView() {
 
       {selectedUsuario ? (
         <>
-        <section className="mt-6 rounded-2xl border border-secondary-dark/60 bg-white shadow-sm">
-          <div className="border-b border-secondary-dark/50 px-4 py-3">
-            <h3 className="text-lg font-semibold text-slate-900">Resumen mensual</h3>
-            <p className="text-sm text-slate-500">
-              Montos históricos, saldo pendiente de pago y total ya abonado para {selectedUsuario.lastName} {selectedUsuario.name}.
-            </p>
-          </div>
+          <section className="mt-6 rounded-2xl border border-secondary-dark/60 bg-white shadow-sm">
+            <div className="border-b border-secondary-dark/50 px-4 py-3">
+              <h3 className="text-lg font-semibold text-slate-900">Resumen mensual</h3>
+              <p className="text-sm text-slate-500">
+                Montos históricos, saldo pendiente de pago y total ya abonado para {selectedUsuario.lastName} {selectedUsuario.name}.
+              </p>
+            </div>
 
-          {isAtencionesLoading ? <LoadingSpinner label="Cargando atenciones del usuario..." className="min-h-[180px]" /> : null}
+            {isAtencionesLoading ? <LoadingSpinner label="Cargando atenciones del usuario..." className="min-h-[180px]" /> : null}
 
-          {!isAtencionesLoading && isAtencionesError ? (
-            <div className="px-4 py-3">
-              <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
-                Ocurrió un error al cargar las atenciones del usuario.
+            {!isAtencionesLoading && isAtencionesError ? (
+              <div className="px-4 py-3">
+                <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
+                  Ocurrió un error al cargar las atenciones del usuario.
+                </div>
               </div>
-            </div>
-          ) : null}
+            ) : null}
 
-          {!isAtencionesLoading && !isAtencionesError && resumenMensual.length > 0 ? (
-            <div className="overflow-x-auto">
-              <table className="min-w-full">
-                <thead className="border-b border-secondary-dark/50 bg-secondary/40">
-                  <tr>
-                    <th className="px-3 py-3 text-left text-[11px] font-semibold uppercase tracking-[0.16em] text-primary-dark/80">Mes</th>
-                    <th className="px-3 py-3 text-right text-[11px] font-semibold uppercase tracking-[0.16em] text-primary-dark/80">$ Atención</th>
-                    <th className="px-3 py-3 text-right text-[11px] font-semibold uppercase tracking-[0.16em] text-primary-dark/80">$ Coseguro</th>
-                    <th className="px-3 py-3 text-right text-[11px] font-semibold uppercase tracking-[0.16em] text-primary-dark/80">$ Total</th>
-                    <th className="px-3 py-3 text-right text-[11px] font-semibold uppercase tracking-[0.16em] text-amber-800">$ Pendiente pago</th>
-                    <th className="px-3 py-3 text-right text-[11px] font-semibold uppercase tracking-[0.16em] text-emerald-800">$ Ya pagado</th>
-                    <th className="bg-emerald-100/80 px-3 py-3 text-center text-[11px] font-semibold uppercase tracking-[0.16em] text-emerald-800">OK</th>
-                    <th className="bg-amber-100/90 px-3 py-3 text-center text-[11px] font-semibold uppercase tracking-[0.16em] text-amber-800">Pend</th>
-                    <th className="bg-rose-100/90 px-3 py-3 text-center text-[11px] font-semibold uppercase tracking-[0.16em] text-rose-800">Denegada</th>
-                    <th className="bg-fuchsia-100/90 px-3 py-3 text-center text-[11px] font-semibold uppercase tracking-[0.16em] text-fuchsia-800">Diferida</th>
-                    <th className="bg-gray-100 px-3 py-3 text-center text-[11px] font-semibold uppercase tracking-[0.16em] text-gray-700">No cargado</th>
-                  </tr>
-                </thead>
-
-                <tbody className="divide-y divide-secondary-dark/40">
-                  {resumenMensual.map((item) => (
-                    <tr key={item.periodo} className="transition-colors hover:bg-secondary/20">
-                      <td className="whitespace-nowrap px-3 py-3.5">
-                        <p className="text-sm font-semibold capitalize text-slate-800">{formatMonthLabel(item.anio, item.mes)}</p>
-                        <p className="text-xs text-slate-500">{item.anio}</p>
-                      </td>
-
-                      <td className="whitespace-nowrap px-3 py-3.5 text-right">
-                        <p className="text-sm font-medium text-slate-800">{formatCurrency(item.montoAtencion)}</p>
-                      </td>
-
-                      <td className="whitespace-nowrap px-3 py-3.5 text-right">
-                        <p className="text-sm font-medium text-slate-800">{formatCurrency(item.montoCoseguro)}</p>
-                      </td>
-
-                      <td className="whitespace-nowrap px-3 py-3.5 text-right">
-                        <p className="text-sm font-semibold text-primary-dark">{formatCurrency(item.montoTotal)}</p>
-                      </td>
-
-                      <td className="whitespace-nowrap px-3 py-3.5 text-right">
-                        <p className="text-sm font-semibold text-amber-700">{formatCurrency(item.montoTotalPendientePago)}</p>
-                      </td>
-
-                      <td className="whitespace-nowrap px-3 py-3.5 text-right">
-                        <p className="text-sm font-semibold text-emerald-700">{formatCurrency(item.montoTotalPagado)}</p>
-                      </td>
-
-                      <td className="px-3 py-3.5 text-center">
-                        <Link
-                          to={getStatusLink("OK", item.periodo, selectedUsuario._id)}
-                          className="inline-flex min-w-20 items-center justify-center rounded-full bg-emerald-50 px-3 py-1.5 text-sm font-semibold text-emerald-700 transition hover:bg-emerald-100"
-                        >
-                          {item.ok}
-                        </Link>
-                      </td>
-
-                      <td className="px-3 py-3.5 text-center">
-                        <Link
-                          to={getStatusLink("Pendiente", item.periodo, selectedUsuario._id)}
-                          className="inline-flex min-w-20 items-center justify-center rounded-full bg-amber-50 px-3 py-1.5 text-sm font-semibold text-amber-700 transition hover:bg-amber-100"
-                        >
-                          {item.pendiente}
-                        </Link>
-                      </td>
-
-                      <td className="px-3 py-3.5 text-center">
-                        <Link
-                          to={getStatusLink("Denegado", item.periodo, selectedUsuario._id)}
-                          className="inline-flex min-w-20 items-center justify-center rounded-full bg-rose-50 px-3 py-1.5 text-sm font-semibold text-rose-700 transition hover:bg-rose-100"
-                        >
-                          {item.denegado}
-                        </Link>
-                      </td>
-
-                      <td className="px-3 py-3.5 text-center">
-                        <Link
-                          to={getStatusLink("Diferido", item.periodo, selectedUsuario._id)}
-                          className="inline-flex min-w-20 items-center justify-center rounded-full bg-fuchsia-50 px-3 py-1.5 text-sm font-semibold text-fuchsia-700 transition hover:bg-fuchsia-100"
-                        >
-                          {item.diferido}
-                        </Link>
-                      </td>
-
-                      <td className="px-3 py-3.5 text-center">
-                        <Link
-                          to={getStatusLink("No cargado", item.periodo, selectedUsuario._id)}
-                          className="inline-flex min-w-20 items-center justify-center rounded-full bg-gray-100 px-3 py-1.5 text-sm font-semibold text-gray-700 transition hover:bg-gray-200"
-                        >
-                          {item.noCargado}
-                        </Link>
-                      </td>
+            {!isAtencionesLoading && !isAtencionesError && resumenMensual.length > 0 ? (
+              <div className="overflow-x-auto">
+                <table className="min-w-full">
+                  <thead className="border-b border-secondary-dark/50 bg-secondary/40">
+                    <tr>
+                      <th className="px-3 py-3 text-left text-[11px] font-semibold uppercase tracking-[0.16em] text-primary-dark/80">Mes</th>
+                      <th className="px-3 py-3 text-right text-[11px] font-semibold uppercase tracking-[0.16em] text-primary-dark/80">$ Atención</th>
+                      <th className="px-3 py-3 text-right text-[11px] font-semibold uppercase tracking-[0.16em] text-primary-dark/80">$ Coseguro</th>
+                      <th className="px-3 py-3 text-right text-[11px] font-semibold uppercase tracking-[0.16em] text-primary-dark/80">$ Total</th>
+                      <th className="px-3 py-3 text-right text-[11px] font-semibold uppercase tracking-[0.16em] text-amber-800">$ Pend. pago</th>
+                      <th className="px-3 py-3 text-right text-[11px] font-semibold uppercase tracking-[0.16em] text-emerald-800">$ Pagado</th>
+                      <th className="bg-emerald-100/80 px-3 py-3 text-center text-[11px] font-semibold uppercase tracking-[0.16em] text-emerald-800">
+                        OK
+                      </th>
+                      <th className="bg-amber-100/90 px-3 py-3 text-center text-[11px] font-semibold uppercase tracking-[0.16em] text-amber-800">
+                        Pend
+                      </th>
+                      <th className="bg-rose-100/90 px-3 py-3 text-center text-[11px] font-semibold uppercase tracking-[0.16em] text-rose-800">
+                        Denegada
+                      </th>
+                      <th className="bg-fuchsia-100/90 px-3 py-3 text-center text-[11px] font-semibold uppercase tracking-[0.16em] text-fuchsia-800">
+                        Diferida
+                      </th>
+                      <th className="bg-gray-100 px-3 py-3 text-center text-[11px] font-semibold uppercase tracking-[0.16em] text-gray-700">
+                        No cargado
+                      </th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          ) : null}
+                  </thead>
 
-          {!isAtencionesLoading && !isAtencionesError && resumenMensual.length === 0 ? (
-            <div className="px-4 py-6 text-center">
-              <p className="text-sm font-medium text-slate-700">Este usuario no tiene atenciones registradas.</p>
-            </div>
-          ) : null}
-        </section>
+                  <tbody className="divide-y divide-secondary-dark/40">
+                    {resumenMensual.map((item) => (
+                      <tr key={item.periodo} className="transition-colors hover:bg-secondary/20">
+                        <td className="whitespace-nowrap px-3 py-3.5">
+                          <p className="text-sm font-semibold capitalize text-slate-800">{formatMonthLabel(item.anio, item.mes)}</p>
+                          <p className="text-xs text-slate-500">{item.anio}</p>
+                        </td>
 
-        <section className="mt-6 rounded-2xl border border-secondary-dark/60 bg-white shadow-sm">
-          <div className="border-b border-secondary-dark/50 px-4 py-3">
-            <h3 className="text-lg font-semibold text-slate-900">Cuenta corriente</h3>
-            <p className="text-sm text-slate-500">Pagos registrados al odontólogo por período contable y fecha efectiva de abono.</p>
-          </div>
+                        <td className="whitespace-nowrap px-3 py-3.5 text-right">
+                          <p className="text-sm font-medium text-slate-800">{formatCurrency(item.montoAtencion)}</p>
+                        </td>
 
-          {isPagosLoading ? <LoadingSpinner label="Cargando cuenta corriente..." className="min-h-[140px]" /> : null}
+                        <td className="whitespace-nowrap px-3 py-3.5 text-right">
+                          <p className="text-sm font-medium text-slate-800">{formatCurrency(item.montoCoseguro)}</p>
+                        </td>
 
-          {!isPagosLoading && isPagosError ? (
-            <div className="px-4 py-3">
-              <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
-                Ocurrió un error al cargar la cuenta corriente del odontólogo.
+                        <td className="whitespace-nowrap px-3 py-3.5 text-right">
+                          <p className="text-sm font-semibold text-primary-dark">{formatCurrency(item.montoTotal)}</p>
+                        </td>
+
+                        <td className="whitespace-nowrap px-3 py-3.5 text-right">
+                          <p className="text-sm font-semibold text-amber-700">{formatCurrency(item.montoTotalPendientePago)}</p>
+                        </td>
+
+                        <td className="whitespace-nowrap px-3 py-3.5 text-right">
+                          <p className="text-sm font-semibold text-emerald-700">{formatCurrency(item.montoTotalPagado)}</p>
+                        </td>
+
+                        <td className="px-3 py-3.5 text-center">
+                          <Link
+                            to={getStatusLink("OK", item.periodo, selectedUsuario._id)}
+                            className="inline-flex min-w-20 items-center justify-center rounded-full bg-emerald-50 px-3 py-1.5 text-sm font-semibold text-emerald-700 transition hover:bg-emerald-100"
+                          >
+                            {item.ok}
+                          </Link>
+                        </td>
+
+                        <td className="px-3 py-3.5 text-center">
+                          <Link
+                            to={getStatusLink("Pendiente", item.periodo, selectedUsuario._id)}
+                            className="inline-flex min-w-20 items-center justify-center rounded-full bg-amber-50 px-3 py-1.5 text-sm font-semibold text-amber-700 transition hover:bg-amber-100"
+                          >
+                            {item.pendiente}
+                          </Link>
+                        </td>
+
+                        <td className="px-3 py-3.5 text-center">
+                          <Link
+                            to={getStatusLink("Denegado", item.periodo, selectedUsuario._id)}
+                            className="inline-flex min-w-20 items-center justify-center rounded-full bg-rose-50 px-3 py-1.5 text-sm font-semibold text-rose-700 transition hover:bg-rose-100"
+                          >
+                            {item.denegado}
+                          </Link>
+                        </td>
+
+                        <td className="px-3 py-3.5 text-center">
+                          <Link
+                            to={getStatusLink("Diferido", item.periodo, selectedUsuario._id)}
+                            className="inline-flex min-w-20 items-center justify-center rounded-full bg-fuchsia-50 px-3 py-1.5 text-sm font-semibold text-fuchsia-700 transition hover:bg-fuchsia-100"
+                          >
+                            {item.diferido}
+                          </Link>
+                        </td>
+
+                        <td className="px-3 py-3.5 text-center">
+                          <Link
+                            to={getStatusLink("No cargado", item.periodo, selectedUsuario._id)}
+                            className="inline-flex min-w-20 items-center justify-center rounded-full bg-gray-100 px-3 py-1.5 text-sm font-semibold text-gray-700 transition hover:bg-gray-200"
+                          >
+                            {item.noCargado}
+                          </Link>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
-            </div>
-          ) : null}
+            ) : null}
 
-          {!isPagosLoading && !isPagosError && (pagosUsuario?.data?.length ?? 0) > 0 ? (
-            <div className="overflow-x-auto">
-              <table className="min-w-full">
-                <thead className="border-b border-secondary-dark/50 bg-secondary/40">
-                  <tr>
-                    <th className="px-3 py-3 text-left text-[11px] font-semibold uppercase tracking-[0.16em] text-primary-dark/80">Fecha pago</th>
-                    <th className="px-3 py-3 text-left text-[11px] font-semibold uppercase tracking-[0.16em] text-primary-dark/80">Período</th>
-                    <th className="px-3 py-3 text-right text-[11px] font-semibold uppercase tracking-[0.16em] text-primary-dark/80">$ Atención</th>
-                    <th className="px-3 py-3 text-right text-[11px] font-semibold uppercase tracking-[0.16em] text-primary-dark/80">$ Coseguro</th>
-                    <th className="px-3 py-3 text-right text-[11px] font-semibold uppercase tracking-[0.16em] text-primary-dark/80">$ Total</th>
-                    <th className="px-3 py-3 text-center text-[11px] font-semibold uppercase tracking-[0.16em] text-primary-dark/80">Atenciones</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-secondary-dark/40">
-                  {pagosUsuario?.data.map((pago) => (
-                    <tr key={pago._id} className="transition-colors hover:bg-secondary/20">
-                      <td className="whitespace-nowrap px-3 py-3.5 text-sm text-slate-800">{pago.fechaPago}</td>
-                      <td className="whitespace-nowrap px-3 py-3.5 text-sm text-slate-800">{pago.periodoPago}</td>
-                      <td className="whitespace-nowrap px-3 py-3.5 text-right text-sm text-slate-800">{formatCurrency(pago.totalAtencion)}</td>
-                      <td className="whitespace-nowrap px-3 py-3.5 text-right text-sm text-slate-800">{formatCurrency(pago.totalCoseguroOdonto)}</td>
-                      <td className="whitespace-nowrap px-3 py-3.5 text-right text-sm font-semibold text-primary-dark">{formatCurrency(pago.totalGeneral)}</td>
-                      <td className="px-3 py-3.5 text-center text-sm font-semibold text-slate-800">{pago.items.length}</td>
+            {!isAtencionesLoading && !isAtencionesError && resumenMensual.length === 0 ? (
+              <div className="px-4 py-6 text-center">
+                <p className="text-sm font-medium text-slate-700">Este usuario no tiene atenciones registradas.</p>
+              </div>
+            ) : null}
+          </section>
+
+          <section className="mt-6 rounded-2xl border border-secondary-dark/60 bg-white shadow-sm">
+            <div className="border-b border-secondary-dark/50 px-4 py-3">
+              <h3 className="text-lg font-semibold text-slate-900">Cuenta corriente</h3>
+              <p className="text-sm text-slate-500">Pagos registrados al odontólogo por período contable y fecha efectiva de abono.</p>
+            </div>
+
+            {isPagosLoading ? <LoadingSpinner label="Cargando cuenta corriente..." className="min-h-[140px]" /> : null}
+
+            {!isPagosLoading && isPagosError ? (
+              <div className="px-4 py-3">
+                <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
+                  Ocurrió un error al cargar la cuenta corriente del odontólogo.
+                </div>
+              </div>
+            ) : null}
+
+            {!isPagosLoading && !isPagosError && (pagosUsuario?.data?.length ?? 0) > 0 ? (
+              <div className="overflow-x-auto">
+                <table className="min-w-full">
+                  <thead className="border-b border-secondary-dark/50 bg-secondary/40">
+                    <tr>
+                      <th className="px-3 py-3 text-left text-[11px] font-semibold uppercase tracking-[0.16em] text-primary-dark/80">Fecha pago</th>
+                      <th className="px-3 py-3 text-left text-[11px] font-semibold uppercase tracking-[0.16em] text-primary-dark/80">Período</th>
+                      <th className="px-3 py-3 text-right text-[11px] font-semibold uppercase tracking-[0.16em] text-primary-dark/80">$ Atención</th>
+                      <th className="px-3 py-3 text-right text-[11px] font-semibold uppercase tracking-[0.16em] text-primary-dark/80">$ Coseguro</th>
+                      <th className="px-3 py-3 text-right text-[11px] font-semibold uppercase tracking-[0.16em] text-primary-dark/80">$ Total</th>
+                      <th className="px-3 py-3 text-center text-[11px] font-semibold uppercase tracking-[0.16em] text-primary-dark/80">Atenciones</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          ) : null}
+                  </thead>
+                  <tbody className="divide-y divide-secondary-dark/40">
+                    {pagosUsuario?.data.map((pago) => (
+                      <tr key={pago._id} className="transition-colors hover:bg-secondary/20">
+                        <td className="whitespace-nowrap px-3 py-3.5 text-sm text-slate-800">{pago.fechaPago}</td>
+                        <td className="whitespace-nowrap px-3 py-3.5 text-sm text-slate-800">{pago.periodoPago}</td>
+                        <td className="whitespace-nowrap px-3 py-3.5 text-right text-sm text-slate-800">{formatCurrency(pago.totalAtencion)}</td>
+                        <td className="whitespace-nowrap px-3 py-3.5 text-right text-sm text-slate-800">
+                          {formatCurrency(pago.totalCoseguroOdonto)}
+                        </td>
+                        <td className="whitespace-nowrap px-3 py-3.5 text-right text-sm font-semibold text-primary-dark">
+                          {formatCurrency(pago.totalGeneral)}
+                        </td>
+                        <td className="px-3 py-3.5 text-center text-sm font-semibold text-slate-800">{pago.items.length}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : null}
 
-          {!isPagosLoading && !isPagosError && (pagosUsuario?.data?.length ?? 0) === 0 ? (
-            <div className="px-4 py-6 text-center">
-              <p className="text-sm font-medium text-slate-700">Este odontólogo no tiene pagos registrados.</p>
-            </div>
-          ) : null}
-        </section>
+            {!isPagosLoading && !isPagosError && (pagosUsuario?.data?.length ?? 0) === 0 ? (
+              <div className="px-4 py-6 text-center">
+                <p className="text-sm font-medium text-slate-700">Este odontólogo no tiene pagos registrados.</p>
+              </div>
+            ) : null}
+          </section>
         </>
       ) : null}
     </>

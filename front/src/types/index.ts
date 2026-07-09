@@ -300,6 +300,27 @@ export const rxFiltersSchema = z.object({
   ),
 });
 
+export const rxMensualItemSchema = z.object({
+  periodo: z.string(),
+  anio: z.number(),
+  mes: z.number(),
+  cantidad: z.number(),
+});
+
+export const rxTiposMensualItemSchema = z.object({
+  tipoRx: z.object({
+    _id: z.string(),
+    name: z.string(),
+  }),
+  meses: z.array(rxMensualItemSchema),
+});
+
+export const rxTiposMensualReportSchema = z.object({
+  availableYears: z.array(z.number()),
+  selectedYear: z.number(),
+  resumenPorTipo: z.array(rxTiposMensualItemSchema),
+});
+
 export const pacienteRxHistorialItemSchema = z.object({
   tipoRegistro: z.literal("rx"),
   fecha: z.string(),
@@ -574,6 +595,9 @@ export type TipoRxFormData = Pick<TipoRx, "name">;
 export type Rx = z.infer<typeof rxSchema>;
 export type RxListResponse = z.infer<typeof rxListResponseSchema>;
 export type RxFilters = z.infer<typeof rxFiltersSchema>;
+export type RxMensualItem = z.infer<typeof rxMensualItemSchema>;
+export type RxTiposMensualItem = z.infer<typeof rxTiposMensualItemSchema>;
+export type RxTiposMensualReport = z.infer<typeof rxTiposMensualReportSchema>;
 export type PagosAvailableFilters = z.infer<typeof pagosAvailableFiltersSchema>;
 export type PagoPendienteRow = z.infer<typeof pagoPendienteRowSchema>;
 export type PagosPendientesResponse = z.infer<typeof pagosPendientesResponseSchema>;

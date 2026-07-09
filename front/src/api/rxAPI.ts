@@ -1,6 +1,13 @@
 import api from "@/libs/axios";
 import { isAxiosError } from "axios";
-import { rxFiltersSchema, rxListResponseSchema, type RxFilters, type RxListResponse } from "@/types/index";
+import {
+  rxTiposMensualReportSchema,
+  rxFiltersSchema,
+  rxListResponseSchema,
+  type RxFilters,
+  type RxListResponse,
+  type RxTiposMensualReport,
+} from "@/types/index";
 
 export type CreateRxPayload = {
   fecha: string;
@@ -70,5 +77,27 @@ export async function createRx(payload: CreateRxPayload) {
     }
 
     throw new Error("Error inesperado al registrar la RX");
+  }
+}
+
+export async function getRxTiposMensualReport(year?: number) {
+  try {
+    const { data } = await api.get("/rx/reportes/tipos-mensual", {
+      params: year ? { year } : undefined,
+    });
+
+    const response = rxTiposMensualReportSchema.safeParse(data.data);
+    if (!response.success) {
+      console.error("Error en la validación de getRxTiposMensualReport:", response.error);
+      throw new Error("La estructura de los datos es inválida");
+    }
+
+    return response.data satisfies RxTiposMensualReport;
+  } catch (error) {
+    if (isAxiosError(error) && error.response) {
+      throw new Error(error.response.data.error || error.response.data.message || "Error al obtener el reporte de RX");
+    }
+
+    throw new Error("Error inesperado al obtener el reporte de RX");
   }
 }

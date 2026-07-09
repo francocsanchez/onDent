@@ -83,41 +83,63 @@ export default function PacienteAtencionesView() {
         {historial.length > 0 ? (
           <div className="space-y-2 p-2">
             {historial.map((item, index) => {
-              const key = item.tipoRegistro === "atencion" ? `${item.tipoRegistro}-${item.paciente._id}-${item.fecha}-${item.usuario._id}-${index}` : `${item.tipoRegistro}-${item.paciente._id}-${item.fecha}-${item.tipoRx._id}-${index}`;
+              const key =
+                item.tipoRegistro === "atencion"
+                  ? `${item.tipoRegistro}-${item.paciente._id}-${item.fecha}-${item.usuario._id}-${index}`
+                  : `${item.tipoRegistro}-${item.paciente._id}-${item.fecha}-${item.tipoRx._id}-${index}`;
 
               return (
                 <article key={key} className="rounded-xl border border-secondary-dark/40 bg-secondary/10 px-2.5 py-2">
                   <div className="flex flex-col gap-1 border-b border-secondary-dark/30 pb-1.5 sm:flex-row sm:flex-wrap sm:items-center sm:gap-x-3">
-                    <span className={`inline-flex w-fit items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold uppercase tracking-[0.14em] ${item.tipoRegistro === "rx" ? "bg-amber-100 text-amber-700" : "bg-emerald-100 text-emerald-700"}`}>
-                      {item.tipoRegistro === "rx" ? <ScanLine className="h-3.5 w-3.5" strokeWidth={2} /> : <Stethoscope className="h-3.5 w-3.5" strokeWidth={2} />}
+                    <span
+                      className={`inline-flex w-fit items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold uppercase tracking-[0.14em] ${item.tipoRegistro === "rx" ? "bg-amber-100 text-amber-700" : "bg-emerald-100 text-emerald-700"}`}
+                    >
+                      {item.tipoRegistro === "rx" ? (
+                        <ScanLine className="h-3.5 w-3.5" strokeWidth={2} />
+                      ) : (
+                        <Stethoscope className="h-3.5 w-3.5" strokeWidth={2} />
+                      )}
                       {item.tipoRegistro === "rx" ? "RX" : "Atención"}
                     </span>
-                    <p className="text-sm font-semibold text-slate-900">{item.paciente.lastName} {item.paciente.name}</p>
+
                     <p className="text-sm text-slate-600">{formatDateOnly(item.fecha)}</p>
-                    <p className="text-sm text-slate-600">{item.usuario.lastName}, {item.usuario.name}</p>
+                    <p className="text-sm text-slate-600">
+                      {item.usuario.lastName}, {item.usuario.name}
+                    </p>
                   </div>
 
                   {item.tipoRegistro === "atencion" ? (
                     <div className="mt-1.5 rounded-lg bg-white/80 px-2 py-1.5">
                       <p className="text-[11px] font-semibold uppercase tracking-wider text-primary-dark/80">Códigos</p>
-                      <div className="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-sm text-slate-700">
-                        {item.codigos.map((codigo, codigoIndex) => (
-                          <span key={`${codigo.codigoId}-${codigoIndex}`} className="inline-flex flex-wrap items-center gap-x-1">
-                            <span className="font-medium text-slate-900">{codigo.code}</span>
-                            <span>{codigo.description.trim()}</span>
-                            <span className="text-slate-500">-</span>
-                            <span>Pieza {codigo.pieza?.trim() ? codigo.pieza : "-"}</span>
-                          </span>
+
+                      <div className="mt-2 space-y-1.5 text-sm">
+                        {item.codigos.map((codigo, index) => (
+                          <div key={`${codigo.codigoId}-${index}`} className="flex items-start gap-2">
+                            <span className="font-semibold text-slate-900 whitespace-nowrap">{codigo.code}</span>
+
+                            <span className="text-slate-600">{codigo.description.trim()}</span>
+
+                            <span className="text-slate-400">•</span>
+
+                            <span className="whitespace-nowrap text-slate-500">Pieza {codigo.pieza?.trim() || "-"}</span>
+                          </div>
                         ))}
                       </div>
                     </div>
                   ) : (
                     <div className="mt-1.5 rounded-lg bg-white/80 px-2 py-1.5">
                       <div className="flex flex-col gap-1 text-sm text-slate-700">
-                        <p><span className="font-semibold text-slate-900">Tipo RX:</span> <span className="uppercase">{item.tipoRx.name}</span></p>
-                        <p><span className="font-semibold text-slate-900">Derivante:</span> {item.derivante || "-"}</p>
-                        <p><span className="font-semibold text-slate-900">Valor:</span> ${item.valor.toLocaleString("es-AR")}</p>
-                        {item.observacion ? <p><span className="font-semibold text-slate-900">Observación:</span> {item.observacion}</p> : null}
+                        <p>
+                          <span className="font-semibold text-slate-900">Tipo RX:</span> <span className="uppercase">{item.tipoRx.name}</span>
+                        </p>
+                        <p>
+                          <span className="font-semibold text-slate-900">Derivante:</span> {item.derivante || "-"}
+                        </p>
+                        {item.observacion ? (
+                          <p>
+                            <span className="font-semibold text-slate-900">Observación:</span> {item.observacion}
+                          </p>
+                        ) : null}
                       </div>
                     </div>
                   )}
