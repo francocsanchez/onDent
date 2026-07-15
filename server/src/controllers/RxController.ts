@@ -42,7 +42,7 @@ export class RxController {
         },
         {
           $lookup: {
-            from: "tipos_rx",
+            from: "tipos_rxes",
             localField: "tipoRx",
             foreignField: "_id",
             as: "tipoRx",
