@@ -34,6 +34,7 @@ import atencionRoutes from "./routes/atencionRoutes";
 import authRoutes from "./routes/authRoutes";
 import rxRoutes from "./routes/rxRoutes";
 import tipoRxRoutes from "./routes/tipoRxRoutes";
+import controlFacturacionRoutes from "./routes/controlFacturacionRoutes";
 
 app.use("/api/auth", authRoutes);
 app.use("/api/obras-sociales", obraSocialRoutes);
@@ -43,5 +44,6 @@ app.use("/api/usuarios", usuarioRoutes);
 app.use("/api/atenciones", atencionRoutes);
 app.use("/api/rx", rxRoutes);
 app.use("/api/tipos-rx", tipoRxRoutes);
+app.use("/api/control-facturacion", controlFacturacionRoutes);
 
 export default app;

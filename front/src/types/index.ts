@@ -80,6 +80,7 @@ export const codigoSchema = z.object({
   code: z.string(),
   description: z.string(),
   obraSocial: z.string(),
+  enable: z.boolean().optional(),
 });
 
 export const atencionCodigoSchema = z.object({
@@ -575,6 +576,61 @@ export const atencionesGlobalReportSchema = z.object({
   resumenMensual: z.array(atencionesGlobalResumenMensualSchema),
 });
 
+export const controlFacturacionCaraSchema = z.enum(["Oclusal", "Vestibular", "Mesial", "Distal", "Lingual", "Palatino"]);
+
+export const controlFacturacionItemSchema = z.object({
+  codigo: codigoSchema,
+  pieza: z.string().optional(),
+  cara: controlFacturacionCaraSchema.optional(),
+});
+
+export const controlFacturacionSchema = z.object({
+  _id: z.string(),
+  periodoMes: z.number().int().min(1).max(12),
+  periodoAnio: z.number().int(),
+  paciente: pacienteSchema,
+  obraSocial: obraSocialSchema.pick({ _id: true, name: true }),
+  usuario: z.object({
+    _id: z.string(),
+    name: z.string(),
+    lastName: z.string(),
+    role: z.string().optional(),
+  }),
+  items: z.array(controlFacturacionItemSchema),
+  createdAt: z.string(),
+  updatedAt: z.string(),
+});
+
+export const controlFacturacionTableSchema = z.array(controlFacturacionSchema);
+
+export const controlFacturacionListResponseSchema = z.object({
+  data: controlFacturacionTableSchema,
+  pagination: pacientesPaginationSchema,
+});
+
+export const controlFacturacionPacienteResumenSchema = z.object({
+  _id: z.string(),
+  paciente: z.object({
+    _id: z.string(),
+    name: z.string(),
+    lastName: z.string(),
+    dni: z.number(),
+    obraSocial: z.string(),
+  }),
+  obraSocial: obraSocialSchema.pick({ _id: true, name: true }),
+  totalRegistros: z.number().int(),
+  totalItems: z.number().int(),
+  ultimoPeriodoMes: z.number().int().min(1).max(12),
+  ultimoPeriodoAnio: z.number().int(),
+});
+
+export const controlFacturacionPacientesResumenTableSchema = z.array(controlFacturacionPacienteResumenSchema);
+
+export const controlFacturacionPacientesListResponseSchema = z.object({
+  data: controlFacturacionPacientesResumenTableSchema,
+  pagination: pacientesPaginationSchema,
+});
+
 export type DisponibilidadPrestaciones = z.infer<typeof disponibilidadPrestacionesSchema>;
 
 export type Atencion = z.infer<typeof atencionSchema>;
@@ -614,3 +670,9 @@ export type AtencionesGlobalTopConsulta = z.infer<typeof atencionesGlobalTopCons
 export type AtencionesGlobalResumenAnual = z.infer<typeof atencionesGlobalResumenAnualSchema>;
 export type AtencionesGlobalResumenMensual = z.infer<typeof atencionesGlobalResumenMensualSchema>;
 export type AtencionesGlobalReport = z.infer<typeof atencionesGlobalReportSchema>;
+export type ControlFacturacionCara = z.infer<typeof controlFacturacionCaraSchema>;
+export type ControlFacturacionItem = z.infer<typeof controlFacturacionItemSchema>;
+export type ControlFacturacion = z.infer<typeof controlFacturacionSchema>;
+export type ControlFacturacionListResponse = z.infer<typeof controlFacturacionListResponseSchema>;
+export type ControlFacturacionPacienteResumen = z.infer<typeof controlFacturacionPacienteResumenSchema>;
+export type ControlFacturacionPacientesListResponse = z.infer<typeof controlFacturacionPacientesListResponseSchema>;

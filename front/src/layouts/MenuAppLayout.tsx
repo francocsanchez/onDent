@@ -5,6 +5,7 @@ import {
   ChevronLeft,
   ChevronRight,
   ClipboardList,
+  FileSpreadsheet,
   LayoutDashboard,
   LogOut,
   Settings,
@@ -52,6 +53,11 @@ const navigationItems: NavigationItem[] = [
     icon: ScanLine,
   },
   {
+    label: "Control facturación",
+    href: "/control-facturacion",
+    icon: FileSpreadsheet,
+  },
+  {
     label: "Liquidaciones",
     href: "/liquidaciones",
     icon: ClipboardList,
@@ -91,6 +97,7 @@ export default function MenuAppLayout({ isOpen, isCollapsed, onClose, onToggleCo
   };
 
   const { allowed: canShowConfig } = useRoleGuard(["superadmin"]);
+  const { allowed: canShowControlFacturacion } = useRoleGuard(["superadmin"]);
   const { allowed: canShowReports } = useRoleGuard(["admin", "superadmin"]);
   const { allowed: canShowLiquidaciones } = useRoleGuard(["admin", "superadmin"]);
   const { allowed: canShowPagos } = useRoleGuard(["admin", "superadmin"]);
@@ -99,6 +106,7 @@ export default function MenuAppLayout({ isOpen, isCollapsed, onClose, onToggleCo
 
   const visibleNavigationItems = navigationItems.filter((item) => {
     if (item.href === "/config") return canShowConfig;
+    if (item.href === "/control-facturacion") return canShowControlFacturacion;
     if (item.href === "/reports") return canShowReports;
     if (item.href === "/liquidaciones") return canShowLiquidaciones;
     if (item.href === "/pagos") return canShowPagos;

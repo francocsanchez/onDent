@@ -32,6 +32,14 @@ export const getTodayDateLocal = () => {
   return `${year}-${month}-${day}`;
 };
 
+export const getCurrentMonthYearLocal = () => {
+  const now = new Date();
+  return {
+    year: now.getFullYear(),
+    month: now.getMonth() + 1,
+  };
+};
+
 export const getYearMonthFromDateOnly = (value?: string) => {
   if (!isDateOnlyString(value)) {
     return null;

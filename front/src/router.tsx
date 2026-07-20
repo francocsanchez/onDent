@@ -38,6 +38,9 @@ const CreateRxView = lazy(() => import("./views/rx/CreateRxView"));
 const ListTiposRxView = lazy(() => import("./views/tiposRx/ListTiposRxView"));
 const CreateTipoRxView = lazy(() => import("./views/tiposRx/CreateTipoRxView"));
 const EditTipoRxView = lazy(() => import("./views/tiposRx/EditTipoRxView"));
+const ListControlFacturacionView = lazy(() => import("./views/controlFacturacion/ListControlFacturacionView"));
+const CreateControlFacturacionView = lazy(() => import("./views/controlFacturacion/CreateControlFacturacionView"));
+const ControlFacturacionPacienteDetailView = lazy(() => import("./views/controlFacturacion/ControlFacturacionPacienteDetailView"));
 
 function withSuspense(element: ReactNode, label?: string) {
   return <Suspense fallback={<LoadingSpinner label={label} />}>{element}</Suspense>;
@@ -87,6 +90,18 @@ export default function Router() {
               />
 
               <Route element={<RoleProtectedRoute allowedRoles={["superadmin"]} />}>
+                <Route
+                  path="/control-facturacion"
+                  element={withSuspense(<ListControlFacturacionView />, "Cargando control de facturación...")}
+                />
+                <Route
+                  path="/control-facturacion/create"
+                  element={withSuspense(<CreateControlFacturacionView />, "Cargando formulario...")}
+                />
+                <Route
+                  path="/control-facturacion/paciente/:idPaciente"
+                  element={withSuspense(<ControlFacturacionPacienteDetailView />, "Cargando cargas del paciente...")}
+                />
                 <Route path="/config" element={withSuspense(<MenuConfigView />, "Cargando configuración...")} />
                 <Route path="/config/usuarios" element={withSuspense(<ListUsuariosView />, "Cargando usuarios...")} />
                 <Route path="/config/usuarios/create" element={withSuspense(<CreateUsuarioView />, "Cargando formulario...")} />
